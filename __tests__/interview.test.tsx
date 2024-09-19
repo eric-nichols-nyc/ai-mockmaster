@@ -1,28 +1,29 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Interview from '../src/app/(dashboard)/dashboard/interview/page';
 import { useRouter } from 'next/navigation';
 
 // Mock the useRouter hook
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
 }));
 
 // Mock the useInterviewStore hook (assuming it's used in the component)
-jest.mock('../src/store/interviewStore', () => ({
-  useInterviewStore: jest.fn().mockReturnValue({
+vi.mock('../src/store/interviewStore', () => ({
+  useInterviewStore: vi.fn().mockReturnValue({
     question: '',
     answer: '',
-    setQuestionAndAnswer: jest.fn(),
+    setQuestionAndAnswer: vi.fn(),
   }),
 }));
 
 describe('Interview Component', () => {
   beforeEach(() => {
     // Setup useRouter mock
-    (useRouter as jest.Mock).mockReturnValue({
-      push: jest.fn(),
+    (useRouter as ReturnType<typeof vi.fn>).mockReturnValue({
+      push: vi.fn(),
     });
   });
 
