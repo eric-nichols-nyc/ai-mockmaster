@@ -20,7 +20,7 @@ vi.mock('@/store/interviewStore', () => ({
 
 // Mock the next/image component
 vi.mock('next/image', () => ({
-  default: (props: any) => {
+  default: (props: {src:string, alt:string}) => {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={props.src} alt={props.alt} />;
   },
@@ -33,7 +33,7 @@ vi.mock('@/app/(dashboard)/dashboard/interview/(components)/audio-recorder', () 
 
 // Mock the Button component
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: React.PropsWithChildren<any>) => (
+  Button: ({ children, ...props }: React.PropsWithChildren<React.ButtonHTMLAttributes<HTMLButtonElement>>) => (
     <button {...props}>{children}</button>
   ),
 }));
