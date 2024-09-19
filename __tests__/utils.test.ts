@@ -1,4 +1,4 @@
-import { calculateScore } from '../src/lib/utils';
+import { calculateScore } from '@/lib/utils';
 
 describe('calculateScore', () => {
   it('should return 0 for an empty string', () => {
