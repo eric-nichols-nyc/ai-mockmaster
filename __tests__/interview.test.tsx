@@ -11,8 +11,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock the useInterviewStore hook
-vi.mock('../src/store/interviewStore', async (importOriginal) => {
-  const actual = await importOriginal();
+vi.mock('../src/store/interviewStore', async () => {
+  const actual = await import('../src/store/interviewStore');
   return {
     ...actual,
     useInterviewStore: vi.fn().mockReturnValue({

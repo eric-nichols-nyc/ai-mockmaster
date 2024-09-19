@@ -1,14 +1,23 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
-
 interface AudioRecorderUploaderProps {
   isRecording: boolean;
   onStopRecording: () => void;
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
   setAudioURL: React.Dispatch<React.SetStateAction<string>>;
+  setAudioFile: (value: File) => void;
+  isDisabled: boolean;
 }
 
-const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({ isRecording, onStopRecording, setIsRecording, setAudioURL }) => {
+const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({ 
+  isRecording, 
+  onStopRecording, 
+  setIsRecording, 
+  setAudioURL,
+  setAudioFile,
+  isDisabled 
+}) => {
+
   const [error, setError] = useState<string>("");
   const [forceUpdate, setForceUpdate] = useState<number>(0);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
@@ -16,7 +25,7 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({ isRecordi
   const animationFrameId = useRef<number | null>(null);
   const latestAudioBlob = useRef<Blob | null>(null);
 
-  console.log("AudioRecorderUploader rendered. isRecording:", isRecording);
+  console.log("AudioRecorderUploader rendered. isRecording:", isRecording, "isDisabled:", isDisabled);
 
   useEffect(() => {
     console.log("isRecording changed:", isRecording);
@@ -55,7 +64,9 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({ isRecordi
 
       mediaRecorder.current.onstop = () => {
         console.log("onstop event triggered");
-        latestAudioBlob.current = new Blob(audioChunks.current, { type: "audio/webm" });
+        latestAudioBlob.current = new Blob(audioChunks.current, { type: "audio/mp3" });
+        const audioFile = new File([latestAudioBlob.current], 'recording.mp3', { type: 'audio/mp3' });
+        setAudioFile(audioFile);
         audioChunks.current = [];
         updateAudioURL();
       };
@@ -116,6 +127,17 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({ isRecordi
     setForceUpdate(prev => prev + 1);
   }, [onStopRecording, setIsRecording]);
 
+  // const transcriptAudio = async (audioBlob: Blob) => {
+  //   console.log(audioBlob);
+  //   try {
+  //     const transcript = await transcribeAudio(audioBlob);
+  //     console.log('Audio transcription completed');
+  //     setRecordedAnswer(transcript)
+  //   } catch (error) {
+  //     console.error('Error transcribing audio:', error);
+  //   }
+  // }
+
   const updateAudioURL = useCallback(() => {
     if (latestAudioBlob.current) {
       const newAudioUrl = URL.createObjectURL(latestAudioBlob.current);
@@ -144,7 +166,8 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({ isRecordi
           onClick={handleRecordingToggle}
           className={`mt-10 flex items-center justify-center rounded-full w-20 h-20 focus:outline-none ${
             isRecording ? 'bg-red-400 hover:bg-red-500' : 'bg-blue-400 hover:bg-blue-500'
-          }`}
+          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isDisabled}
         >
           {isRecording ? (
             <svg

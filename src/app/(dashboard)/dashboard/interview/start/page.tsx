@@ -1,5 +1,5 @@
 import React from "react";
-import AvatarWithPlay from "../(components)/avatar-with-play";
+import AvatarWithPlay from "../(components)/interview";
 
 const InterviewStart = () => {
   return (

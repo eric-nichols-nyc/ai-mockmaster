@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,9 @@ export default function AvatarWithPlay() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
   const [audioURL, setAudioURL] = useState<string>('');
-  const { question } = useInterviewStore();
+  const { question, setRecordedAnswer } = useInterviewStore();
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let timerId: NodeJS.Timeout;
@@ -51,6 +53,7 @@ export default function AvatarWithPlay() {
     setIsTimerRunning(true); // Start the timer
     setHasRecordingStopped(false);
     setAudioURL(''); // Reset audioURL when starting a new recording
+    setError(null); // Clear any previous errors
   };
 
   const handleStopRecording = () => {
@@ -65,17 +68,43 @@ export default function AvatarWithPlay() {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
+  const setAudioFile = useCallback((audioFile: File) => {
+    setFile(audioFile);
+  }, []);
+
   const handleSubmitForAIFeedback = async () => {
+    if (!file) {
+      console.error('Please select an audio file');
+      setError("No audio file available for transcription.");
+      return;
+    }
+    console.log('file ',file)
+     // Create FormData and append the file
+     const formData = new FormData();
+     formData.append('audio', file);
     setIsLoading(true);
-    // Simulating an async call with a 3-second delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    setIsLoading(false);
-    // Redirect to the summary page
-    router.push('/dashboard/interview/summary');
+    setError(null); // Clear any previous errors
+    
+    try {
+      // create a POST request to /api/transcribe
+      const response = await fetch('/api/transcript', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json();
+      console.log('Transcription result:', result.transcription);
+      setRecordedAnswer(result.transcription);
+      // router.push('/dashboard/interview/summary');
+    } catch (e) {
+      setError('Failed to transcribe: ' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
+      {error && <div className="text-red-500 mb-4">{error}</div>}
       <Card className="w-full max-w-2xl mb-8">
         <CardHeader>
           <CardTitle>User Information</CardTitle>
@@ -116,6 +145,8 @@ export default function AvatarWithPlay() {
             onStopRecording={handleStopRecording}
             setIsRecording={setIsRecording}
             setAudioURL={setAudioURL}
+            isDisabled={hasRecordingStopped}
+            setAudioFile={setAudioFile}
           />
           {audioURL && (
             <div className="mt-4">
@@ -124,11 +155,11 @@ export default function AvatarWithPlay() {
             </div>
           )}
           {hasRecordingStopped && (
-            <Button 
-              onClick={handleSubmitForAIFeedback}
-              className="mt-4 bg-green-500 hover:bg-green-600"
-              disabled={isLoading}
-            >
+              <Button 
+                onClick={handleSubmitForAIFeedback}
+                className="mt-4 bg-green-500 hover:bg-green-600"
+                disabled={isLoading}
+              >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
