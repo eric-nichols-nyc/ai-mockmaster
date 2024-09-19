@@ -10,14 +10,18 @@ vi.mock('next/navigation', () => ({
   useRouter: vi.fn(),
 }));
 
-// Mock the useInterviewStore hook (assuming it's used in the component)
-vi.mock('../src/store/interviewStore', () => ({
-  useInterviewStore: vi.fn().mockReturnValue({
-    question: '',
-    answer: '',
-    setQuestionAndAnswer: vi.fn(),
-  }),
-}));
+// Mock the useInterviewStore hook
+vi.mock('../src/store/interviewStore', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useInterviewStore: vi.fn().mockReturnValue({
+      question: '',
+      answer: '',
+      setQuestionAndAnswer: vi.fn(),
+    }),
+  };
+});
 
 describe('Interview Component', () => {
   beforeEach(() => {
