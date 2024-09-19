@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest"
+    "test": "jest --env=jsdom"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.5.2",
@@ -44,6 +44,8 @@
     "zustand": "^5.0.0-rc.2"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
     "@types/jest": "^29.5.13",
     "@types/node": "^20",
     "@types/react": "^18",
@@ -53,6 +55,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.9",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "ts-jest": "^29.2.5",
