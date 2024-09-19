@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'
+import { z } from 'zod'
+import { zValidator } from '@hono/zod-validator'
 
 const app = new Hono()
 
@@ -35,9 +37,14 @@ const safetySettings = [
   },
 ]
 
-app.post('/getquestion', async (c) => {
+// Define the schema for input validation
+const questionSchema = z.object({
+  message: z.string().min(1, 'Message is required'),
+})
+
+app.post('/getquestion', zValidator('json', questionSchema), async (c) => {
   try {
-    const { message } = await c.req.json()
+    const { message } = await c.req.valid('json')
 
     const chatSession = model.startChat({
       generationConfig,

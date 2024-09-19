@@ -3,30 +3,38 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import useInterviewStore from '@/store/interviewStore';
-import  {useRouter} from 'next/navigation';
-interface InterviewFormProps {
-  onSubmit: (formData: { title: string; description: string; skills: string }) => void;
-}
+import { useRouter } from 'next/navigation';
+import { z } from 'zod';
 
-const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit }) => {
+const formSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
+  description: z.string().min(1, 'Description is required').max(500, 'Description must be 500 characters or less'),
+  skills: z.string().min(1, 'Skills are required').max(200, 'Skills must be 200 characters or less'),
+});
+
+const InterviewForm: React.FC = () => {
   const router = useRouter();
   const { question, answer, setQuestionAndAnswer } = useInterviewStore();
 
-  const [title, setTitle] = React.useState('frontend developer');
-  const [description, setDescription] = React.useState('Performs hands-on architecture, design, and development of systems');
-  const [skills, setSkills] = React.useState('react, redux');
+  const [title, setTitle] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [skills, setSkills] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [fieldErrors, setFieldErrors] = React.useState<{ [key: string]: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setFieldErrors({});
 
     const formData = { title, description, skills };
-    onSubmit(formData);
 
     try {
+      // Validate form data
+      const validatedData = formSchema.parse(formData);
+   
       const response = await fetch(`${process.env.NEXT_PUBLIC_LOCAL_URL}/api/question/getquestion`, {
         method: 'POST',
         headers: {
@@ -34,9 +42,9 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit }) => {
         },
         body: JSON.stringify({
           message: `Generate an interview question and answer in JSON schema: {"question": string, "answer":string}, based on the following:
-            Title: ${title}
-            Description: ${description}
-            Skills: ${skills}
+            Title: ${validatedData.title}
+            Description: ${validatedData.description}
+            Skills: ${validatedData.skills}
             `
         }),
       });
@@ -57,7 +65,6 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit }) => {
         setQuestionAndAnswer(question, answer);
         
         // Redirect to the dashboard/start page
-        // You can uncomment the following line if you want to enable redirection
         router.push('/dashboard/interview/start');
       } else if (data.error) {
         throw new Error(data.error);
@@ -70,7 +77,13 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit }) => {
       setDescription('');
       setSkills('');
     } catch (err) {
-      if (err instanceof Error) {
+      if (err instanceof z.ZodError) {
+        const errors = err.errors.reduce((acc, curr) => {
+          acc[curr.path[0]] = curr.message;
+          return acc;
+        }, {} as { [key: string]: string });
+        setFieldErrors(errors);
+      } else if (err instanceof Error) {
         setError(`An error occurred while submitting the form: ${err.message}`);
       } else {
         setError('An unknown error occurred while submitting the form.');
@@ -90,9 +103,9 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit }) => {
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          required
           className="mt-1"
         />
+        {fieldErrors.title && <p className="text-red-500 text-sm mt-1">{fieldErrors.title}</p>}
       </div>
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
@@ -100,9 +113,9 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit }) => {
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          required
           className="mt-1"
         />
+        {fieldErrors.description && <p className="text-red-500 text-sm mt-1">{fieldErrors.description}</p>}
       </div>
       <div>
         <label htmlFor="skills" className="block text-sm font-medium text-gray-700">Skills</label>
@@ -111,10 +124,10 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit }) => {
           id="skills"
           value={skills}
           onChange={(e) => setSkills(e.target.value)}
-          required
           className="mt-1"
           placeholder="Separate skills with commas"
         />
+        {fieldErrors.skills && <p className="text-red-500 text-sm mt-1">{fieldErrors.skills}</p>}
       </div>
       <Button type="submit" disabled={isLoading}>
         {isLoading ? 'Generating Question...' : 'Generate Question'}

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.654.0",
     "@clerk/nextjs": "^5.5.2",
     "@google/generative-ai": "^0.19.0",
     "@hono/zod-validator": "^0.2.2",
@@ -15,6 +16,7 @@
     "@types/jest": "^29.5.13",
     "@types/react-speech-recognition": "^3.9.5",
     "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "aws-sdk": "^2.1691.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
