@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 const Hero: React.FC = () => {
 
   return (
-    <section className="hero flex" style={{ height: '528px' }}>
+    <section className="hero flex" style={{ height: '528px' }} data-testid="hero-section">
       {/* Left side - Image */}
       <div className="w-1/2 relative">
         <Image
