@@ -4,6 +4,7 @@ import webhook from './webhook'
 import interviews from './interviews'
 import question from './question'
 import upload from './upload'
+import openai from './openai'
 import transcript from './transcript'
 const app = new Hono().basePath('/api')
 
@@ -19,6 +20,7 @@ app.route('/interviews', interviews)
 app.route('/question', question)
 app.route('/upload', upload)
 app.route('/transcript', transcript)
+app.route('/openai', openai)
 
 
 export const GET = handle(app)

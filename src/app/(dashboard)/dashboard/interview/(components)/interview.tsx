@@ -23,8 +23,9 @@ export default function AvatarWithPlay() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
   const [audioURL, setAudioURL] = useState<string>('');
+  const [transcription, setTranscription] = useState<string>('');
+  const [s3Url, setS3Url] = useState<string>('');
   const { question, setRecordedAnswer } = useInterviewStore();
-  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,7 +33,9 @@ export default function AvatarWithPlay() {
     if (isTimerRunning && timeLeft > 0) {
       timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
     } else if (timeLeft === 0) {
-      handleStopRecording();
+      setIsRecording(false);
+      setIsTimerRunning(false);
+      setHasRecordingStopped(true);
     }
     return () => clearTimeout(timerId);
   }, [timeLeft, isTimerRunning]);
@@ -45,61 +48,30 @@ export default function AvatarWithPlay() {
     } else {
       setDisplayText(question);
     }
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0; // Reset audio to start
-      audioRef.current.play();
-    }
     setTimeLeft(120); // Reset timer to 2 minutes
     setIsTimerRunning(true); // Start the timer
     setHasRecordingStopped(false);
     setAudioURL(''); // Reset audioURL when starting a new recording
+    setTranscription(''); // Reset transcription
+    setS3Url(''); // Reset S3 URL
     setError(null); // Clear any previous errors
+    setIsRecording(true); // Start recording
   };
 
-  const handleStopRecording = () => {
+  const handleStopRecording = useCallback((transcription: string, audioUrl: string) => {
     setIsRecording(false);
     setIsTimerRunning(false);
     setHasRecordingStopped(true);
-  };
+    setTranscription(transcription);
+    setS3Url(audioUrl);
+    setRecordedAnswer(transcription);
+    setIsLoading(false);
+  }, [setRecordedAnswer]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-  };
-
-  const setAudioFile = useCallback((audioFile: File) => {
-    setFile(audioFile);
-  }, []);
-
-  const handleSubmitForAIFeedback = async () => {
-    if (!file) {
-      console.error('Please select an audio file');
-      setError("No audio file available for transcription.");
-      return;
-    }
-    console.log('file ',file)
-     // Create FormData and append the file
-     const formData = new FormData();
-     formData.append('audio', file);
-    setIsLoading(true);
-    setError(null); // Clear any previous errors
-    
-    try {
-      // create a POST request to /api/transcribe
-      const response = await fetch('/api/transcript', {
-        method: 'POST',
-        body: formData,
-      });
-      const result = await response.json();
-      console.log('Transcription result:', result.transcription);
-      setRecordedAnswer(result.transcription);
-      // router.push('/dashboard/interview/summary');
-    } catch (e) {
-      setError('Failed to transcribe: ' + (e instanceof Error ? e.message : String(e)));
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -145,8 +117,8 @@ export default function AvatarWithPlay() {
             onStopRecording={handleStopRecording}
             setIsRecording={setIsRecording}
             setAudioURL={setAudioURL}
+            setAudioFile={() => {}} // This is no longer needed as we're handling file upload in the AudioRecorderUploader
             isDisabled={hasRecordingStopped}
-            setAudioFile={setAudioFile}
           />
           {audioURL && (
             <div className="mt-4">
@@ -154,25 +126,29 @@ export default function AvatarWithPlay() {
               <audio src={audioURL} controls />
             </div>
           )}
+          {transcription && (
+            <div className="mt-4">
+              <p>Transcription:</p>
+              <p>{transcription}</p>
+            </div>
+          )}
+          {s3Url && (
+            <div className="mt-4">
+              <p>S3 URL:</p>
+              <a href={s3Url} target="_blank" rel="noopener noreferrer">{s3Url}</a>
+            </div>
+          )}
           {hasRecordingStopped && (
-              <Button 
-                onClick={handleSubmitForAIFeedback}
-                className="mt-4 bg-green-500 hover:bg-green-600"
-                disabled={isLoading}
-              >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing
-                </>
-              ) : (
-                'Submit for AI feedback'
-              )}
+            <Button 
+              onClick={() => router.push('/dashboard/interview/summary')}
+              className="mt-4 bg-green-500 hover:bg-green-600"
+              disabled={isLoading}
+            >
+              View AI Feedback
             </Button>
           )}
         </div>
       </div>
-      <audio ref={audioRef} src="/mp3/speech.wav" />
     </div>
   );
 }

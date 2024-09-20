@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
+
 interface AudioRecorderUploaderProps {
   isRecording: boolean;
-  onStopRecording: () => void;
+  onStopRecording: (transcription: string, audioUrl: string) => void;
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
   setAudioURL: React.Dispatch<React.SetStateAction<string>>;
   setAudioFile: (value: File) => void;
@@ -19,16 +20,12 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({
 }) => {
 
   const [error, setError] = useState<string>("");
-  const [forceUpdate, setForceUpdate] = useState<number>(0);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const animationFrameId = useRef<number | null>(null);
   const latestAudioBlob = useRef<Blob | null>(null);
 
-  console.log("AudioRecorderUploader rendered. isRecording:", isRecording, "isDisabled:", isDisabled);
-
   useEffect(() => {
-    console.log("isRecording changed:", isRecording);
     if (isRecording && !mediaRecorder.current) {
       startRecording();
     } else if (!isRecording && mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
@@ -42,28 +39,20 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({
     };
   }, [isRecording]);
 
-  useEffect(() => {
-    console.log("Component re-rendered due to forceUpdate:", forceUpdate);
-  }, [forceUpdate]);
-
   const startRecording = async () => {
     try {
-      console.log("Starting recording...");
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Audio recording is not supported in this browser.");
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder.current = new MediaRecorder(stream);
-      console.log("MediaRecorder created:", mediaRecorder.current);
 
       mediaRecorder.current.ondataavailable = (event: BlobEvent) => {
-        console.log("Data available:", event.data.size);
         audioChunks.current.push(event.data);
       };
 
       mediaRecorder.current.onstop = () => {
-        console.log("onstop event triggered");
         latestAudioBlob.current = new Blob(audioChunks.current, { type: "audio/mp3" });
         const audioFile = new File([latestAudioBlob.current], 'recording.mp3', { type: 'audio/mp3' });
         setAudioFile(audioFile);
@@ -72,16 +61,12 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({
       };
 
       mediaRecorder.current.start();
-      console.log("Recording started");
       setIsRecording(true);
       setError("");
 
-      // Use requestAnimationFrame to periodically check recorder state
       const checkRecorderState = () => {
         if (mediaRecorder.current && isRecording) {
-          console.log("Recorder state:", mediaRecorder.current.state);
           if (mediaRecorder.current.state === "inactive" && audioChunks.current.length > 0) {
-            console.log("Recorder inactive, but audio chunks available. Creating URL.");
             latestAudioBlob.current = new Blob(audioChunks.current, { type: "audio/webm" });
             audioChunks.current = [];
             updateAudioURL();
@@ -99,22 +84,15 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({
     }
   };
 
-  const stopRecording = useCallback(() => {
-    console.log("Stopping recording...");
+  const stopRecording = useCallback(async () => {
     if (mediaRecorder.current && mediaRecorder.current.state !== "inactive") {
       mediaRecorder.current.stop();
-      console.log("MediaRecorder stopped");
 
       if (mediaRecorder.current.stream) {
         mediaRecorder.current.stream
           .getTracks()
-          .forEach((track) => {
-            track.stop();
-            console.log("Track stopped:", track.kind);
-          });
+          .forEach((track) => track.stop());
       }
-    } else {
-      console.log("MediaRecorder not active, cannot stop");
     }
 
     if (animationFrameId.current) {
@@ -123,35 +101,39 @@ const AudioRecorderUploader: React.FC<AudioRecorderUploaderProps> = ({
     }
 
     setIsRecording(false);
-    onStopRecording();
-    setForceUpdate(prev => prev + 1);
-  }, [onStopRecording, setIsRecording]);
 
-  // const transcriptAudio = async (audioBlob: Blob) => {
-  //   console.log(audioBlob);
-  //   try {
-  //     const transcript = await transcribeAudio(audioBlob);
-  //     console.log('Audio transcription completed');
-  //     setRecordedAnswer(transcript)
-  //   } catch (error) {
-  //     console.error('Error transcribing audio:', error);
-  //   }
-  // }
+    if (latestAudioBlob.current) {
+      try {
+        const audioFile = new File([latestAudioBlob.current], 'recording.mp3', { type: 'audio/mp3' });
+        const formData = new FormData();
+        formData.append('audio', audioFile);
+
+        const response = await fetch('/api/transcript', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const { transcription, audioUrl } = await response.json();
+        onStopRecording(transcription, audioUrl);
+      } catch (error) {
+        console.error('Error transcribing audio:', error);
+        setError("Failed to transcribe audio. Please try again.");
+      }
+    }
+  }, [onStopRecording, setIsRecording]);
 
   const updateAudioURL = useCallback(() => {
     if (latestAudioBlob.current) {
       const newAudioUrl = URL.createObjectURL(latestAudioBlob.current);
-      console.log("New Audio URL created:", newAudioUrl);
       setAudioURL(newAudioUrl);
-      console.log("setAudioURL called with:", newAudioUrl);
-      setForceUpdate(prev => prev + 1);
-    } else {
-      console.log("No audio blob available to create URL");
     }
   }, [setAudioURL]);
 
   const handleRecordingToggle = useCallback(() => {
-    console.log("Recording toggle clicked, current state:", isRecording);
     if (isRecording) {
       stopRecording();
     } else {
