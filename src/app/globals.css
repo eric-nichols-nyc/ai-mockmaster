@@ -57,3 +57,7 @@ body {
   }
 }
 
+.voice-visualizer__audio-info-container{
+  display:none !important;
+  border:1px solid red;
+}

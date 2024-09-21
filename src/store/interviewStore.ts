@@ -1,47 +1,75 @@
 import { create } from 'zustand'
 
-export interface InterviewState {
-  currentQuestionIndex: number
-  question: string
-  answer: string
-  userAnswer: string
-  recordedAnswer: string
-  grade: string
-  summary: string
-  feedback: string
-  improvements: string[]
-  keyTakeaways: string[]
-  setCurrentQuestionIndex: (index: number) => void
-  setQuestionAndAnswer: (question: string, answer: string) => void
-  setUserAnswer: (userAnswer: string) => void
-  setRecordedAnswer: (recordedAnswer: string) => void
-  setGrade: (grade: string) => void
-  setSummary: (summary: string) => void
-  setFeedback: (feedback: string) => void
-  setImprovements: (improvements: string[]) => void
-  setKeyTakeaways: (keyTakeaways: string[]) => void
+export interface Question {
+  id: string;
+  question: string;
+  answer: string;
+  userAnswer?: string;
+  recordedAnswer?: string;
+  grade?: string;
+  feedback?: string;
+}
+
+export interface Interview {
+  id: string;
+  title: string;
+  jobTitle: string;
+  jobDescription: string;
+  questions: Question[];
+  currentQuestionIndex: number;
+  summary?: string;
+  improvements?: string[];
+  keyTakeaways?: string[];
+}
+
+interface InterviewState {
+  interview: Interview | null;
+  setInterview: (interview: Interview) => void;
+  setCurrentQuestionIndex: (index: number) => void;
+  updateQuestion: (questionId: string, updates: Partial<Question>) => void;
+  setSummary: (summary: string) => void;
+  setImprovements: (improvements: string[]) => void;
+  setKeyTakeaways: (keyTakeaways: string[]) => void;
 }
 
 const useInterviewStore = create<InterviewState>((set) => ({
-  currentQuestionIndex: 0,
-  question: '',
-  answer: '',
-  userAnswer: '',
-  recordedAnswer: '',
-  grade: '',
-  summary: '',
-  feedback: '',
-  improvements: [],
-  keyTakeaways: [],
-  setCurrentQuestionIndex: (index) => set({ currentQuestionIndex: index }),
-  setQuestionAndAnswer: (question, answer) => set({ question, answer }),
-  setUserAnswer: (userAnswer) => set({ userAnswer }),
-  setRecordedAnswer: (recordedAnswer) => set({ recordedAnswer }),
-  setGrade: (grade) => set({ grade }),
-  setSummary: (summary) => set({ summary }),
-  setFeedback: (feedback) => set({ feedback }),
-  setImprovements: (improvements) => set({ improvements }),
-  setKeyTakeaways: (keyTakeaways) => set({ keyTakeaways }),
+  interview: null,
+  setInterview: (interview) => set({ interview }),
+  setCurrentQuestionIndex: (index) => 
+    set((state) => ({
+      interview: state.interview 
+        ? { ...state.interview, currentQuestionIndex: index }
+        : null
+    })),
+  updateQuestion: (questionId, updates) =>
+    set((state) => ({
+      interview: state.interview
+        ? {
+            ...state.interview,
+            questions: state.interview.questions.map((q) =>
+              q.id === questionId ? { ...q, ...updates } : q
+            ),
+          }
+        : null
+    })),
+  setSummary: (summary) =>
+    set((state) => ({
+      interview: state.interview
+        ? { ...state.interview, summary }
+        : null
+    })),
+  setImprovements: (improvements) =>
+    set((state) => ({
+      interview: state.interview
+        ? { ...state.interview, improvements }
+        : null
+    })),
+  setKeyTakeaways: (keyTakeaways) =>
+    set((state) => ({
+      interview: state.interview
+        ? { ...state.interview, keyTakeaways }
+        : null
+    })),
 }))
 
 export default useInterviewStore

@@ -1,154 +1,192 @@
-"use client"
-import { useRef, useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AudioRecorderUploader from './audio-recorder';
-import { Loader2 } from "lucide-react";
-import useInterviewStore from '@/store/interviewStore';
+"use client";
+import { useRef, useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useVoiceVisualizer } from "react-voice-visualizer";
+import useInterviewStore from "@/store/interviewStore";
+import Visualizer from "./visualizer";
+import { useApi } from "@/lib/api";
 
-const placeholderQuestion = {
-  question: "What are your greatest strengths?",
-  answer: "This is a common interview question. You should be prepared to discuss your skills and experiences that are most relevant to the job you're applying for."
-};
-
-export default function AvatarWithPlay() {
+export default function Interview() {
   const router = useRouter();
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [displayText, setDisplayText] = useState('');
-  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes in seconds
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const { fetchApi } = useApi();
+  const {
+    interview,
+    setInterview,
+    setCurrentQuestionIndex,
+    updateQuestion,
+  } = useInterviewStore();
+
   const [isRecording, setIsRecording] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
-  const [audioURL, setAudioURL] = useState<string>('');
-  const [transcription, setTranscription] = useState<string>('');
-  const [s3Url, setS3Url] = useState<string>('');
-  const { question, setRecordedAnswer } = useInterviewStore();
-  const [error, setError] = useState<string | null>(null);
+  const [transcription, setTranscription] = useState("");
+  const [s3Url, setS3Url] = useState("");
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const { startRecording, stopRecording } = useVoiceVisualizer();
 
   useEffect(() => {
-    let timerId: NodeJS.Timeout;
-    if (isTimerRunning && timeLeft > 0) {
-      timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-    } else if (timeLeft === 0) {
+    const fetchCurrentInterview = async () => {
+      try {
+        const response = await fetchApi("/interviews/current", { method: "GET" });
+        if (response) {
+          setInterview(response);
+        } else {
+          setErrorMessage("No current interview found. Please start a new interview.");
+        }
+      } catch (error) {
+        console.error("Error fetching interview:", error);
+        setErrorMessage("Failed to load the interview. Please try again.");
+      }
+    };
+
+    fetchCurrentInterview();
+  }, [fetchApi, setInterview]);
+
+  const handleStartRecording = useCallback(() => {
+    setIsRecording(true);
+    setIsTimerRunning(true);
+    setHasRecordingStopped(false);
+    startRecording();
+  }, [startRecording]);
+
+  const handleStopRecording = useCallback(
+    async (transcription: string, audioUrl: string) => {
       setIsRecording(false);
       setIsTimerRunning(false);
       setHasRecordingStopped(true);
+      setTranscription(transcription);
+      setS3Url(audioUrl);
+      setSaveStatus('saving');
+
+      try {
+        if (interview) {
+          const currentQuestion = interview.questions[interview.currentQuestionIndex];
+          await fetchApi(`/interviews/${interview.id}/questions/${currentQuestion.id}/answer`, {
+            method: "POST",
+            body: JSON.stringify({ 
+              answer: transcription, 
+              audioUrl 
+            }),
+          });
+          updateQuestion(currentQuestion.id, { userAnswer: transcription, recordedAnswer: audioUrl });
+          setSaveStatus('success');
+        }
+      } catch (error) {
+        console.error("Error saving recorded answer:", error);
+        setSaveStatus('error');
+        setErrorMessage("Failed to save your answer. Please try again.");
+      }
+    },
+    [fetchApi, interview, updateQuestion]
+  );
+
+  const handleNextQuestion = useCallback(async () => {
+    if (interview) {
+      if (interview.currentQuestionIndex < interview.questions.length - 1) {
+        setCurrentQuestionIndex(interview.currentQuestionIndex + 1);
+        setSaveStatus('idle');
+        setHasRecordingStopped(false);
+        setTranscription("");
+        setS3Url("");
+      } else {
+        // Mark the interview as complete
+        try {
+          await fetchApi(`/interviews/${interview.id}/complete`, {
+            method: "POST",
+          });
+          router.push("/dashboard/interview/summary");
+        } catch (error) {
+          console.error("Error completing interview:", error);
+          setErrorMessage("Failed to complete the interview. Please try again.");
+        }
+      }
     }
-    return () => clearTimeout(timerId);
-  }, [timeLeft, isTimerRunning]);
+  }, [interview, setCurrentQuestionIndex, router, fetchApi]);
 
-  const handlePlay = () => {
-    console.log("Play button clicked");
-    if (!question) {
-      console.error("No question available in the interview store. Using placeholder question.");
-      setDisplayText(placeholderQuestion.question);
-    } else {
-      setDisplayText(question);
-    }
-    setTimeLeft(120); // Reset timer to 2 minutes
-    setIsTimerRunning(true); // Start the timer
-    setHasRecordingStopped(false);
-    setAudioURL(''); // Reset audioURL when starting a new recording
-    setTranscription(''); // Reset transcription
-    setS3Url(''); // Reset S3 URL
-    setError(null); // Clear any previous errors
-    setIsRecording(true); // Start recording
-  };
+  if (errorMessage) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <Card className="w-full max-w-2xl">
+          <CardContent>
+            <p className="text-red-500 text-center">{errorMessage}</p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="mt-4 bg-blue-500 hover:bg-blue-600"
+            >
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const handleStopRecording = useCallback((transcription: string, audioUrl: string) => {
-    setIsRecording(false);
-    setIsTimerRunning(false);
-    setHasRecordingStopped(true);
-    setTranscription(transcription);
-    setS3Url(audioUrl);
-    setRecordedAnswer(transcription);
-    setIsLoading(false);
-  }, [setRecordedAnswer]);
+  if (!interview) {
+    return <div>Loading interview...</div>;
+  }
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-  };
+  const currentQuestion = interview.questions[interview.currentQuestionIndex];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      <Card className="w-full max-w-2xl mb-8">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>User Information</CardTitle>
+          <CardTitle>Interview Question {interview.currentQuestionIndex + 1}/{interview.questions.length}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Enable Video Microphone to start your AI generated mock interview.</p>
-        </CardContent>
-      </Card>
-      <div className="flex flex-col items-center space-y-4">
-        <div className="relative w-40 h-40 md:w-[400px] md:h-[400px]">
-          <Image
-            src="/images/interview/avatar.png"
-            alt="Avatar"
-            layout="fill"
-            objectFit="cover"
-            className="rounded-full"
-          />
-          <Button
-            className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full w-12 h-12 md:w-24 md:h-24 flex items-center justify-center bg-white bg-opacity-70 hover:bg-opacity-90`}
-            onClick={handlePlay}
-          >
-            <span className="text-blue-500 text-2xl md:text-4xl">▶</span>
-          </Button>
-        </div>
-        {isTimerRunning && (
-          <div className="mt-2 text-xl font-bold">
-            Time remaining: {formatTime(timeLeft)}
+          <p className="text-lg mb-4">{currentQuestion.question}</p>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/images/interview/avatar.png"
+              alt="Interview Avatar"
+              width={200}
+              height={200}
+              className="rounded-full"
+            />
           </div>
-        )}
-        {displayText && (
-          <div className="mt-4 p-4 bg-gray-100 rounded-lg max-w-2xl text-center">
-            {displayText}
-          </div>
-        )}
-        <div className="flex flex-col items-center space-y-4 w-full max-w-2xl">
-          <AudioRecorderUploader 
-            isRecording={isRecording} 
-            onStopRecording={handleStopRecording}
-            setIsRecording={setIsRecording}
-            setAudioURL={setAudioURL}
-            setAudioFile={() => {}} // This is no longer needed as we're handling file upload in the AudioRecorderUploader
-            isDisabled={hasRecordingStopped}
+          <Visualizer
+            isRecording={isRecording}
+            isTimerRunning={isTimerRunning}
+            hasRecordingStopped={hasRecordingStopped}
+            transcription={transcription}
           />
-          {audioURL && (
-            <div className="mt-4">
-              <p>Your recorded answer:</p>
-              <audio src={audioURL} controls />
-            </div>
+          <div className="flex justify-center mt-4">
+            {!isRecording && !hasRecordingStopped && (
+              <Button onClick={handleStartRecording} className="bg-blue-500 hover:bg-blue-600">
+                Start Recording
+              </Button>
+            )}
+            {isRecording && (
+              <Button onClick={() => stopRecording(handleStopRecording)} className="bg-red-500 hover:bg-red-600">
+                Stop Recording
+              </Button>
+            )}
+          </div>
+          {saveStatus === 'saving' && (
+            <p className="mt-2 text-yellow-500">Saving your answer...</p>
           )}
-          {transcription && (
-            <div className="mt-4">
-              <p>Transcription:</p>
-              <p>{transcription}</p>
-            </div>
+          {saveStatus === 'success' && (
+            <p className="mt-2 text-green-500">Your answer has been saved successfully!</p>
           )}
-          {s3Url && (
-            <div className="mt-4">
-              <p>S3 URL:</p>
-              <a href={s3Url} target="_blank" rel="noopener noreferrer">{s3Url}</a>
-            </div>
+          {saveStatus === 'error' && (
+            <p className="mt-2 text-red-500">There was an error saving your answer. Please try again.</p>
           )}
           {hasRecordingStopped && (
-            <Button 
-              onClick={() => router.push('/dashboard/interview/summary')}
+            <Button
+              onClick={handleNextQuestion}
               className="mt-4 bg-green-500 hover:bg-green-600"
-              disabled={isLoading}
+              disabled={saveStatus === 'saving'}
             >
-              View AI Feedback
+              {interview.currentQuestionIndex < interview.questions.length - 1 ? "Next Question" : "Finish Interview"}
             </Button>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

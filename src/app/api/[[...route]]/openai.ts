@@ -1,6 +1,5 @@
 import { Hono } from 'hono'
 import { OpenAI } from 'openai'
-import uploadToS3 from '../../../lib/uploader'
 
 const app = new Hono()
 
@@ -8,30 +7,50 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-app.post('/tts', async (c) => {
-  try {
-    const { text, voice } = await c.req.json()
+// ... (keep the existing /tts endpoint)
 
-    if (!text) {
-      return c.json({ error: 'Text is required' }, 400)
+app.post('/generate-questions', async (c) => {
+  try {
+    const { jobTitle, jobDescription, skills } = await c.req.json()
+
+    if (!jobTitle || !jobDescription || !skills) {
+      return c.json({ error: 'Title, description, and skills are required' }, 400)
     }
 
-    const mp3 = await openai.audio.speech.create({
-      model: "tts-1",
-      voice: voice || "alloy",
-      input: text,
+    const prompt = `Generate 5 interview questions based on the following information:
+    Title: ${jobTitle}
+    Description: ${jobDescription}
+    Required Skills: ${skills}
+    
+    Provide the questions in the following JSON format:
+    {
+      "questions": [
+        {
+          "question": "Question text here"
+        },
+        ...
+      ]
+    }
+    
+    Ensure the questions are relevant to the provided information and cover a range of topics suitable for the position.`
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: "You are a helpful assistant that generates interview questions." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
     })
 
-    const buffer = Buffer.from(await mp3.arrayBuffer())
-    const fileName = `speech-${Date.now()}.mp3`
+    const questions = JSON.parse(response.choices[0].message.content || '{"questions": []}')
+    console.log("generatedQuestions======================", questions)
 
-    const audioUrl = await uploadToS3(buffer, fileName, 'audio/mpeg')
-
-    return c.json({ audioUrl })
+    return c.json({questions})
 
   } catch (error) {
-    console.error('TTS Error:', error)
-    return c.json({ error: 'Failed to generate speech' }, 500)
+    console.error('Question Generation Error:', error)
+    return c.json({ error: 'Failed to generate interview questions' }, 500)
   }
 })
 

@@ -1,6 +1,6 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, boolean, jsonb } from 'drizzle-orm/pg-core';
 
-// Users table
+// Users table (unchanged)
 export const users = pgTable('users', {
     id: text('id').primaryKey(),
     name: text('name').notNull(),
@@ -8,24 +8,27 @@ export const users = pgTable('users', {
     createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
-// Interviews table
+// Updated Interviews table
 export const interviews = pgTable('interviews', {
     id: uuid('id').defaultRandom().primaryKey(),
     userId: text('user_id').references(() => users.id).notNull(),
-    title: text('title').notNull(),
     jobTitle: text('job_title').notNull(),
     jobDescription: text('job_description'),
+    skills: text('skills').array().notNull(),
     date: timestamp('date').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull()
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    completed: boolean('completed').default(false).notNull(),
+    questions: jsonb('questions')
 });
 
-// Interview questions table
+// Interview questions table (you might not need this anymore)
 export const interviewQuestions = pgTable('interview_questions', {
     id: uuid('id').defaultRandom().primaryKey(),
     interviewId: uuid('interview_id').references(() => interviews.id).notNull(),
     question: text('question').notNull(),
+    audioUrl: text('audio_url'),
     answer: text('answer'),
-    feedback: text('answer'),
-    suggested: text('answer'),
+    feedback: text('feedback'),
+    suggested: text('suggested'),
     createdAt: timestamp('created_at').defaultNow().notNull()
 });
