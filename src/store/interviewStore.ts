@@ -34,6 +34,7 @@ interface InterviewState {
 
 const useInterviewStore = create<InterviewState>((set) => ({
   interview: null,
+  currentQuestionIndex: 0,
   setInterview: (interview) => set({ interview }),
   setCurrentQuestionIndex: (index) => 
     set((state) => ({

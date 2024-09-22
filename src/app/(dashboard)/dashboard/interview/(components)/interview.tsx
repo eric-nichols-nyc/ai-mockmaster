@@ -33,6 +33,7 @@ export default function Interview() {
     const fetchCurrentInterview = async () => {
       try {
         const response = await fetchApi("/interviews/current", { method: "GET" });
+        console.log('response', response);
         if (response) {
           setInterview(response);
         } else {
@@ -45,7 +46,7 @@ export default function Interview() {
     };
 
     fetchCurrentInterview();
-  }, [fetchApi, setInterview]);
+  }, []);
 
   const handleStartRecording = useCallback(() => {
     setIsRecording(true);
@@ -130,14 +131,11 @@ export default function Interview() {
     return <div>Loading interview...</div>;
   }
 
-  const currentQuestion = interview.questions[interview.currentQuestionIndex];
+  const currentQuestion = interview.questions[0];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle>Interview Question {interview.currentQuestionIndex + 1}/{interview.questions.length}</CardTitle>
-        </CardHeader>
         <CardContent>
           <p className="text-lg mb-4">{currentQuestion.question}</p>
           <div className="flex justify-center mb-4">
@@ -150,20 +148,12 @@ export default function Interview() {
             />
           </div>
           <Visualizer
-            isRecording={isRecording}
-            isTimerRunning={isTimerRunning}
-            hasRecordingStopped={hasRecordingStopped}
-            transcription={transcription}
+            setHasRecordingStopped={setHasRecordingStopped}
           />
           <div className="flex justify-center mt-4">
-            {!isRecording && !hasRecordingStopped && (
-              <Button onClick={handleStartRecording} className="bg-blue-500 hover:bg-blue-600">
-                Start Recording
-              </Button>
-            )}
-            {isRecording && (
-              <Button onClick={() => stopRecording(handleStopRecording)} className="bg-red-500 hover:bg-red-600">
-                Stop Recording
+            {isRecording && hasRecordingStopped && (
+              <Button onClick={() => stopRecording()} className="bg-red-500 hover:bg-red-600">
+                Submit
               </Button>
             )}
           </div>

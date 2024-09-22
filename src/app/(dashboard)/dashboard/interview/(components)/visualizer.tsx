@@ -1,12 +1,17 @@
 "use client";
 import { useEffect } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
-const Visualizer = () => {
+
+interface VisualizerProps {
+  setHasRecordingStopped: (value: boolean) => void;
+}
+
+const Visualizer: React.FC<VisualizerProps> = ({ setHasRecordingStopped }) => {
   const recorderControls = useVoiceVisualizer();
   const {
-    // ... (Extracted controls and states, if necessary)
     recordedBlob,
     error,
+    isRecordingInProgress,
   } = recorderControls;
 
   // Get the recorded audio blob
@@ -14,7 +19,8 @@ const Visualizer = () => {
     if (!recordedBlob) return;
 
     console.log(recordedBlob);
-  }, [recordedBlob, error]);
+    setHasRecordingStopped(true);
+  }, [recordedBlob, setHasRecordingStopped]);
 
   // Get the error when it occurs
   useEffect(() => {
@@ -22,16 +28,22 @@ const Visualizer = () => {
 
     console.error(error);
   }, [error]);
+
+  // Reset hasRecordingStopped when starting a new recording
+  useEffect(() => {
+    if (isRecordingInProgress) {
+      setHasRecordingStopped(false);
+    }
+  }, [isRecordingInProgress, setHasRecordingStopped]);
+
   return (
     <div>
-      {" "}
       <VoiceVisualizer 
-      controls={recorderControls} 
-      width={500} 
-      height={100} 
-      backgroundColor="transparent"
-      mainBarColor="black"
-
+        controls={recorderControls} 
+        width={500} 
+        height={100} 
+        backgroundColor="transparent"
+        mainBarColor="black"
       />
     </div>
   );

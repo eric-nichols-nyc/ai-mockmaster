@@ -21,6 +21,7 @@ const InterviewForm: React.FC = () => {
   const [jobTitle, setTitle] = useState('frontend dev');
   const [jobDescription, setDescription] = useState('frontend dev wanted with react experience');
   const [skillsInput, setSkillsInput] = useState('react, redux');
+  const [interviewId, setInterviewId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
@@ -56,6 +57,7 @@ const InterviewForm: React.FC = () => {
 
         // Set the interview in the store
         setInterview(newInterview);
+        setInterviewId(newInterview.id);
 
         // Set isSubmitted to true to show the Next button
         setIsSubmitted(true);
@@ -84,7 +86,7 @@ const InterviewForm: React.FC = () => {
   };
 
   const handleNext = () => {
-    router.push('/dashboard/interview');
+    router.push(`/dashboard/interview/${interviewId}/start`);
   };
 
   return (
