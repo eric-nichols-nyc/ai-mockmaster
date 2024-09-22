@@ -29,17 +29,20 @@ const app = new Hono()
 app.post('/', async (c) => {
   console.log('Transcribing...')
   const body = await c.req.parseBody()
+  console.log('Received body:', body)
 
   let audioFile;
   if (body.audio && body.audio instanceof File) {
     audioFile = body.audio;
+    console.log('Audio file received:', audioFile.name, audioFile.type, audioFile.size)
   } else {
+    console.error('Invalid audio file:', body.audio)
     throw new HTTPException(400, { message: 'No valid audio file provided' })
   }
-
+  
   try {
     // Upload to S3
-    const fileKey = `${uuidv4()}.mp3`
+    const fileKey = `${uuidv4()}.webm`
     const arrayBuffer = await audioFile.arrayBuffer()
     const uploadParams = {
       Bucket: process.env.S3_BUCKET_NAME,
@@ -51,6 +54,7 @@ app.post('/', async (c) => {
     await s3Client.send(new PutObjectCommand(uploadParams))
 
     const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`
+    console.log('File uploaded to S3:', s3Url)
 
     // Call OpenAI API with S3 URL
     const response = await fetch(s3Url);
@@ -65,6 +69,7 @@ app.post('/', async (c) => {
       model: 'whisper-1',
     })
 
+    console.log('Transcription completed:', transcription.text)
     return c.json({ transcription: transcription.text, audioUrl: s3Url })
   } catch (error) {
     console.error('Error during transcription or upload:', error)

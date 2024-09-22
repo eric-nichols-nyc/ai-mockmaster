@@ -5,6 +5,5 @@ import postgres from 'postgres';
 if (typeof window !== 'undefined') {
   throw new Error('This module should only be used on the server side');
 }
-console.log('test ',process.env.NEON_DB_URL!)
 const client = postgres(process.env.NEON_DB_URL!);
 export const db = drizzle(client);

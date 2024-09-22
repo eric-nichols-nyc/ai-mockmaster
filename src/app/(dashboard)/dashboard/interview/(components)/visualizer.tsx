@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
+import useInterviewStore from "@/store/interviewStore";
 
 interface VisualizerProps {
   setHasRecordingStopped: (value: boolean) => void;
@@ -14,13 +15,16 @@ const Visualizer: React.FC<VisualizerProps> = ({ setHasRecordingStopped }) => {
     isRecordingInProgress,
   } = recorderControls;
 
+  const { setCurrentBlob } = useInterviewStore();
+
   // Get the recorded audio blob
   useEffect(() => {
     if (!recordedBlob) return;
 
     console.log(recordedBlob);
     setHasRecordingStopped(true);
-  }, [recordedBlob, setHasRecordingStopped]);
+    setCurrentBlob(recordedBlob); // Store the blob in the interviewStore
+  }, [recordedBlob, setHasRecordingStopped, setCurrentBlob]);
 
   // Get the error when it occurs
   useEffect(() => {

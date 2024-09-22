@@ -155,6 +155,9 @@ app.post('/:id/questions/:questionId/answer', zValidator('json', saveAnswerSchem
 
     return c.json(updatedQuestion[0])
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ error: 'Invalid input', details: error.errors }, 400)
+    }
     console.error('Error saving answer:', error)
     return c.json({ error: 'Failed to save answer' }, 500)
   }

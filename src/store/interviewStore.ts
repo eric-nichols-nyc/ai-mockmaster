@@ -20,21 +20,25 @@ export interface Interview {
   summary?: string;
   improvements?: string[];
   keyTakeaways?: string[];
+  currentBlob?: Blob;
 }
 
 interface InterviewState {
   interview: Interview | null;
+  currentBlob?: Blob | null; // New field for storing the current
   setInterview: (interview: Interview) => void;
   setCurrentQuestionIndex: (index: number) => void;
   updateQuestion: (questionId: string, updates: Partial<Question>) => void;
   setSummary: (summary: string) => void;
   setImprovements: (improvements: string[]) => void;
   setKeyTakeaways: (keyTakeaways: string[]) => void;
+  setCurrentBlob: (blob: Blob) => void; // New function to set the current blob
 }
 
 const useInterviewStore = create<InterviewState>((set) => ({
   interview: null,
   currentQuestionIndex: 0,
+  currentBlob: null,
   setInterview: (interview) => set({ interview }),
   setCurrentQuestionIndex: (index) => 
     set((state) => ({
@@ -69,6 +73,12 @@ const useInterviewStore = create<InterviewState>((set) => ({
     set((state) => ({
       interview: state.interview
         ? { ...state.interview, keyTakeaways }
+        : null
+    })),
+  setCurrentBlob: (blob) =>
+    set((state) => ({
+      interview: state.interview
+        ? { ...state.interview, currentBlob: blob }
         : null
     })),
 }))
