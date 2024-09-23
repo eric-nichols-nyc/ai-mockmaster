@@ -50,32 +50,25 @@ export default function Interview() {
   const handleSubmitRecording = useCallback(
     async () => {
       setSaveStatus('saving');
-      console.log('test')
       try {
-        console.log('try', interview, interview?.currentBlob)
         if (interview && interview.currentBlob) {
           const currentQuestion = interview.questions[0];
           const audioFile = new File([interview.currentBlob], 'audio.webm', { type: interview.currentBlob.type });
-          console.log(audioFile)
-          // Create a FormData object to send the blob
           const formData = new FormData();
           formData.append('audio', audioFile, 'audio.webm');
-          // Post to /api/transcript
           const transcriptResponse = await fetchApi("/transcript", {
             method: "POST",
             body: formData,
           });
-          console.log('transcriptResponse', transcriptResponse);
 
           if (transcriptResponse && transcriptResponse.transcription) {
             setTranscription(transcriptResponse.transcription);
 
-            // Update the interview with the transcription
             const updatedResponse = await fetchApi(`/interviews/${interview.id}/questions/${currentQuestion.id}/answer`, {
               method: "POST",
               body: JSON.stringify({
                 answer: transcriptResponse.transcription,
-                audioUrl: transcriptResponse.audioUrl, // Use the audioUrl from the transcriptResponse
+                audioUrl: transcriptResponse.audioUrl,
               }),
             });
 
@@ -107,7 +100,6 @@ export default function Interview() {
   const handleNextQuestion = useCallback(async () => {
     if (interview) {
       if (interview.questions.length > 1) {
-        // Remove the first question as it's been answered
         const updatedQuestions = interview.questions.slice(1);
         setInterview({ ...interview, questions: updatedQuestions });
         setSaveStatus('idle');
@@ -115,7 +107,6 @@ export default function Interview() {
         setS3Url("");
         setHasRecordingStopped(false);
       } else {
-        // Mark the interview as complete
         try {
           await fetchApi(`/interviews/${interview.id}/complete`, {
             method: "POST",
@@ -131,13 +122,13 @@ export default function Interview() {
 
   if (errorMessage) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Card className="w-full max-w-2xl">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 gradient-bg">
+        <Card className="w-full max-w-2xl card-shadow">
           <CardContent>
-            <p className="text-red-500 text-center">{errorMessage}</p>
+            <p className="text-red-500 text-center font-semibold">{errorMessage}</p>
             <Button
               onClick={() => {setIsInitialFetch(true); setErrorMessage(null);}}
-              className="mt-4 bg-blue-500 hover:bg-blue-600"
+              className="mt-4 button-gradient w-full"
             >
               Retry
             </Button>
@@ -148,23 +139,24 @@ export default function Interview() {
   }
 
   if (!interview || interview.questions.length === 0) {
-    return <div>Loading interview...</div>;
+    return <div className="text-center text-2xl font-bold text-purple-800">Loading interview...</div>;
   }
 
   const currentQuestion = interview.questions[0];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-2xl">
-        <CardContent>
-          <p className="text-lg mb-4">{currentQuestion.question}</p>
-          <div className="flex justify-center mb-4">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 gradient-bg">
+      <Card className="w-full max-w-2xl card-shadow">
+        <CardContent className="p-6">
+          <h2 className="text-2xl mb-6 text-center">{currentQuestion.question}</h2>
+          <div className="flex justify-center mb-6 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-300 to-purple-300 rounded-full blur opacity-75"></div>
             <Image
               src="/images/interview/avatar.png"
               alt="Interview Avatar"
               width={200}
               height={200}
-              className="rounded-full"
+              className="rounded-full relative z-10"
             />
           </div>
           <Visualizer
@@ -174,29 +166,31 @@ export default function Interview() {
             setHasRecordingStopped={setHasRecordingStopped}
           />
           {hasRecordingStopped && saveStatus !== 'success' && (
-            <div className="flex justify-center mt-4">
-              <Button onClick={handleSubmitRecording} className="bg-blue-500 hover:bg-blue-600">
+            <div className="flex justify-center mt-6">
+              <Button onClick={handleSubmitRecording} className="button-gradient">
                 Submit
               </Button>
             </div>
           )}
           {saveStatus === 'saving' && (
-            <p className="mt-2 text-yellow-500">Processing your answer...</p>
+            <p className="mt-4 text-yellow-600 font-semibold text-center">Processing your answer...</p>
           )}
           {saveStatus === 'success' && (
-            <p className="mt-2 text-green-500">Your answer has been processed and saved successfully!</p>
+            <p className="mt-4 text-green-600 font-semibold text-center">Your answer has been processed and saved successfully!</p>
           )}
           {saveStatus === 'error' && (
-            <p className="mt-2 text-red-500">There was an error processing your answer. Please try again.</p>
+            <p className="mt-4 text-red-600 font-semibold text-center">There was an error processing your answer. Please try again.</p>
           )}
           {saveStatus === 'success' && (
-            <Button
-              onClick={handleNextQuestion}
-              className="mt-4 bg-green-500 hover:bg-green-600"
-              disabled={saveStatus === 'saving'}
-            >
-              {interview.questions.length > 1 ? "Next Question" : "Finish Interview"}
-            </Button>
+            <div className="flex justify-center mt-6">
+              <Button
+                onClick={handleNextQuestion}
+                className="button-gradient"
+                disabled={saveStatus === 'saving'}
+              >
+                {interview.questions.length > 1 ? "Next Question" : "Finish Interview"}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

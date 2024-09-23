@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Recording and Saving Answer Flowchart</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+</head>
+<body>
+    <h1>User Recording and Saving Answer Flowchart</h1>
+    <div class="mermaid">
+        graph TD
+        A[Start] --> B[User initiates recording]
+        B --> C[Audio recording begins]
+        C --> D{Is user speaking?}
+        D -->|Yes| E[Capture audio]
+        E --> D
+        D -->|No| F{Stop recording?}
+        F -->|No| D
+        F -->|Yes| G[Stop recording]
+        G --> H[Process recorded audio]
+        H --> I[Display playback options]
+        I --> J{User action?}
+        J -->|Play| K[Play recorded audio]
+        K --> J
+        J -->|Re-record| B
+        J -->|Save| L[Save recorded answer]
+        L --> M[Associate answer with question]
+        M --> N[Update interview progress]
+        N --> O[End]
+    </div>
+</body>
+</html>
