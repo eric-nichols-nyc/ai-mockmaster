@@ -44,14 +44,14 @@ const InterviewForm: React.FC = () => {
         method: 'POST',
         body: JSON.stringify(validatedData),
       });
-      console.log('data', data.questions.questions)
-      if (data.questions) {
+      // check to make sure data.questions is an array
+      if (Array.isArray(data.questions)) {
         // Create a new interview in the database
         const newInterview = await fetchApi('/interviews', {
           method: 'POST',
           body: JSON.stringify({ 
             ...validatedData,
-            questions: data.questions.questions
+            questions: data.questions
           }),
         });
 
@@ -62,6 +62,7 @@ const InterviewForm: React.FC = () => {
         // Set isSubmitted to true to show the Next button
         setIsSubmitted(true);
       } else if (data.error) {
+        console.log('error', data.error);
         throw new Error(data.error);
       } else {
         throw new Error('Invalid response from server');

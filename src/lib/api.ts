@@ -32,6 +32,7 @@ export const useApi = () => {
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('api error = ',error);
       throw new Error(error.message || 'An error occurred');
     }
 

@@ -20,6 +20,7 @@ const createInterviewSchema = z.object({
     skills: z.array(z.string()),
     questions: z.array(z.object({
       question: z.string().min(1),
+      suggested: z.string().min(1),
     })).nonempty(), // Ensure there's at least one question
   }),
 })
@@ -68,7 +69,6 @@ app.post('/', zValidator('json', createInterviewSchema.shape.body), async (c) =>
 
   try {
     const { jobTitle, jobDescription, skills, questions } = c.req.valid('json')
-    console.log("questions======================", questions)
 
     const newInterview = await db.transaction(async (tx) => {
       const [interview] = await tx.insert(interviews).values({

@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI MockMaster
 
-## Getting Started
+[... Previous content remains unchanged ...]
 
-First, run the development server:
+## Security Best Practices
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+[... Security Best Practices content remains unchanged ...]
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## AI Integration
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+AI MockMaster leverages OpenAI's powerful AI models to enhance the interview simulation experience. The integration is primarily handled in the `src/app/api/[[...route]]/openai.ts` file. Here's an overview of how AI is utilized in the project:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Interview Question Generation**
+   The application uses OpenAI's GPT-3.5-turbo model to generate relevant interview questions based on the job title, description, and required skills. This ensures that each mock interview is tailored to the specific job the user is preparing for.
 
-## Learn More
+   ```typescript
+   app.post('/generate-questions', async (c) => {
+     // ... request parsing ...
 
-To learn more about Next.js, take a look at the following resources:
+     const prompt = `Generate 5 interview questions based on the following information:
+     Title: ${jobTitle}
+     Description: ${jobDescription}
+     Required Skills: ${skills}
+     
+     Provide the questions in the following JSON format:
+     {
+       "questions": [
+         {
+           "question": "Question text here"
+         },
+         ...
+       ]
+     }
+     
+     Ensure the questions are relevant to the provided information and cover a range of topics suitable for the position.`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+     const response = await openai.chat.completions.create({
+       model: "gpt-3.5-turbo",
+       messages: [
+         { role: "system", content: "You are a helpful assistant that generates interview questions." },
+         { role: "user", content: prompt }
+       ],
+       temperature: 0.7,
+     })
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+     // ... response handling ...
+   })
+   ```
 
-## Deploy on Vercel
+2. **Text-to-Speech Functionality**
+   The application uses OpenAI's text-to-speech model to convert generated questions into audio, providing a more realistic interview experience.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```typescript
+   app.post('/text-to-speech', async (c) => {
+     // ... request parsing ...
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+     const mp3 = await openai.audio.speech.create({
+       model: "tts-1",
+       voice: "onyx",
+       input: text,
+     })
+
+     // ... audio file handling ...
+   })
+   ```
+
+These AI integrations enable AI MockMaster to:
+- Generate contextually relevant interview questions based on specific job details.
+- Provide audio versions of the questions, simulating a real interviewer's voice.
+
+To further enhance the AI capabilities, consider:
+- Implementing AI-driven feedback on user responses.
+- Using AI to analyze speech patterns and provide communication tips.
+- Integrating sentiment analysis to gauge the confidence and clarity of responses.
+
+Note: Ensure that you comply with OpenAI's usage policies and implement proper error handling and rate limiting when using these AI services.
+
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines and code of conduct before submitting pull requests.
+
+## License
+
+[Add your chosen license here]
