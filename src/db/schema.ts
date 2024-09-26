@@ -24,11 +24,18 @@ export const interviews = pgTable('interviews', {
 // Interview questions table (you might not need this anymore)
 export const interviewQuestions = pgTable('interview_questions', {
     id: uuid('id').defaultRandom().primaryKey(),
+    grade: text('grade'),
     interviewId: uuid('interview_id').references(() => interviews.id).notNull(),
     question: text('question').notNull(),
     audioUrl: text('audio_url'),
     answer: text('answer'),
     feedback: text('feedback'),
     suggested: text('suggested'),
+    improvements: text('improvements').array(),
+    keyTakeaways: text('key_takeaways').array(),
     createdAt: timestamp('created_at').defaultNow().notNull()
 });
+
+
+export type Interview = typeof interviews.$inferSelect;
+export type InterviewQuestion = typeof interviewQuestions.$inferSelect;

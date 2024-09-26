@@ -3,7 +3,7 @@ import Hero from './_components/hero'
 import Features from './_components/features'
 import Reviews from './_components/reviews'
 
-const Page = () => {
+const Home = () => {
   return (
     <div>
       <Hero />
@@ -13,4 +13,4 @@ const Page = () => {
   )
 }
 
-export default Page
+export default Home

@@ -1,19 +1,20 @@
 'use client';
 
 import React from 'react';
-import InterviewForm from './(components)/interview-form';
-import { useSession } from '@clerk/nextjs';
+import InterviewGenerationForm from './(components)/interview-generation-form';
 
-const InterviewPage = () => {
-  const session = useSession();
-  console.log('session', session);
+
+// do api call to load interview questions from database and display them in a list.
+
+
+const QuestionGeneratorPage = () => {
 
   return (
     <div className="flex flex-col items-center space-y-6 p-4">
       <h1 className="text-2xl font-bold mb-4">Interview Question Generator</h1>
-      <InterviewForm />
+      <InterviewGenerationForm />
     </div>
   );
 };
 
-export default InterviewPage;
+export default QuestionGeneratorPage;

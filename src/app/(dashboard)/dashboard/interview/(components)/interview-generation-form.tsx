@@ -18,9 +18,9 @@ const InterviewForm: React.FC = () => {
   const { setInterview } = useInterviewStore();
   const { fetchApi } = useApi();
 
-  const [jobTitle, setTitle] = useState('frontend dev');
-  const [jobDescription, setDescription] = useState('frontend dev wanted with react experience');
-  const [skillsInput, setSkillsInput] = useState('react, redux');
+  const [jobTitle, setTitle] = useState('fullstack developer');
+  const [jobDescription, setDescription] = useState('full-stack dev wanted with node experience');
+  const [skillsInput, setSkillsInput] = useState('node, aws');
   const [interviewId, setInterviewId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');

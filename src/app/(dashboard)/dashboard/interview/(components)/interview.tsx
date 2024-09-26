@@ -24,6 +24,7 @@ export default function Interview() {
   const [isInitialFetch, setIsInitialFetch] = useState(true);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -35,7 +36,6 @@ export default function Interview() {
         const response = await fetchApi("/interviews/current", {
           method: "GET",
         });
-        console.log("response", response);
         if (
           response &&
           JSON.stringify(response) !== JSON.stringify(interview)
@@ -59,6 +59,7 @@ export default function Interview() {
 
   const handleSubmitRecording = useCallback(async () => {
     setSaveStatus("saving");
+    setIsSubmittingRecording(true);
     try {
       if (interview && interview.currentBlob) {
         const currentQuestion = interview.questions[0];
@@ -106,6 +107,8 @@ export default function Interview() {
       console.error("Error processing recorded answer:", error);
       setSaveStatus("error");
       setErrorMessage("Failed to process your answer. Please try again.");
+    } finally {
+      setIsSubmittingRecording(false);
     }
   }, [fetchApi, interview, updateQuestion]);
 
@@ -147,7 +150,10 @@ export default function Interview() {
           setAudioUrl(response.audioUrl);
           if (audioRef.current) {
             audioRef.current.src = response.audioUrl;
-            audioRef.current.play();
+            audioRef.current.play().catch(error => {
+              console.error("Error playing audio:", error);
+              setErrorMessage("Failed to play audio. Please try again.");
+            });
           }
         }
       } catch (error) {
@@ -210,7 +216,7 @@ export default function Interview() {
             />
           </div>
           <div className="flex justify-center mb-4">
-          <Button 
+            <Button 
               onClick={handleTextToSpeech} 
               className="button-gradient"
               disabled={isLoadingAudio}
@@ -230,17 +236,17 @@ export default function Interview() {
           {hasRecordingStopped && saveStatus !== "success" && (
             <div className="flex justify-center mt-6">
               <Button
-                onClick={handleTextToSpeech}
+                onClick={handleSubmitRecording}
                 className="button-gradient"
-                disabled={isLoadingAudio}
+                disabled={isSubmittingRecording}
               >
-                {isLoadingAudio ? (
+                {isSubmittingRecording ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading Audio...
+                    Submitting...
                   </>
                 ) : (
-                  "Play Question Audio"
+                  "Submit Recording"
                 )}
               </Button>
             </div>
@@ -265,7 +271,6 @@ export default function Interview() {
               <Button
                 onClick={handleNextQuestion}
                 className="button-gradient"
-                disabled={saveStatus === "success"}
               >
                 {interview.questions.length > 1
                   ? "Next Question"

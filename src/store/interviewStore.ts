@@ -1,86 +1,68 @@
 import { create } from 'zustand'
+import { Interview } from '@/db/schema';
 
-export interface Question {
+/**
+ * This file contains two stores:
+ * 1. useInterviewStore: Holds the state of the interview.
+ * 2. useBlobStore: Holds the current blob state.
+ */
+
+type QuestionData = {
   id: string;
-  question: string;
-  answer: string;
-  userAnswer?: string;
-  recordedAnswer?: string;
   grade?: string;
+  question: string;
+  suggested?: string;
+  answer?: string;
+  audioUrl?: string;
   feedback?: string;
-}
-
-export interface Interview {
-  id: string;
-  title: string;
-  jobTitle: string;
-  jobDescription: string;
-  questions: Question[];
-  currentQuestionIndex: number;
-  summary?: string;
   improvements?: string[];
   keyTakeaways?: string[];
-  currentBlob?: Blob;
-}
+  createdAt: Date;
+};
 
 interface InterviewState {
   interview: Interview | null;
-  currentBlob?: Blob | null; // New field for storing the current
+  currentQuestionIndex: number;
   setInterview: (interview: Interview) => void;
   setCurrentQuestionIndex: (index: number) => void;
-  updateQuestion: (questionId: string, updates: Partial<Question>) => void;
-  setSummary: (summary: string) => void;
-  setImprovements: (improvements: string[]) => void;
-  setKeyTakeaways: (keyTakeaways: string[]) => void;
-  setCurrentBlob: (blob: Blob) => void; // New function to set the current blob
+  updateQuestion: (questionIndex: number, updates: Partial<QuestionData>) => void;
 }
 
 const useInterviewStore = create<InterviewState>((set) => ({
   interview: null,
   currentQuestionIndex: 0,
-  currentBlob: null,
   setInterview: (interview) => set({ interview }),
-  setCurrentQuestionIndex: (index) => 
-    set((state) => ({
-      interview: state.interview 
-        ? { ...state.interview, currentQuestionIndex: index }
-        : null
-    })),
-  updateQuestion: (questionId, updates) =>
-    set((state) => ({
-      interview: state.interview
-        ? {
-            ...state.interview,
-            questions: state.interview.questions.map((q) =>
-              q.id === questionId ? { ...q, ...updates } : q
-            ),
-          }
-        : null
-    })),
-  setSummary: (summary) =>
-    set((state) => ({
-      interview: state.interview
-        ? { ...state.interview, summary }
-        : null
-    })),
-  setImprovements: (improvements) =>
-    set((state) => ({
-      interview: state.interview
-        ? { ...state.interview, improvements }
-        : null
-    })),
-  setKeyTakeaways: (keyTakeaways) =>
-    set((state) => ({
-      interview: state.interview
-        ? { ...state.interview, keyTakeaways }
-        : null
-    })),
-  setCurrentBlob: (blob) =>
-    set((state) => ({
-      interview: state.interview
-        ? { ...state.interview, currentBlob: blob }
-        : null
-    })),
+  setCurrentQuestionIndex: (index) => set({ currentQuestionIndex: index }),
+  updateQuestion: (questionIndex, updates) =>
+    set((state) => {
+      if (!state.interview) return state;
+      
+      const questions: QuestionData[] = state.interview.questions 
+        ? (state.interview.questions as unknown as QuestionData[])
+        : [];
+
+      const updatedQuestions = questions.map((q, index) =>
+        index === questionIndex ? { ...q, ...updates } : q
+      );
+
+      return {
+        interview: {
+          ...state.interview,
+          questions: updatedQuestions as unknown as Interview['questions'],
+        },
+      };
+    }),
 }))
 
-export default useInterviewStore
+interface BlobState {
+  currentBlob: Blob | null;
+  setCurrentBlob: (blob: Blob) => void;
+}
+
+const useBlobStore = create<BlobState>((set) => ({
+  currentBlob: null,
+  setCurrentBlob: (blob) => set({ currentBlob: blob }),
+}))
+
+export { useInterviewStore, useBlobStore }
+export default useInterviewStore // For backward compatibility

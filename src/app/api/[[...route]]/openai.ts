@@ -48,6 +48,7 @@ app.post('/generate-questions', async (c) => {
     })
 
     const questionsAndAnswers = JSON.parse(response.choices[0].message.content || '{"questions": []}')
+    console.log('questionsAndAnswers = ',questionsAndAnswers)
     return c.json(questionsAndAnswers)
 
   } catch (error) {

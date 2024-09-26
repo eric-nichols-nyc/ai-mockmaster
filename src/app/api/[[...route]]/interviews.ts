@@ -43,6 +43,7 @@ const saveAnswerSchema = z.object({
 // GET / - List all interviews for the authenticated user
 app.get('/', async (c) => {
   const auth = getAuth(c);
+  console.log(auth)
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
   }

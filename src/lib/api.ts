@@ -41,3 +41,30 @@ export const useApi = () => {
 
   return { fetchApi };
 };
+
+export interface Interview {
+  id: string;
+  jobTitle: string;
+  questions: {
+    text: string;
+    answer: string;
+    feedback?: string;
+  }[];
+  summary: string;
+}
+
+export const useInterviews = () => {
+  const { fetchApi } = useApi();
+
+  const getInterviewById = async (id: string): Promise<Interview | null> => {
+    try {
+      const interview = await fetchApi(`/interviews/${id}`, { method: 'GET' });
+      return interview;
+    } catch (error) {
+      console.error('Error fetching interview:', error);
+      return null;
+    }
+  };
+
+  return { getInterviewById };
+};

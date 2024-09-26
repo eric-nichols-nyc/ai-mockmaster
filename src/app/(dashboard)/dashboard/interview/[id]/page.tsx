@@ -1,4 +1,6 @@
+"use client"
 import React from "react";
+import { useParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -8,8 +10,33 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { useInterviews, Interview } from "@/lib/api";
 
-const InterviewReviewPage = () => {
+const InterviewReviewPage: React.FC = () => {
+  const params = useParams();
+  const id = params.id as string;
+  const { getInterviewById } = useInterviews();
+  const [interview, setInterview] = React.useState<Interview | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchInterview = async () => {
+      const fetchedInterview = await getInterviewById(id);
+      console.log(fetchedInterview)
+      setInterview(fetchedInterview);
+      setLoading(false);
+    };
+    fetchInterview();
+  }, [id]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!interview) {
+    return <div>Interview not found</div>;
+  }
+
   return (
     <div className="container max-w-2xl mx-auto p-4">
       <Breadcrumb className="mb-4">
@@ -19,7 +46,7 @@ const InterviewReviewPage = () => {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Interview Review</BreadcrumbPage>
+            <BreadcrumbPage>Interview Review: {interview.jobTitle}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -30,56 +57,37 @@ const InterviewReviewPage = () => {
           <TabsTrigger value="summary">Summary</TabsTrigger>
         </TabsList>
         <TabsContent value="questions">
-          <Accordion type="multiple" className="w-full" defaultValue={["question"]}>
-            <AccordionItem value="question">
-              <AccordionTrigger>Question</AccordionTrigger>
-              <AccordionContent>
-                <Card className="mb-6">
-                  <CardHeader>
-                    <CardTitle>What is your greatest strength?</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p>
-                      My greatest strength is my ability to quickly adapt to new
-                      situations and learn new skills...
-                    </p>
-                  </CardContent>
-                </Card>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="feedback">
-              <AccordionTrigger>Feedback</AccordionTrigger>
-              <AccordionContent>
-                <p>
-                  Your answer demonstrates self-awareness and highlights a
-                  valuable skill. To improve, consider providing a specific
-                  example that illustrates how you have used this strength in a
-                  professional setting.
-                </p>
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="sample-response">
-              <AccordionTrigger>Sample Response</AccordionTrigger>
-              <AccordionContent>
-                <p>
-                  One of my greatest strengths is my adaptability. In my
-                  previous role as a project manager, we often faced unexpected
-                  challenges. For instance, when a key team member left
-                  mid-project, I quickly learned their responsibilities and
-                  redistributed tasks among the team. This allowed us to
-                  complete the project on time despite the setback. My ability
-                  to adapt not only helps me navigate challenges but also
-                  enables me to continually grow and take on new
-                  responsibilities.
-                </p>
-              </AccordionContent>
-            </AccordionItem>
+          <Accordion type="multiple" className="w-full">
+            {interview.questions.map((question, index) => (
+              <AccordionItem key={index} value={`question-${index}`}>
+                <AccordionTrigger>{question.text}</AccordionTrigger>
+                <AccordionContent>
+                  <Card className="mb-6">
+                    <CardHeader>
+                      <CardTitle>Your Answer</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p>{question.answer}</p>
+                    </CardContent>
+                  </Card>
+                  {question.feedback && (
+                    <Card className="mb-6">
+                      <CardHeader>
+                        <CardTitle>Feedback</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p>{question.feedback}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
           </Accordion>
         </TabsContent>
         <TabsContent value="summary">
           <h2 className="text-2xl font-bold mb-4">Interview Summary</h2>
-          {/* Add your summary content here */}
-          <p>Summary content goes here...</p>
+          <p>{interview.summary}</p>
         </TabsContent>
       </Tabs>
     </div>

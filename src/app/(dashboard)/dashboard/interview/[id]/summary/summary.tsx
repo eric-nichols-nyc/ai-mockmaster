@@ -2,41 +2,56 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import useInterviewStore from '@/store/interviewStore';
+import { useInterviewStore } from '@/store/interviewStore';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { Interview } from '@/db/schema';
 
-interface InterviewData {
-  grade: string;
+type QuestionData = {
+  id: string;
+  grade?: string;
   question: string;
-  userAnswer: string;
-  answer: string;
-  recordedAnswer: string;
-  feedback: string;
-  improvements: string[];
-  keyTakeaways: string[];
-}
+  suggested?: string;
+  answer?: string;
+  audioUrl?: string;
+  feedback?: string;
+  improvements?: string[];
+  keyTakeaways?: string[];
+  createdAt: Date;
+};
 
-const dummyInterview: InterviewData = {
-  grade: "F",
-  question: "Tell me about a time when you worked effectively in a team environment.",
-  userAnswer: "Please provide your answer here.",
-  answer: "I worked in a team environment for a software development company. During this time, I contributed to the development of a web application, where I was responsible for designing and implementing the user interface (UI) and backend functionality. I also had the opportunity to work on various aspects of the project, such as database design, API integration, and testing. The team's collaboration and communication were essential to the success of the project.",
-  recordedAnswer: "/mp3/speech.mp3",
-  feedback: "This answer is too generic and doesn't provide any specific examples of how the candidate demonstrates their teamwork skills. The candidate should provide concrete examples of situations where they have successfully worked in a team environment, highlighting their contributions and the positive outcomes. They should also mention specific skills that contribute to their teamwork abilities, such as communication, collaboration, conflict resolution, and problem-solving.",
-  improvements: [
-    "Provide specific examples of teamwork experiences and outcomes.",
-    "Highlight specific skills related to teamwork."
-  ],
-  keyTakeaways: [
-    "Specificity is crucial when answering behavioral questions.",
-    "Highlighting skills and experiences is more impactful than simply stating general traits."
-  ]
+const dummyInterview: Interview = {
+  id: 'dummy',
+  userId: 'dummy-user',
+  jobTitle: 'Software Developer',
+  jobDescription: 'Developing web applications',
+  skills: ['JavaScript', 'React', 'Node.js'],
+  date: new Date(),
+  createdAt: new Date(),
+  completed: false,
+  questions: [{
+    id: 'dummy-question',
+    grade: "F",
+    question: "Tell me about a time when you worked effectively in a team environment.",
+    suggested: "Please provide your answer here.",
+    answer: "I worked in a team environment for a software development company...",
+    audioUrl: "/mp3/speech.mp3",
+    feedback: "This answer is too generic and doesn't provide any specific examples...",
+    improvements: [
+      "Provide specific examples of teamwork experiences and outcomes.",
+      "Highlight specific skills related to teamwork."
+    ],
+    keyTakeaways: [
+      "Specificity is crucial when answering behavioral questions.",
+      "Highlighting skills and experiences is more impactful than simply stating general traits."
+    ],
+    createdAt: new Date('2024-09-24T17:40:20.227535Z')
+  }] as unknown as Interview['questions']
 }
 
 export default function Summary() {
-  const interviewData = useInterviewStore();
+  const { interview } = useInterviewStore();
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   
@@ -73,48 +88,62 @@ export default function Summary() {
   };
 
   const renderCards = () => {
-    const hasInterviewData = interviewData.question && interviewData.answer;
-    const data: InterviewData = hasInterviewData ? interviewData as InterviewData : dummyInterview;
-    console.log('Using data:', hasInterviewData ? 'interviewStore' : 'dummyInterview');
+    const data: Interview = interview || dummyInterview;
+    console.log('Using data:', interview ? 'interviewStore' : 'dummyInterview');
     console.log('Data:', JSON.stringify(data, null, 2));
 
-    const cardOrder: (keyof InterviewData)[] = ['grade', 'question', 'userAnswer', 'answer', 'recordedAnswer', 'feedback', 'improvements', 'keyTakeaways'];
+    const interviewCards = [
+      { key: 'jobTitle', title: 'Job Title' },
+      { key: 'jobDescription', title: 'Job Description' },
+      { key: 'skills', title: 'Skills' },
+      { key: 'date', title: 'Interview Date' },
+    ];
 
-    return cardOrder.map(key => {
-      if (key === 'grade') {
-        return (
+    const questionCards: (keyof QuestionData)[] = ['grade', 'question', 'answer', 'feedback', 'improvements', 'keyTakeaways'];
+
+    const questions: QuestionData[] = data.questions as unknown as QuestionData[];
+
+    return (
+      <>
+        {interviewCards.map(({ key, title }) => (
           <Card key={key} className="mb-4">
             <CardHeader>
-              <CardTitle>Grade</CardTitle>
+              <CardTitle>{title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>{data[key]}</p>
+              {Array.isArray(data[key as keyof Interview]) ? (
+                <ul className="list-disc pl-5">
+                  {(data[key as keyof Interview] as string[]).map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>{String(data[key as keyof Interview])}</p>
+              )}
             </CardContent>
           </Card>
-        );
-      } else if (key === 'recordedAnswer') {
-        return renderAudio(data[key]);
-      } else {
-        return (
+        ))}
+        {questions.length > 0 && questionCards.map(key => (
           <Card key={key} className="mb-4">
             <CardHeader>
               <CardTitle className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</CardTitle>
             </CardHeader>
             <CardContent>
-              {Array.isArray(data[key]) ? (
+              {Array.isArray(questions[0][key]) ? (
                 <ul className="list-disc pl-5">
-                  {(data[key] as string[]).map((item, index) => (
+                  {(questions[0][key] as string[]).map((item, index) => (
                     <li key={index}>{item}</li>
                   ))}
                 </ul>
               ) : (
-                <p>{String(data[key])}</p>
+                <p>{String(questions[0][key] || '')}</p>
               )}
             </CardContent>
           </Card>
-        );
-      }
-    });
+        ))}
+        {questions.length > 0 && questions[0].audioUrl && renderAudio(questions[0].audioUrl)}
+      </>
+    );
   };
 
   return (
