@@ -22,7 +22,7 @@ const Hero: React.FC = () => {
       
       {/* Right side - Content */}
       <div className={`w-1/2 flex flex-col justify-center items-start p-12 bg-white dark:bg-[#323232]`}>
-        <h1 className="text-5xl font-bold mb-6 text-gray-800 dark:text-white">Welcome to Our App</h1>
+        <h1 className="text-5xl font-bold mb-6 text-gray-800 dark:text-white">AI-Powered Interview Practice</h1>
         <p className="text-xl mb-10 text-gray-600 dark:text-gray-300">Discover amazing features and benefits that will transform your experience.</p>
         {isSignedIn ? (
           <Link href="/dashboard">
@@ -33,7 +33,7 @@ const Hero: React.FC = () => {
         ) : (
           <SignInButton mode="modal">
             <Button className="text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300 ease-in-out transform hover:scale-105">
-              Start Now
+              Get Started
             </Button>
           </SignInButton>
         )}

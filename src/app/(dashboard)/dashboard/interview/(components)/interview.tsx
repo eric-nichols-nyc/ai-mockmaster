@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import useInterviewStore from "@/store/interviewStore";
+import useInterviewStore, { useBlobStore, ExtendedInterview } from "@/store/interviewStore";
 import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
 import { Loader2 } from "lucide-react";
@@ -13,16 +13,14 @@ export default function Interview() {
   const router = useRouter();
   const { fetchApi } = useApi();
   const { interview, setInterview, updateQuestion } = useInterviewStore();
+  const { currentBlob } = useBlobStore();
 
-  const [transcription, setTranscription] = useState("");
-  const [s3Url, setS3Url] = useState("");
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "success" | "error"
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
   const [isInitialFetch, setIsInitialFetch] = useState(true);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
 
@@ -40,7 +38,7 @@ export default function Interview() {
           response &&
           JSON.stringify(response) !== JSON.stringify(interview)
         ) {
-          setInterview(response);
+          setInterview(response as ExtendedInterview);
         } else if (!response) {
           setErrorMessage(
             "No current interview found. Please start a new interview."
@@ -61,10 +59,10 @@ export default function Interview() {
     setSaveStatus("saving");
     setIsSubmittingRecording(true);
     try {
-      if (interview && interview.currentBlob) {
+      if (interview && currentBlob) {
         const currentQuestion = interview.questions[0];
-        const audioFile = new File([interview.currentBlob], "audio.webm", {
-          type: interview.currentBlob.type,
+        const audioFile = new File([currentBlob], "audio.webm", {
+          type: currentBlob.type,
         });
         const formData = new FormData();
         formData.append("audio", audioFile, "audio.webm");
@@ -74,8 +72,6 @@ export default function Interview() {
         });
 
         if (transcriptResponse && transcriptResponse.transcription) {
-          setTranscription(transcriptResponse.transcription);
-
           const updatedResponse = await fetchApi(
             `/interviews/${interview.id}/questions/${currentQuestion.id}/answer`,
             {
@@ -88,10 +84,9 @@ export default function Interview() {
           );
 
           if (updatedResponse && updatedResponse.audioUrl) {
-            setS3Url(updatedResponse.audioUrl);
             updateQuestion(currentQuestion.id, {
-              userAnswer: transcriptResponse.transcription,
-              recordedAnswer: updatedResponse.audioUrl,
+              answer: transcriptResponse.transcription,
+              audioUrl: updatedResponse.audioUrl,
             });
             setSaveStatus("success");
           } else {
@@ -110,7 +105,7 @@ export default function Interview() {
     } finally {
       setIsSubmittingRecording(false);
     }
-  }, [fetchApi, interview, updateQuestion]);
+  }, [fetchApi, interview, updateQuestion, currentBlob]);
 
   const handleNextQuestion = useCallback(async () => {
     if (interview) {
@@ -118,10 +113,7 @@ export default function Interview() {
         const updatedQuestions = interview.questions.slice(1);
         setInterview({ ...interview, questions: updatedQuestions });
         setSaveStatus("idle");
-        setTranscription("");
-        setS3Url("");
         setHasRecordingStopped(false);
-        setAudioUrl(null);
       } else {
         try {
           await fetchApi(`/interviews/${interview.id}/complete`, {
@@ -147,7 +139,6 @@ export default function Interview() {
           body: JSON.stringify({ text: interview.questions[0].question }),
         });
         if (response && response.audioUrl) {
-          setAudioUrl(response.audioUrl);
           if (audioRef.current) {
             audioRef.current.src = response.audioUrl;
             audioRef.current.play().catch(error => {

@@ -1,13 +1,7 @@
 import { create } from 'zustand'
-import { Interview } from '@/db/schema';
+import { Interview as BaseInterview } from '@/db/schema';
 
-/**
- * This file contains two stores:
- * 1. useInterviewStore: Holds the state of the interview.
- * 2. useBlobStore: Holds the current blob state.
- */
-
-type QuestionData = {
+export type QuestionData = {
   id: string;
   grade?: string;
   question: string;
@@ -20,12 +14,17 @@ type QuestionData = {
   createdAt: Date;
 };
 
+export interface ExtendedInterview extends BaseInterview {
+  currentBlob?: Blob;
+  questions: QuestionData[];
+}
+
 interface InterviewState {
-  interview: Interview | null;
+  interview: ExtendedInterview | null;
   currentQuestionIndex: number;
-  setInterview: (interview: Interview) => void;
+  setInterview: (interview: ExtendedInterview) => void;
   setCurrentQuestionIndex: (index: number) => void;
-  updateQuestion: (questionIndex: number, updates: Partial<QuestionData>) => void;
+  updateQuestion: (questionId: string, updates: Partial<QuestionData>) => void;
 }
 
 const useInterviewStore = create<InterviewState>((set) => ({
@@ -33,22 +32,18 @@ const useInterviewStore = create<InterviewState>((set) => ({
   currentQuestionIndex: 0,
   setInterview: (interview) => set({ interview }),
   setCurrentQuestionIndex: (index) => set({ currentQuestionIndex: index }),
-  updateQuestion: (questionIndex, updates) =>
+  updateQuestion: (questionId, updates) =>
     set((state) => {
       if (!state.interview) return state;
       
-      const questions: QuestionData[] = state.interview.questions 
-        ? (state.interview.questions as unknown as QuestionData[])
-        : [];
-
-      const updatedQuestions = questions.map((q, index) =>
-        index === questionIndex ? { ...q, ...updates } : q
+      const updatedQuestions = state.interview.questions.map((q) =>
+        q.id === questionId ? { ...q, ...updates } : q
       );
 
       return {
         interview: {
           ...state.interview,
-          questions: updatedQuestions as unknown as Interview['questions'],
+          questions: updatedQuestions,
         },
       };
     }),

@@ -1,11 +1,20 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
-import useInterviewStore from "@/store/interviewStore";
+import { useBlobStore } from "@/store/interviewStore";
 
 interface VisualizerProps {
   setHasRecordingStopped: (value: boolean) => void;
 }
+
+type AudioContextType = typeof AudioContext;
+
+interface ExtendedWindow extends Window {
+  AudioContext: AudioContextType;
+  webkitAudioContext?: AudioContextType;
+}
+
+declare const window: ExtendedWindow;
 
 const Visualizer: React.FC<VisualizerProps> = ({ setHasRecordingStopped }) => {
   const recorderControls = useVoiceVisualizer();
@@ -16,7 +25,7 @@ const Visualizer: React.FC<VisualizerProps> = ({ setHasRecordingStopped }) => {
     stopRecording,
   } = recorderControls;
 
-  const { setCurrentBlob } = useInterviewStore();
+  const { setCurrentBlob } = useBlobStore();
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [lastAudioTime, setLastAudioTime] = useState<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -29,7 +38,7 @@ const Visualizer: React.FC<VisualizerProps> = ({ setHasRecordingStopped }) => {
 
     console.log(recordedBlob);
     setHasRecordingStopped(true);
-    setCurrentBlob(recordedBlob); // Store the blob in the interviewStore
+    setCurrentBlob(recordedBlob); // Store the blob in the blobStore
   }, [recordedBlob, setHasRecordingStopped, setCurrentBlob]);
 
   // Get the error when it occurs
@@ -78,14 +87,21 @@ const Visualizer: React.FC<VisualizerProps> = ({ setHasRecordingStopped }) => {
     };
 
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          sourceNodeRef.current = audioContextRef.current!.createMediaStreamSource(stream);
-          sourceNodeRef.current.connect(analyserRef.current!);
-        })
-        .catch(err => console.error("Error accessing microphone:", err));
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioContextRef.current = new AudioContextClass();
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(stream => {
+            if (audioContextRef.current && analyserRef.current) {
+              sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(stream);
+              sourceNodeRef.current.connect(analyserRef.current);
+            }
+          })
+          .catch(err => console.error("Error accessing microphone:", err));
+      } else {
+        console.error("AudioContext is not supported in this browser");
+      }
     }
 
     const animationFrame = requestAnimationFrame(checkRecordingStatus);
