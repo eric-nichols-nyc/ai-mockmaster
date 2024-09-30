@@ -27,7 +27,6 @@ const createInterviewSchema = z.object({
 
 const updateInterviewSchema = z.object({
   body: z.object({
-    title: z.string().min(1).optional(),
     jobTitle: z.string().min(1).optional(),
     jobDescription: z.string().optional(),
   }),
@@ -129,6 +128,29 @@ app.get('/current', async (c) => {
   }
 })
 
+// GET /list/completed - Fetch all completed interviews for the authenticated user
+app.get('/list/completed', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  try {
+    const completedInterviews = await db.select()
+      .from(interviews)
+      .where(and(
+        eq(interviews.userId, auth.userId),
+        eq(interviews.completed, true)
+      ))
+      .orderBy(desc(interviews.createdAt))
+    
+    return c.json(completedInterviews)
+  } catch (error) {
+    console.error('Error fetching completed interviews:', error)
+    return c.json({ error: 'Failed to fetch completed interviews' }, 500)
+  }
+})
+
 // POST /:id/questions/:questionId/answer - Save the recorded answer for a specific question
 app.post('/:id/questions/:questionId/answer', zValidator('json', saveAnswerSchema.shape.body), async (c) => {
   const auth = getAuth(c);
@@ -205,7 +227,7 @@ app.put('/:id', zValidator('json', updateInterviewSchema.shape.body), async (c) 
   const id = c.req.param('id')
 
   try {
-    const { title, jobTitle, jobDescription, } = c.req.valid('json')
+    const { jobTitle, jobDescription } = c.req.valid('json')
 
     const updateData: Partial<typeof interviews.$inferInsert> = {}
 
@@ -259,6 +281,5 @@ app.post('/:id/complete', async (c) => {
     return c.json({ error: 'Failed to complete interview' }, 500)
   }
 })
-
 
 export default app

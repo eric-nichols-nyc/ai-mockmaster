@@ -4,18 +4,32 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import InterviewList from './(components)/InterviewList'
-import { useApi } from "@/lib/api"
+import { useInterviews } from "@/lib/api"
+import { Interview } from '@/db/schema';
+
+// Define the correct Interview type
+// interface Interview {
+//   date: Date;
+//   id: string;
+//   createdAt: Date;
+//   userId: string;
+//   jobTitle: string;
+//   jobDescription: string | null;
+//   skills: string[];
+//   completed: boolean;
+//   questions: unknown;
+// }
 
 const DashboardPage = () => {
-  const { fetchApi } = useApi();
-  const [interviews, setInterviews] = useState([]);
+  const { getCompletedInterviews } = useInterviews();
+  const [interviews, setInterviews] = useState<Interview[] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchInterviews = async () => {
       try {
-        const data = await fetchApi('/interviews', { method: 'GET' });
+        const data = await getCompletedInterviews();
         console.log('data = ', data)
         setInterviews(data);
       } catch (err) {

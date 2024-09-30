@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useAuth, SignInButton } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 
 const Hero: React.FC = () => {
   const { isSignedIn } = useAuth();
@@ -31,11 +31,11 @@ const Hero: React.FC = () => {
             </Button>
           </Link>
         ) : (
-          <SignInButton mode="modal">
+          <Link href="/sign-in">
             <Button className="text-white font-bold py-3 px-6 rounded-lg text-lg transition duration-300 ease-in-out transform hover:scale-105">
               Get Started
             </Button>
-          </SignInButton>
+          </Link>
         )}
       </div>
     </section>

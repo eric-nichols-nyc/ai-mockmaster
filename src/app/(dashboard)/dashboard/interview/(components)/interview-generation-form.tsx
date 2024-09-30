@@ -45,6 +45,7 @@ const InterviewForm: React.FC = () => {
         body: JSON.stringify(validatedData),
       });
       // check to make sure data.questions is an array
+      console.log('data questions = ', data.questions)
       if (Array.isArray(data.questions)) {
         // Create a new interview in the database
         const newInterview = await fetchApi('/interviews', {

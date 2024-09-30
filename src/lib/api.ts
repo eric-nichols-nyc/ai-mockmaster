@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/nextjs';
-
+import { Interview } from '@/db/schema';
 // Define a custom type that extends RequestInit
 type CustomRequestInit = Omit<RequestInit, 'body'> & {
   body?: FormData | string | object;
@@ -42,17 +42,6 @@ export const useApi = () => {
   return { fetchApi };
 };
 
-export interface Interview {
-  id: string;
-  jobTitle: string;
-  questions: {
-    text: string;
-    answer: string;
-    feedback?: string;
-  }[];
-  summary: string;
-}
-
 export const useInterviews = () => {
   const { fetchApi } = useApi();
 
@@ -66,5 +55,15 @@ export const useInterviews = () => {
     }
   };
 
-  return { getInterviewById };
+  const getCompletedInterviews = async (): Promise<Interview[]> => {
+    try {
+      const completedInterviews = await fetchApi('/interviews/list/completed', { method: 'GET' });
+      return completedInterviews;
+    } catch (error) {
+      console.error('Error fetching completed interviews:', error);
+      return [];
+    }
+  };
+
+  return { getInterviewById, getCompletedInterviews };
 };

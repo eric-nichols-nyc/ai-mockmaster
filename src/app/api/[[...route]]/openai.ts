@@ -45,6 +45,7 @@ app.post('/generate-questions', async (c) => {
         { role: "user", content: prompt }
       ],
       temperature: 0.7,
+      response_format: { type: "json_object" }
     })
 
     const questionsAndAnswers = JSON.parse(response.choices[0].message.content || '{"questions": []}')

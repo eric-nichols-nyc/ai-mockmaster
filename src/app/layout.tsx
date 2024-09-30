@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import "./globals.css";
+
 import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
-import "./globals.css";
 import StickyHeader from "./_components/stickyHeader";
 import Footer from "./_components/footer";
 import { Toaster } from "sonner";

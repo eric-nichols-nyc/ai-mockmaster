@@ -1,30 +1,21 @@
 import React from 'react'
-import Interview from './Interview'
-
-interface Interview {
-  id: number;
-  jobTitle: string;
-  date: string;
-  jobDescription: string;
-}
+import InterviewCard from './Interview'
+import { Interview } from '@/db/schema';
 
 interface InterviewListProps {
-  interviews: Interview[];
+  interviews: Interview[] | undefined;
 }
 
 const InterviewList: React.FC<InterviewListProps> = ({ interviews }) => { 
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">Your Interviews</h2>
-      {interviews.length > 0 ? (
+      {interviews&&interviews.length > 0 ? (
         <div className="space-y-4">
           {interviews.map((interview) => (
-            <Interview
+            <InterviewCard
               key={interview.id}
-              id={interview.id}
-              jobTitle={interview.jobTitle}
-              date={interview.date}
-              jobDescription={interview.jobDescription}
+              {...interview}
             />
           ))}
         </div>
