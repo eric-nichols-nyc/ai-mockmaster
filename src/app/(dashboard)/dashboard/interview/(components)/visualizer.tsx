@@ -9,15 +9,6 @@ interface VisualizerProps {
   hasTimedOut: boolean;
 }
 
-type AudioContextType = typeof AudioContext;
-
-interface ExtendedWindow extends Window {
-  AudioContext: AudioContextType;
-  webkitAudioContext?: AudioContextType;
-}
-
-declare const window: ExtendedWindow;
-
 const Visualizer: React.FC<VisualizerProps> = ({ 
   setHasRecordingStopped, 
   setRecordingStarted, 
@@ -70,67 +61,6 @@ const Visualizer: React.FC<VisualizerProps> = ({
       stopRecording();
     }
   }, [isRecordingInProgress, hasTimedOut]);
-
-
-  // Handle recording time limit and silence detection
-  //useEffect(() => {
-   // if (!isRecordingInProgress || !recordingStartTime) return;
-
-    // const checkRecordingStatus = () => {
-    //   const currentTime = Date.now();
-    //   const recordingDuration = currentTime - recordingStartTime;
-    //   //const silenceDuration = currentTime - (lastAudioTime || currentTime);
-
-    //   if (recordingDuration >= 60000) {
-    //     stopRecording();
-    //     return;
-    //   }
-
-      // if (analyserRef.current) {
-      //   console.log("Recording")
-      //   const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      //   analyserRef.current.getByteFrequencyData(dataArray);
-      //   const sum = dataArray.reduce((a, b) => a + b, 0);
-      //   if (sum > 0) {
-      //     setLastAudioTime(currentTime);
-      //   }
-      // }
-
-      //requestAnimationFrame(checkRecordingStatus);
-    //};
-
-    // if (!audioContextRef.current) {
-    //   console.log('No audio context')
-    //   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    //   if (AudioContextClass) {
-    //     audioContextRef.current = new AudioContextClass();
-    //     analyserRef.current = audioContextRef.current.createAnalyser();
-    //     navigator.mediaDevices.getUserMedia({ audio: true })
-    //       .then(stream => {
-    //         if (audioContextRef.current && analyserRef.current) {
-    //           sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(stream);
-    //           sourceNodeRef.current.connect(analyserRef.current);
-    //         }
-    //       })
-    //       .catch(err => console.error("Error accessing microphone:", err));
-    //   } else {
-    //     console.error("AudioContext is not supported in this browser");
-    //   }
-    // }
-
-    //const animationFrame = requestAnimationFrame(checkRecordingStatus);
-
-    //return () => {
-      //cancelAnimationFrame(animationFrame);
-      // if (sourceNodeRef.current) {
-      //   sourceNodeRef.current.disconnect();
-      // }
-      // if (audioContextRef.current) {
-      //   audioContextRef.current.close();
-      //   audioContextRef.current = null;
-      // }
-    //};
-  //}, [isRecordingInProgress, recordingStartTime, stopRecording]);
 
   return (
     <div>
