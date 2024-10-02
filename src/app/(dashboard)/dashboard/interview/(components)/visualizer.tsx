@@ -5,6 +5,8 @@ import { useBlobStore } from "@/store/interviewStore";
 
 interface VisualizerProps {
   setHasRecordingStopped: (value: boolean) => void;
+  setRecordingStarted: (value: boolean) => void
+  hasTimedOut: boolean;
 }
 
 type AudioContextType = typeof AudioContext;
@@ -16,13 +18,18 @@ interface ExtendedWindow extends Window {
 
 declare const window: ExtendedWindow;
 
-const Visualizer: React.FC<VisualizerProps> = ({ setHasRecordingStopped }) => {
+const Visualizer: React.FC<VisualizerProps> = ({ 
+  setHasRecordingStopped, 
+  setRecordingStarted, 
+  hasTimedOut 
+}) => {
   const recorderControls = useVoiceVisualizer();
   const {
     recordedBlob,
     error,
     isRecordingInProgress,
     stopRecording,
+    onStartRecording
   } = recorderControls;
 
   const { setCurrentBlob } = useBlobStore();
@@ -51,14 +58,19 @@ const Visualizer: React.FC<VisualizerProps> = ({ setHasRecordingStopped }) => {
   // Reset hasRecordingStopped and start time when starting a new recording
   useEffect(() => {
     if (isRecordingInProgress) {
-      setHasRecordingStopped(false);
+      setRecordingStarted(true)
       setRecordingStartTime(Date.now());
       setLastAudioTime(Date.now());
     } else {
       setRecordingStartTime(null);
       setLastAudioTime(null);
     }
-  }, [isRecordingInProgress, setHasRecordingStopped]);
+    if(hasTimedOut){
+      console.log('hasTiimedOut')
+      stopRecording();
+    }
+  }, [isRecordingInProgress, hasTimedOut]);
+
 
   // Handle recording time limit and silence detection
   //useEffect(() => {

@@ -39,6 +39,15 @@ const saveAnswerSchema = z.object({
   }),
 })
 
+const updateQuestionSchema = z.object({
+  body: z.object({
+    feedback: z.string().optional(),
+    improvements: z.array(z.string()).optional(),
+    keyTakeaways: z.array(z.string()).optional(),
+    grade: z.string().optional(),
+  }),
+})
+
 // GET / - List all interviews for the authenticated user
 app.get('/', async (c) => {
   const auth = getAuth(c);
@@ -79,12 +88,13 @@ app.post('/', zValidator('json', createInterviewSchema.shape.body), async (c) =>
         skills,
         date: new Date(),
         completed: false,
-        questions: JSON.stringify(questions) // Convert questions array to a JSON string
+        questions: questions // This is already an array of objects
       }).returning()
 
       const interviewQuestionValues = questions.map(q => ({
         interviewId: interview.id,
         question: q.question,
+        suggested: q.suggested,
       }))
 
       await tx.insert(interviewQuestions).values(interviewQuestionValues)
@@ -250,6 +260,60 @@ app.put('/:id', zValidator('json', updateInterviewSchema.shape.body), async (c) 
   } catch (error) {
     console.error(`Error updating interview with id ${id}:`, error)
     return c.json({ error: 'Failed to update interview' }, 500)
+  }
+})
+
+// PUT /:id/questions/:questionId - Update a specific question with feedback, improvements, keyTakeaways, and grade
+app.put('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.shape.body), async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  const interviewId = c.req.param('id')
+  const questionId = c.req.param('questionId')
+
+  try {
+    const { feedback, improvements, keyTakeaways, grade } = c.req.valid('json')
+
+    // First, verify that the interview belongs to the authenticated user
+    const interviewCheck = await db.select({ id: interviews.id })
+      .from(interviews)
+      .where(and(
+        eq(interviews.id, interviewId),
+        eq(interviews.userId, auth.userId)
+      ))
+
+    if (interviewCheck.length === 0) {
+      return c.json({ error: 'Interview not found or unauthorized' }, 404)
+    }
+
+    const updateData: Partial<typeof interviewQuestions.$inferInsert> = {}
+
+    if (feedback !== undefined) updateData.feedback = feedback
+    if (improvements !== undefined) updateData.improvements = improvements
+    if (keyTakeaways !== undefined) updateData.keyTakeaways = keyTakeaways
+    if (grade !== undefined) updateData.grade = grade
+
+    const updatedQuestion = await db.update(interviewQuestions)
+      .set(updateData)
+      .where(and(
+        eq(interviewQuestions.id, questionId),
+        eq(interviewQuestions.interviewId, interviewId)
+      ))
+      .returning()
+
+    if (updatedQuestion.length === 0) {
+      return c.json({ error: 'Question not found' }, 404)
+    }
+
+    return c.json(updatedQuestion[0])
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ error: 'Invalid input', details: error.errors }, 400)
+    }
+    console.error(`Error updating question with id ${questionId} in interview ${interviewId}:`, error)
+    return c.json({ error: 'Failed to update question' }, 500)
   }
 })
 

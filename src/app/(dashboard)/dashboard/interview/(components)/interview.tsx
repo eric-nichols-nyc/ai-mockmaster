@@ -4,10 +4,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import useInterviewStore, { useBlobStore, ExtendedInterview } from "@/store/interviewStore";
+import useInterviewStore, {
+  useBlobStore,
+  ExtendedInterview,
+} from "@/store/interviewStore";
 import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
 import { Loader2 } from "lucide-react";
+import CountdownTimer from "@/components/countdown-timer";
 
 export default function Interview() {
   const router = useRouter();
@@ -20,11 +24,24 @@ export default function Interview() {
   >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
+  const [hasRecordingStarted, setHasRecordingStarted] = useState(false);
   const [isInitialFetch, setIsInitialFetch] = useState(true);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
+  const [showTimer, setShowTimer] = useState(false);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handleTimerComplete = useCallback(() => {
+    console.log("Interview time is up!");
+    setErrorMessage(
+      "Interview time has ended. Please submit your final answer."
+    );
+    setShowTimer(false);
+    setHasRecordingStopped(true);
+    setHasTimedOut(true)
+  }, []);
 
   useEffect(() => {
     const fetchCurrentInterview = async () => {
@@ -52,8 +69,18 @@ export default function Interview() {
       }
     };
 
+    if (hasRecordingStarted) {
+      //start timer when recording starts and stop it when recording stops
+      if (!showTimer) {
+        setShowTimer(true);
+      }
+    }
+    if(hasRecordingStopped){
+      setShowTimer(false);
+    }
+
     fetchCurrentInterview();
-  }, [fetchApi, setInterview, interview, isInitialFetch]);
+  }, [fetchApi, setInterview, interview, isInitialFetch, hasRecordingStarted,hasRecordingStopped]);
 
   const handleSubmitRecording = useCallback(async () => {
     setSaveStatus("saving");
@@ -109,24 +136,26 @@ export default function Interview() {
 
   const handleNextQuestion = useCallback(async () => {
     if (interview) {
-      if (interview.questions.length > 1) {
-        const updatedQuestions = interview.questions.slice(1);
-        setInterview({ ...interview, questions: updatedQuestions });
-        setSaveStatus("idle");
-        setHasRecordingStopped(false);
-      } else {
-        try {
-          await fetchApi(`/interviews/${interview.id}/complete`, {
-            method: "POST",
-          });
-          router.push("/dashboard/interview/summary");
-        } catch (error) {
-          console.error("Error completing interview:", error);
-          setErrorMessage(
-            "Failed to complete the interview. Please try again."
-          );
-        }
-      }
+      // setShowTimer(true); // Show timer when interview is loaded
+      // if (interview.questions.length > 1) {
+      //   const updatedQuestions = interview.questions.slice(1);
+      //   setInterview({ ...interview, questions: updatedQuestions });
+      //   setSaveStatus("idle");
+      //   setHasRecordingStopped(false);
+      //   setShowTimer(true); // Show timer for the next question
+      // } else {
+      //   try {
+      //     await fetchApi(`/interviews/${interview.id}/complete`, {
+      //       method: "POST",
+      //     });
+      //     router.push("/dashboard/interview/summary");
+      //   } catch (error) {
+      //     console.error("Error completing interview:", error);
+      //     setErrorMessage(
+      //       "Failed to complete the interview. Please try again."
+      //     );
+      //   }
+      // }
     }
   }, [interview, setInterview, router, fetchApi]);
 
@@ -141,7 +170,7 @@ export default function Interview() {
         if (response && response.audioUrl) {
           if (audioRef.current) {
             audioRef.current.src = response.audioUrl;
-            audioRef.current.play().catch(error => {
+            audioRef.current.play().catch((error) => {
               console.error("Error playing audio:", error);
               setErrorMessage("Failed to play audio. Please try again.");
             });
@@ -156,28 +185,6 @@ export default function Interview() {
     }
   }, [interview, fetchApi]);
 
-  if (errorMessage) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 gradient-bg">
-        <Card className="w-full max-w-2xl card-shadow">
-          <CardContent>
-            <p className="text-red-500 text-center font-semibold">
-              {errorMessage}
-            </p>
-            <Button
-              onClick={() => {
-                setIsInitialFetch(true);
-                setErrorMessage(null);
-              }}
-              className="mt-4 button-gradient w-full"
-            >
-              Retry
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (!interview || interview.questions.length === 0) {
     return (
@@ -193,6 +200,14 @@ export default function Interview() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4 gradient-bg">
       <Card className="w-full max-w-2xl card-shadow">
         <CardContent className="p-6">
+          {showTimer && (
+            <div className="mb-6">
+              <CountdownTimer
+                initialTime={6}
+                onComplete={handleTimerComplete}
+              />
+            </div>
+          )}
           <h2 className="text-2xl mb-6 text-center">
             {currentQuestion.question}
           </h2>
@@ -206,9 +221,11 @@ export default function Interview() {
               className="rounded-full relative z-10"
             />
           </div>
+          {/* <p>        {hasRecordingStopped.toString()}
+          </p> */}
           <div className="flex justify-center mb-4">
-            <Button 
-              onClick={handleTextToSpeech} 
+            <Button
+              onClick={handleTextToSpeech}
               className="button-gradient"
               disabled={isLoadingAudio}
             >
@@ -223,7 +240,11 @@ export default function Interview() {
             </Button>
           </div>
           <audio ref={audioRef} className="hidden" />
-          <Visualizer setHasRecordingStopped={setHasRecordingStopped} />
+          <Visualizer
+            hasTimedOut={hasTimedOut}
+            setHasRecordingStopped={setHasRecordingStopped}
+            setRecordingStarted={setHasRecordingStarted}
+          />
           {hasRecordingStopped && saveStatus !== "success" && (
             <div className="flex justify-center mt-6">
               <Button
@@ -259,18 +280,27 @@ export default function Interview() {
           )}
           {saveStatus === "success" && (
             <div className="flex justify-center mt-6">
-              <Button
-                onClick={handleNextQuestion}
-                className="button-gradient"
-              >
+              <Button onClick={handleNextQuestion} className="button-gradient">
                 {interview.questions.length > 1
                   ? "Next Question"
                   : "Finish Interview"}
               </Button>
             </div>
           )}
+               {errorMessage && errorMessage !== "" && (
+        <div className="flex flex-col items-center justify-center p-4 gradient-bg">
+          <Card className="w-full max-w-2xl card-shadow">
+            <CardContent>
+              <p className="text-red-500 text-center font-semibold">
+                {errorMessage}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
         </CardContent>
       </Card>
+ 
     </div>
   );
 }
