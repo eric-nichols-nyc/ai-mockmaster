@@ -3,6 +3,7 @@ import { Interview as BaseInterview } from '@/db/schema';
 
 export type QuestionData = {
   id: string;
+  interviewId: string;
   grade?: string;
   question: string;
   suggested?: string;
@@ -32,10 +33,11 @@ const useInterviewStore = create<InterviewState>((set) => ({
   currentQuestionIndex: 0,
   setInterview: (interview) => set({ interview }),
   setCurrentQuestionIndex: (index) => set({ currentQuestionIndex: index }),
-  updateQuestion: (questionId, updates) =>
+  updateQuestion: (questionId, updates) => {
+    console.log(questionId, updates)
     set((state) => {
       if (!state.interview) return state;
-      
+
       const updatedQuestions = state.interview.questions.map((q) =>
         q.id === questionId ? { ...q, ...updates } : q
       );
@@ -46,8 +48,9 @@ const useInterviewStore = create<InterviewState>((set) => ({
           questions: updatedQuestions,
         },
       };
-    }),
-}))
+    })
+  }
+}));
 
 interface BlobState {
   currentBlob: Blob | null;

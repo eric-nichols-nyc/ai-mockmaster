@@ -264,7 +264,7 @@ app.put('/:id', zValidator('json', updateInterviewSchema.shape.body), async (c) 
 })
 
 // PUT /:id/questions/:questionId - Update a specific question with feedback, improvements, keyTakeaways, and grade
-app.put('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.shape.body), async (c) => {
+app.post('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.shape.body), async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);

@@ -76,7 +76,7 @@ app.post('/generate-questions', async (c) => {
 
     // Parse and return the generated questions and answers
     const questionsAndAnswers = JSON.parse(response.choices[0].message.content || '{"questions": []}')
-    console.log('questionsAndAnswers = ',questionsAndAnswers)
+    console.log('questionsAndAnswers = ', questionsAndAnswers)
     return c.json(questionsAndAnswers)
 
   } catch (error) {
@@ -138,7 +138,7 @@ app.post('/transcribe', async (c) => {
     console.error('Invalid audio file:', body.audio)
     throw new HTTPException(400, { message: 'No valid audio file provided' })
   }
-  
+
   try {
     // Upload audio file to S3
     const fileKey = `${uuidv4()}.webm`
@@ -180,6 +180,74 @@ app.post('/transcribe', async (c) => {
     }
   }
 })
+
+const evaluationPrompt = `
+You are an expert interviewer and career coach. Your task is to evaluate a candidate's answer to an interview question for a specific job position. Provide a comprehensive assessment based on the following inputs:
+
+1. Interview Question: {question}
+2. Candidate's Answer: {answer}
+3. Job Position: {position}
+
+Please provide your evaluation in the following JSON format:
+
+{
+  "feedback": "Detailed feedback on the candidate's answer, considering factors such as relevance, clarity, depth of knowledge, and alignment with the job position.",
+  "grade": {
+    "letter": "A letter grade (A, B, C, D, or F)",
+    "explanation": "A brief explanation of why this grade was given."
+  },
+  "improvements": [
+    "Improvement suggestion 1",
+    "Improvement suggestion 2",
+    "Improvement suggestion 3"
+  ],
+  "keyTakeaways": [
+    "Key takeaway 1",
+    "Key takeaway 2",
+    "Key takeaway 3"
+  ]
+}
+
+Ensure that your response is a valid JSON object. Remember to tailor your evaluation to the specific job position and consider industry standards and expectations when providing feedback and suggestions.
+`
+
+app.post('/get-results', async (c) => {
+  try {
+    const { question, answer, position } = await c.req.json()
+
+    if (!question || !answer || !position) {
+      return c.json({ error: 'Missing required fields' }, 400)
+    }
+
+    const prompt = evaluationPrompt
+      .replace('{question}', question)
+      .replace('{answer}', answer)
+      .replace('{position}', position)
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are an AI assistant that provides interview evaluations in JSON format.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+      response_format: { type: 'json_object' }
+    })
+
+    if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
+      const evaluationResult = JSON.parse(response.choices[0].message.content.trim());
+      return c.json(evaluationResult);
+    } else {
+      return c.json({ error: 'Invalid response from OpenAI API' }, 500);
+    }
+  } catch (error) {
+    console.error('Error:', error)
+    return c.json({ error: 'An error occurred while processing your request' }, 500)
+  }
+
+})
+
 
 export default app
 

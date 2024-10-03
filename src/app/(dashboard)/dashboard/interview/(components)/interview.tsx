@@ -14,7 +14,8 @@ import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import CountdownTimer from "@/components/countdown-timer";
-
+import {FeedbackData} from '@/types';
+import { InterviewQuestion } from "@/db/schema";
 export default function Interview() {
   // Initialize router and API hooks
   const router = useRouter();
@@ -89,6 +90,7 @@ export default function Interview() {
     }
 
     fetchCurrentInterview();
+    console.log('interview = ', interview)
   }, [fetchApi, setInterview, interview, isInitialFetch, hasRecordingStarted,hasRecordingStopped]);
 
   // Function to handle submitting the recorded answer
@@ -124,6 +126,7 @@ export default function Interview() {
           );
 
           if (updatedResponse && updatedResponse.audioUrl) {
+            // updates question in store
             updateQuestion(currentQuestion.id, {
               answer: transcriptResponse.transcription,
               audioUrl: updatedResponse.audioUrl,
@@ -147,13 +150,66 @@ export default function Interview() {
     }
   }, [fetchApi, interview, updateQuestion, currentBlob]);
 
+
+  const updateCurrentQuestionWithFeedback = useCallback(async (feedbackData: FeedbackData) => {
+    if (interview && interview.questions.length > 0) {
+      const updatedQuestion: InterviewQuestion = {
+        ...interview.questions[0],
+        feedback: feedbackData.feedback,
+        grade: feedbackData.grade.letter,
+        improvements: feedbackData.improvements,
+        keyTakeaways: feedbackData.keyTakeaways
+      };
+
+      // Send feedback to server
+     const update =  await fetchApi(`/interviews/${interview.id}/questions/${updatedQuestion.id}`, {
+        method: "POST",
+        body: JSON.stringify(updatedQuestion),
+      });
+
+      console.log('update ', update)
+
+      // Update the question in the store
+      updateQuestion(updatedQuestion.id, updatedQuestion);
+
+      // Update the interview in the store
+      setInterview({
+        ...interview,
+        questions: [updatedQuestion, ...interview.questions.slice(1)]
+      });
+      // show get summary page after feedback submission
+      router.push(`/interview/${interview.id}/summary`);
+    }
+  }, [interview, updateQuestion, setInterview]);
+
   // Function to handle moving to the next question or completing the interview
   const handleNextQuestion = useCallback(async () => {
-    if (interview) {
+    if (interview && interview.jobTitle && interview.questions) {
       // Note: This function is currently commented out. It would typically handle
-      // moving to the next question or completing the interview.
+      // 1. call openai to get data
+      try {
+        const response = await fetchApi(`/openai/get-results`, {
+          method: "POST",
+          body: JSON.stringify({
+            question: currentQuestion.question,
+            answer: currentQuestion.answer,
+            position: interview.jobDescription
+          }),
+        });
+
+        console.log('response ', response);
+        // 2. add data to db
+      updateCurrentQuestionWithFeedback(response)
+
+      }catch(e){
+        console.log('error', e)
+      }
+    
+   
+      // 3 show button to get summary of answers and move to next step
     }
   }, [interview, setInterview, router, fetchApi]);
+  
 
   // Function to handle text-to-speech for the current question
   const handleTextToSpeech = useCallback(async () => {
@@ -202,7 +258,7 @@ export default function Interview() {
           {showTimer && (
             <div className="mb-6">
               <CountdownTimer
-                initialTime={6}
+                initialTime={60}
                 onComplete={handleTimerComplete}
               />
             </div>

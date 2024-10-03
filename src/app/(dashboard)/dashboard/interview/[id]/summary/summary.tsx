@@ -52,6 +52,7 @@ const dummyInterview: Interview = {
 
 export default function Summary() {
   const { interview } = useInterviewStore();
+  console.log('interview:', interview);
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   

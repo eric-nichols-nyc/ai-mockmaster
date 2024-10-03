@@ -56,6 +56,8 @@ const InterviewForm: React.FC = () => {
           }),
         });
 
+        console.log('new interview = ', newInterview)
+
         // Set the interview in the store
         setInterview(newInterview);
         setInterviewId(newInterview.id);
