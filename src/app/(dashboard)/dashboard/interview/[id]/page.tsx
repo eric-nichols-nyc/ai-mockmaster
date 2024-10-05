@@ -1,16 +1,10 @@
 "use client"
 import React from "react";
 import { useParams } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { useInterviews, Interview } from "@/lib/api";
+import { useInterviews } from "@/lib/api";
+import { Interview } from "@/db/schema";
 
 const InterviewReviewPage: React.FC = () => {
   const params = useParams();
@@ -51,45 +45,8 @@ const InterviewReviewPage: React.FC = () => {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <Tabs defaultValue="questions" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="questions">Questions</TabsTrigger>
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-        </TabsList>
-        <TabsContent value="questions">
-          <Accordion type="multiple" className="w-full">
-            {interview.questions.map((question, index) => (
-              <AccordionItem key={index} value={`question-${index}`}>
-                <AccordionTrigger>{question.text}</AccordionTrigger>
-                <AccordionContent>
-                  <Card className="mb-6">
-                    <CardHeader>
-                      <CardTitle>Your Answer</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p>{question.answer}</p>
-                    </CardContent>
-                  </Card>
-                  {question.feedback && (
-                    <Card className="mb-6">
-                      <CardHeader>
-                        <CardTitle>Feedback</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p>{question.feedback}</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </TabsContent>
-        <TabsContent value="summary">
-          <h2 className="text-2xl font-bold mb-4">Interview Summary</h2>
-          <p>{interview.summary}</p>
-        </TabsContent>
-      </Tabs>
+      
+      <Card><CardTitle></CardTitle><CardContent>review summary goes here...</CardContent></Card>
     </div>
   );
 };
