@@ -2,8 +2,6 @@
 import { Hono } from 'hono'
 import { OpenAI } from 'openai'
 import { HTTPException } from 'hono/http-exception'
-import fs from 'fs'
-import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
 
@@ -104,18 +102,25 @@ app.post('/text-to-speech', async (c) => {
       input: text,
     })
 
-    // Save the generated audio file
+    // Get the audio data as a buffer
     const buffer = Buffer.from(await mp3.arrayBuffer())
+
+    // Generate a unique filename
     const fileName = `${uuidv4()}.mp3`
-    const filePath = path.join(process.cwd(), 'public', 'audio', fileName)
 
-    // Ensure the directory exists
-    fs.mkdirSync(path.join(process.cwd(), 'public', 'audio'), { recursive: true })
+    // Upload the audio file to S3
+    const uploadParams = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `audio/${fileName}`,
+      Body: buffer,
+      ContentType: 'audio/mpeg',
+    }
 
-    fs.writeFileSync(filePath, buffer)
+    await s3Client.send(new PutObjectCommand(uploadParams))
 
-    // Return the URL of the saved audio file
-    const audioUrl = `/audio/${fileName}`
+    // Generate the S3 URL for the uploaded file
+    const audioUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/audio/${fileName}`
+
     return c.json({ audioUrl })
 
   } catch (error) {
@@ -255,16 +260,16 @@ export default app
 // This file sets up an API using Hono framework to interact with OpenAI's services.
 // It provides four main functionalities:
 // 1. Generating interview questions based on job details and skills
-// 2. Converting text to speech
+// 2. Converting text to speech and uploading the audio to AWS S3
 // 3. Transcribing audio files
 // 4. Evaluating interview answers
 //
 // The app uses environment variables for API keys and AWS credentials.
-// It also integrates with AWS S3 for storing audio files during the transcription process.
+// It integrates with AWS S3 for storing audio files during the text-to-speech and transcription processes.
 //
 // Each route (/generate-questions, /text-to-speech, /transcribe, /get-results) handles a specific task:
 // - /generate-questions: Uses OpenAI's GPT model to create relevant interview questions, answers, and associated skills
-// - /text-to-speech: Converts given text to speech using OpenAI's text-to-speech model
+// - /text-to-speech: Converts given text to speech using OpenAI's text-to-speech model and uploads the audio to S3
 // - /transcribe: Uploads an audio file to S3, then uses OpenAI's Whisper model to transcribe it
 // - /get-results: Evaluates a candidate's answer to an interview question, considering the job position and related skills
 //
