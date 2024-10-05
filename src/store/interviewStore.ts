@@ -1,23 +1,25 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { Interview as BaseInterview } from '@/db/schema';
 
 export type QuestionData = {
   id: string;
   interviewId: string;
-  grade?: string;
+  grade: string | null;
   question: string;
-  suggested?: string;
-  answer?: string;
-  audioUrl?: string;
-  feedback?: string;
-  improvements?: string[];
-  keyTakeaways?: string[];
+  suggested: string | null;
+  answer: string | null;
+  audioUrl: string | null;
+  feedback: string | null;
+  improvements: string[] | null;
+  keyTakeaways: string[] | null;
+  skills: string[] | null; // Added skills property as optional
   createdAt: Date;
 };
 
-export interface ExtendedInterview extends BaseInterview {
+export interface ExtendedInterview extends Omit<BaseInterview, 'questions'> {
   currentBlob?: Blob;
-  questions: QuestionData[];
+  questions: QuestionData[] | Record<string, QuestionData>;
 }
 
 interface InterviewState {
@@ -28,29 +30,43 @@ interface InterviewState {
   updateQuestion: (questionId: string, updates: Partial<QuestionData>) => void;
 }
 
-const useInterviewStore = create<InterviewState>((set) => ({
-  interview: null,
-  currentQuestionIndex: 0,
-  setInterview: (interview) => set({ interview }),
-  setCurrentQuestionIndex: (index) => set({ currentQuestionIndex: index }),
-  updateQuestion: (questionId, updates) => {
-    console.log(questionId, updates)
-    set((state) => {
-      if (!state.interview) return state;
-
-      const updatedQuestions = state.interview.questions.map((q) =>
-        q.id === questionId ? { ...q, ...updates } : q
-      );
-
-      return {
+const useInterviewStore = create<InterviewState>()(
+  persist(
+    (set) => ({
+      interview: null,
+      currentQuestionIndex: 0,
+      setInterview: (interview) => set({
         interview: {
-          ...state.interview,
-          questions: updatedQuestions,
-        },
-      };
-    })
-  }
-}));
+          ...interview,
+          questions: Array.isArray(interview.questions)
+            ? interview.questions
+            : Object.values(interview.questions || {})
+        }
+      }),
+      setCurrentQuestionIndex: (index) => set({ currentQuestionIndex: index }),
+      updateQuestion: (questionId, updates) => {
+        set((state) => {
+          if (!state.interview) return state;
+
+          const updatedQuestions = (state.interview.questions as QuestionData[]).map((q: QuestionData) =>
+            q.id === questionId ? { ...q, ...updates } : q
+          );
+
+          return {
+            interview: {
+              ...state.interview,
+              questions: updatedQuestions,
+            },
+          };
+        })
+      }
+    }),
+    {
+      name: 'interview-storage',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
 
 interface BlobState {
   currentBlob: Blob | null;

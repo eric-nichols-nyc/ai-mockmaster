@@ -21,7 +21,7 @@ export const interviews = pgTable('interviews', {
     questions: jsonb('questions')
 });
 
-// Interview questions table (you might not need this anymore)
+// Updated Interview questions table with optional skills reference
 export const interviewQuestions = pgTable('interview_questions', {
     id: uuid('id').defaultRandom().primaryKey(),
     grade: text('grade'),
@@ -33,9 +33,12 @@ export const interviewQuestions = pgTable('interview_questions', {
     suggested: text('suggested'),
     improvements: text('improvements').array(),
     keyTakeaways: text('key_takeaways').array(),
+    skills: text('skills').array(), // Made skills optional by removing .notNull()
     createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
-
 export type Interview = typeof interviews.$inferSelect;
 export type InterviewQuestion = typeof interviewQuestions.$inferSelect;
+
+// Note: The 'skills' field in interviewQuestions is an optional array of text that corresponds to the 'skills' field in the interviews table.
+// This allows each question to be optionally associated with specific skills from the interview.

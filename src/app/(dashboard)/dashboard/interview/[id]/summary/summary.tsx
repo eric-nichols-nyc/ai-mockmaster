@@ -1,165 +1,99 @@
-"use client"
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { useInterviewStore } from '@/store/interviewStore';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import { Interview } from '@/db/schema';
+"use client";
 
-type QuestionData = {
-  id: string;
-  grade?: string;
-  question: string;
-  suggested?: string;
-  answer?: string;
-  audioUrl?: string;
-  feedback?: string;
-  improvements?: string[];
-  keyTakeaways?: string[];
-  createdAt: Date;
-};
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import useInterviewStore, { ExtendedInterview, QuestionData } from '@/store/interviewStore';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useInterviews } from "@/lib/api";
+import { Button } from '@/components/ui/button';
 
-const dummyInterview: Interview = {
-  id: 'dummy',
-  userId: 'dummy-user',
-  jobTitle: 'Software Developer',
-  jobDescription: 'Developing web applications',
-  skills: ['JavaScript', 'React', 'Node.js'],
-  date: new Date(),
-  createdAt: new Date(),
-  completed: false,
-  questions: [{
-    id: 'dummy-question',
-    grade: "F",
-    question: "Tell me about a time when you worked effectively in a team environment.",
-    suggested: "Please provide your answer here.",
-    answer: "I worked in a team environment for a software development company...",
-    audioUrl: "/mp3/speech.mp3",
-    feedback: "This answer is too generic and doesn't provide any specific examples...",
-    improvements: [
-      "Provide specific examples of teamwork experiences and outcomes.",
-      "Highlight specific skills related to teamwork."
-    ],
-    keyTakeaways: [
-      "Specificity is crucial when answering behavioral questions.",
-      "Highlighting skills and experiences is more impactful than simply stating general traits."
-    ],
-    createdAt: new Date('2024-09-24T17:40:20.227535Z')
-  }] as unknown as Interview['questions']
-}
+const Summary: React.FC = () => {
+  const { interview, setInterview } = useInterviewStore();
+  const { getInterviewById } = useInterviews();
+  const [isLoading, setIsLoading] = useState(true);
+  const params = useParams();
+  const interviewId = params.id as string;
 
-export default function Summary() {
-  const { interview } = useInterviewStore();
-  console.log('interview:', interview);
-  const router = useRouter();
-  const [isSaving, setIsSaving] = useState(false);
-  
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Add save functionality here
-    console.log('Save button clicked');
-    
-    // Pause for 3 seconds
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Show toast
-    toast.success('Interview summary saved successfully!');
-    
-    setIsSaving(false);
-    
-    // Redirect to dashboard
-    router.push('/dashboard');
-  };
+  useEffect(() => {
+    const fetchInterview = async () => {
+      if (!interview || interview.id !== interviewId) {
+        try {
+          const fetchedInterview = await getInterviewById(interviewId);
+          if (fetchedInterview) {
+            const extendedInterview: ExtendedInterview = {
+              ...fetchedInterview,
+              questions: Array.isArray(fetchedInterview.questions)
+                ? fetchedInterview.questions
+                : Object.values(fetchedInterview.questions || {})
+            };
+            setInterview(extendedInterview);
+          }
+        } catch (error) {
+          console.error('Error fetching interview:', error);
+        }
+      }
+      setIsLoading(false);
+    };
 
-  const renderAudio = (src: string) => {
-    return (
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Recorded Answer</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <audio controls src={src}>
-            Your browser does not support the audio element.
-          </audio>
-        </CardContent>
-      </Card>
-    );
-  };
+    fetchInterview();
+  }, [interview, interviewId, getInterviewById, setInterview]);
 
-  const renderCards = () => {
-    const data: Interview = interview || dummyInterview;
-    console.log('Using data:', interview ? 'interviewStore' : 'dummyInterview');
-    console.log('Data:', JSON.stringify(data, null, 2));
+  if (isLoading) {
+    return <div>Loading interview data...</div>;
+  }
 
-    const interviewCards = [
-      { key: 'jobTitle', title: 'Job Title' },
-      { key: 'jobDescription', title: 'Job Description' },
-      { key: 'skills', title: 'Skills' },
-      { key: 'date', title: 'Interview Date' },
-    ];
+  if (!interview) {
+    return <div>Interview not found.</div>;
+  }
 
-    const questionCards: (keyof QuestionData)[] = ['grade', 'question', 'answer', 'feedback', 'improvements', 'keyTakeaways'];
-
-    const questions: QuestionData[] = data.questions as unknown as QuestionData[];
-
-    return (
-      <>
-        {interviewCards.map(({ key, title }) => (
-          <Card key={key} className="mb-4">
-            <CardHeader>
-              <CardTitle>{title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {Array.isArray(data[key as keyof Interview]) ? (
-                <ul className="list-disc pl-5">
-                  {(data[key as keyof Interview] as string[]).map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>{String(data[key as keyof Interview])}</p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-        {questions.length > 0 && questionCards.map(key => (
-          <Card key={key} className="mb-4">
-            <CardHeader>
-              <CardTitle className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {Array.isArray(questions[0][key]) ? (
-                <ul className="list-disc pl-5">
-                  {(questions[0][key] as string[]).map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>{String(questions[0][key] || '')}</p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-        {questions.length > 0 && questions[0].audioUrl && renderAudio(questions[0].audioUrl)}
-      </>
-    );
-  };
+  const questions = Array.isArray(interview.questions)
+    ? interview.questions
+    : Object.values(interview.questions);
 
   return (
-    <div className="space-y-6">
-      {renderCards()}
-      <Button onClick={handleSave} disabled={isSaving}>
-        {isSaving ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Saving...
-          </>
-        ) : (
-          'Save'
-        )}
-      </Button>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Interview Summary</h1>
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Job Title: {interview.jobTitle}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Job Description: {interview.jobDescription}</p>
+        </CardContent>
+      </Card>
+      {questions.map((question: QuestionData, index: number) => (
+        <Card key={question.id} className="mb-4">
+          <CardHeader>
+            <CardTitle>Question {index + 1}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-2"><strong>Question:</strong> {question.question}</p>
+            <p><strong>Suggested Answer:</strong> {question.suggested}</p>
+            <p className="mb-2"><strong>Your Answer:</strong> {question.answer}</p>
+            <p className="mb-2"><strong>Feedback:</strong> {question.feedback}</p>
+            <p className="mb-2"><strong>Grade:</strong> {question.grade}</p>
+            <div className="mb-2">
+              <strong>Improvements:</strong>
+              <ul className="list-disc pl-5">
+                {question.improvements?.map((improvement, i) => (
+                  <li key={i}>{improvement}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <strong>Key Takeaways:</strong>
+              <ul className="list-disc pl-5">
+                {question.keyTakeaways?.map((takeaway, i) => (
+                  <li key={i}>{takeaway}</li>
+                ))}
+              </ul>
+            </div>
+          </CardContent>
+          <Button>Save question</Button>
+        </Card>
+      ))}
     </div>
   );
-}
+};
+
+export default Summary;

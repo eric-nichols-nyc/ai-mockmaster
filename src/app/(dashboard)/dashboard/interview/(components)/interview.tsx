@@ -1,6 +1,5 @@
 "use client";
 
-// Import necessary dependencies and components
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import useInterviewStore, {
   useBlobStore,
-  ExtendedInterview,
+  ExtendedInterview
 } from "@/store/interviewStore";
 import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
@@ -16,19 +15,13 @@ import { Loader2 } from "lucide-react";
 import CountdownTimer from "@/components/countdown-timer";
 import {FeedbackData} from '@/types';
 import { InterviewQuestion } from "@/db/schema";
+
 export default function Interview() {
-  // Initialize router and API hooks
   const router = useRouter();
   const { fetchApi } = useApi();
-
-  // Access interview state and methods from the interview store
   const { interview, setInterview, updateQuestion } = useInterviewStore();
   const { currentBlob } = useBlobStore();
-
-  // State variables for managing the interview process
-  const [saveStatus, setSaveStatus] = useState<
-    "idle" | "saving" | "success" | "error"
-  >("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
   const [hasRecordingStarted, setHasRecordingStarted] = useState(false);
@@ -37,22 +30,16 @@ export default function Interview() {
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
-
-  // Reference for the audio element
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Callback function to handle timer completion
   const handleTimerComplete = useCallback(() => {
     console.log("Interview time is up!");
-    setErrorMessage(
-      "Interview time has ended. Please submit your final answer."
-    );
+    setErrorMessage("Interview time has ended. Please submit your final answer.");
     setShowTimer(false);
     setHasRecordingStopped(true);
     setHasTimedOut(true)
   }, []);
 
-  // Effect to fetch the current interview and manage timer visibility
   useEffect(() => {
     const fetchCurrentInterview = async () => {
       if (!isInitialFetch) return;
@@ -61,15 +48,10 @@ export default function Interview() {
         const response = await fetchApi("/interviews/current", {
           method: "GET",
         });
-        if (
-          response &&
-          JSON.stringify(response) !== JSON.stringify(interview)
-        ) {
+        if (response && JSON.stringify(response) !== JSON.stringify(interview)) {
           setInterview(response as ExtendedInterview);
         } else if (!response) {
-          setErrorMessage(
-            "No current interview found. Please start a new interview."
-          );
+          setErrorMessage("No current interview found. Please start a new interview.");
         }
       } catch (error) {
         console.error("Error fetching interview:", error);
@@ -79,7 +61,6 @@ export default function Interview() {
       }
     };
 
-    // Manage timer visibility based on recording state
     if (hasRecordingStarted) {
       if (!showTimer) {
         setShowTimer(true);
@@ -93,27 +74,27 @@ export default function Interview() {
     console.log('interview = ', interview)
   }, [fetchApi, setInterview, interview, isInitialFetch, hasRecordingStarted,hasRecordingStopped]);
 
-  // Function to handle submitting the recorded answer
   const handleSubmitRecording = useCallback(async () => {
     setSaveStatus("saving");
     setIsSubmittingRecording(true);
     try {
       if (interview && currentBlob) {
-        const currentQuestion = interview.questions[0];
+        const currentQuestion = Array.isArray(interview.questions) 
+          ? interview.questions[0] 
+          : Object.values(interview.questions)[0];
+        
         const audioFile = new File([currentBlob], "audio.webm", {
           type: currentBlob.type,
         });
         const formData = new FormData();
         formData.append("audio", audioFile, "audio.webm");
         
-        // Send audio for transcription
         const transcriptResponse = await fetchApi("/openai/transcribe", {
           method: "POST",
           body: formData,
         });
 
         if (transcriptResponse && transcriptResponse.transcription) {
-          // Save the transcribed answer
           const updatedResponse = await fetchApi(
             `/interviews/${interview.id}/questions/${currentQuestion.id}/answer`,
             {
@@ -126,7 +107,6 @@ export default function Interview() {
           );
 
           if (updatedResponse && updatedResponse.audioUrl) {
-            // updates question in store
             updateQuestion(currentQuestion.id, {
               answer: transcriptResponse.transcription,
               audioUrl: updatedResponse.audioUrl,
@@ -150,75 +130,76 @@ export default function Interview() {
     }
   }, [fetchApi, interview, updateQuestion, currentBlob]);
 
-
   const updateCurrentQuestionWithFeedback = useCallback(async (feedbackData: FeedbackData) => {
-    if (interview && interview.questions.length > 0) {
+    if (interview && (Array.isArray(interview.questions) ? interview.questions.length > 0 : Object.keys(interview.questions).length > 0)) {
+      const currentQuestion = Array.isArray(interview.questions) 
+        ? interview.questions[0] 
+        : Object.values(interview.questions)[0];
+
       const updatedQuestion: InterviewQuestion = {
-        ...interview.questions[0],
+        ...currentQuestion,
         feedback: feedbackData.feedback,
         grade: feedbackData.grade.letter,
         improvements: feedbackData.improvements,
-        keyTakeaways: feedbackData.keyTakeaways
+        keyTakeaways: feedbackData.keyTakeaways,
+        skills: currentQuestion.skills || [] // Include skills, defaulting to an empty array if not present
       };
 
-      // Send feedback to server
-     const update =  await fetchApi(`/interviews/${interview.id}/questions/${updatedQuestion.id}`, {
+      const update = await fetchApi(`/interviews/${interview.id}/questions/${updatedQuestion.id}`, {
         method: "POST",
         body: JSON.stringify(updatedQuestion),
       });
 
       console.log('update ', update)
 
-      // Update the question in the store
       updateQuestion(updatedQuestion.id, updatedQuestion);
 
-      // Update the interview in the store
       setInterview({
         ...interview,
-        questions: [updatedQuestion, ...interview.questions.slice(1)]
+        questions: Array.isArray(interview.questions)
+          ? [updatedQuestion, ...interview.questions.slice(1)]
+          : { ...interview.questions, [updatedQuestion.id]: updatedQuestion }
       });
-      // show get summary page after feedback submission
       router.push(`/interview/${interview.id}/summary`);
     }
-  }, [interview, updateQuestion, setInterview]);
+  }, [interview, updateQuestion, setInterview, router, fetchApi]);
 
-  // Function to handle moving to the next question or completing the interview
   const handleNextQuestion = useCallback(async () => {
     if (interview && interview.jobTitle && interview.questions) {
-      // Note: This function is currently commented out. It would typically handle
-      // 1. call openai to get data
+      const currentQuestion = Array.isArray(interview.questions) 
+        ? interview.questions[0] 
+        : Object.values(interview.questions)[0];
+
       try {
         const response = await fetchApi(`/openai/get-results`, {
           method: "POST",
           body: JSON.stringify({
             question: currentQuestion.question,
             answer: currentQuestion.answer,
-            position: interview.jobDescription
+            position: interview.jobDescription,
+            skills: currentQuestion.skills || [] // Include skills in the request
           }),
         });
 
         console.log('response ', response);
-        // 2. add data to db
-      updateCurrentQuestionWithFeedback(response)
-
-      }catch(e){
+        updateCurrentQuestionWithFeedback(response)
+      } catch(e) {
         console.log('error', e)
       }
-    
-   
-      // 3 show button to get summary of answers and move to next step
     }
-  }, [interview, setInterview, router, fetchApi]);
-  
+  }, [interview, updateCurrentQuestionWithFeedback, fetchApi]);
 
-  // Function to handle text-to-speech for the current question
   const handleTextToSpeech = useCallback(async () => {
-    if (interview && interview.questions[0]) {
+    if (interview && (Array.isArray(interview.questions) ? interview.questions[0] : Object.values(interview.questions)[0])) {
       setIsLoadingAudio(true);
       try {
+        const currentQuestion = Array.isArray(interview.questions) 
+          ? interview.questions[0] 
+          : Object.values(interview.questions)[0];
+
         const response = await fetchApi("/openai/text-to-speech", {
           method: "POST",
-          body: JSON.stringify({ text: interview.questions[0].question }),
+          body: JSON.stringify({ text: currentQuestion.question }),
         });
         if (response && response.audioUrl) {
           if (audioRef.current) {
@@ -238,8 +219,7 @@ export default function Interview() {
     }
   }, [interview, fetchApi]);
 
-  // Render loading state if interview is not loaded
-  if (!interview || interview.questions.length === 0) {
+  if (!interview || (Array.isArray(interview.questions) ? interview.questions.length === 0 : Object.keys(interview.questions).length === 0)) {
     return (
       <div className="text-center text-2xl font-bold text-purple-800">
         Loading interview...
@@ -247,14 +227,14 @@ export default function Interview() {
     );
   }
 
-  const currentQuestion = interview.questions[0];
+  const currentQuestion = Array.isArray(interview.questions) 
+    ? interview.questions[0] 
+    : Object.values(interview.questions)[0];
 
-  // Render the main interview interface
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 gradient-bg">
       <Card className="w-full max-w-2xl card-shadow">
         <CardContent className="p-6">
-          {/* Render countdown timer if showTimer is true */}
           {showTimer && (
             <div className="mb-6">
               <CountdownTimer
@@ -263,11 +243,9 @@ export default function Interview() {
               />
             </div>
           )}
-          {/* Display current question */}
           <h2 className="text-2xl mb-6 text-center">
             {currentQuestion.question}
           </h2>
-          {/* Display avatar image */}
           <div className="flex justify-center mb-6 relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-300 to-purple-300 rounded-full blur opacity-75"></div>
             <Image
@@ -278,7 +256,6 @@ export default function Interview() {
               className="rounded-full relative z-10"
             />
           </div>
-          {/* Button to play question audio */}
           <div className="flex justify-center mb-4">
             <Button
               onClick={handleTextToSpeech}
@@ -296,13 +273,11 @@ export default function Interview() {
             </Button>
           </div>
           <audio ref={audioRef} className="hidden" />
-          {/* Render audio visualizer component */}
           <Visualizer
             hasTimedOut={hasTimedOut}
             setHasRecordingStopped={setHasRecordingStopped}
             setRecordingStarted={setHasRecordingStarted}
           />
-          {/* Show submit button when recording has stopped and answer is not yet saved */}
           {hasRecordingStopped && saveStatus !== "success" && (
             <div className="flex justify-center mt-6">
               <Button
@@ -321,7 +296,6 @@ export default function Interview() {
               </Button>
             </div>
           )}
-          {/* Display save status messages */}
           {saveStatus === "saving" && (
             <p className="mt-4 text-yellow-600 font-semibold text-center">
               Processing your answer...
@@ -337,17 +311,15 @@ export default function Interview() {
               There was an error processing your answer. Please try again.
             </p>
           )}
-          {/* Show next question button when answer is successfully saved */}
           {saveStatus === "success" && (
             <div className="flex justify-center mt-6">
               <Button onClick={handleNextQuestion} className="button-gradient">
-                {interview.questions.length > 1
-                  ? "Next Question"
-                  : "Finish Interview"}
+                {Array.isArray(interview.questions) 
+                  ? (interview.questions.length > 1 ? "Next Question" : "Finish Interview")
+                  : (Object.keys(interview.questions).length > 1 ? "Next Question" : "Finish Interview")}
               </Button>
             </div>
           )}
-          {/* Display error messages */}
           {errorMessage && errorMessage !== "" && (
             <div className="flex flex-col items-center justify-center p-4 gradient-bg">
               <Card className="w-full max-w-2xl card-shadow">

@@ -48,24 +48,25 @@ app.post('/generate-questions', async (c) => {
     const prompt = `Generate 5 interview questions based on the following information:
     Title: ${jobTitle}
     Description: ${jobDescription}
-    Required Skills: ${skills}
+    Required Skills: ${skills.join(', ')}
     
-    Provide the questions and suggested answers in the following JSON format:
+    Provide the questions, suggested answers, and related skills in the following JSON format:
     {
       "questions": [
         {
           "question": "Question text here",
-          "suggested": "A detailed suggested answer for the question"
+          "suggested": "A detailed suggested answer for the question",
+          "skills": ["skill1", "skill2"]
         },
         ...
       ]
     }
     
-    Ensure the questions are relevant to the provided information and cover a range of topics suitable for the position. The suggested answers should be comprehensive and demonstrate a strong understanding of the topic.`
+    Ensure the questions are relevant to the provided information and cover a range of topics suitable for the position. The suggested answers should be comprehensive and demonstrate a strong understanding of the topic. For each question, include an array of skills that are most relevant to that specific question.`
 
     // Call OpenAI API to generate questions and answers
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4",
       messages: [
         { role: "system", content: "You are a helpful assistant that generates interview questions and suggested answers." },
         { role: "user", content: prompt }
@@ -187,11 +188,12 @@ You are an expert interviewer and career coach. Your task is to evaluate a candi
 1. Interview Question: {question}
 2. Candidate's Answer: {answer}
 3. Job Position: {position}
+4. Related Skills: {skills}
 
 Please provide your evaluation in the following JSON format:
 
 {
-  "feedback": "Detailed feedback on the candidate's answer, considering factors such as relevance, clarity, depth of knowledge, and alignment with the job position.",
+  "feedback": "Detailed feedback on the candidate's answer, considering factors such as relevance, clarity, depth of knowledge, and alignment with the job position and related skills.",
   "grade": {
     "letter": "A letter grade (A, B, C, D, or F)",
     "explanation": "A brief explanation of why this grade was given."
@@ -208,14 +210,14 @@ Please provide your evaluation in the following JSON format:
   ]
 }
 
-Ensure that your response is a valid JSON object. Remember to tailor your evaluation to the specific job position and consider industry standards and expectations when providing feedback and suggestions.
+Ensure that your response is a valid JSON object. Remember to tailor your evaluation to the specific job position and consider industry standards and expectations when providing feedback and suggestions. Pay special attention to how well the candidate's answer addresses the related skills for the question.
 `
 
 app.post('/get-results', async (c) => {
   try {
-    const { question, answer, position } = await c.req.json()
+    const { question, answer, position, skills } = await c.req.json()
 
-    if (!question || !answer || !position) {
+    if (!question || !answer || !position || !skills) {
       return c.json({ error: 'Missing required fields' }, 400)
     }
 
@@ -223,9 +225,10 @@ app.post('/get-results', async (c) => {
       .replace('{question}', question)
       .replace('{answer}', answer)
       .replace('{position}', position)
+      .replace('{skills}', skills.join(', '))
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         { role: 'system', content: 'You are an AI assistant that provides interview evaluations in JSON format.' },
         { role: 'user', content: prompt }
@@ -245,24 +248,24 @@ app.post('/get-results', async (c) => {
     console.error('Error:', error)
     return c.json({ error: 'An error occurred while processing your request' }, 500)
   }
-
 })
-
 
 export default app
 
 // This file sets up an API using Hono framework to interact with OpenAI's services.
-// It provides three main functionalities:
-// 1. Generating interview questions based on job details
+// It provides four main functionalities:
+// 1. Generating interview questions based on job details and skills
 // 2. Converting text to speech
 // 3. Transcribing audio files
+// 4. Evaluating interview answers
 //
 // The app uses environment variables for API keys and AWS credentials.
 // It also integrates with AWS S3 for storing audio files during the transcription process.
 //
-// Each route (/generate-questions, /text-to-speech, /transcribe) handles a specific task:
-// - /generate-questions: Uses OpenAI's GPT model to create relevant interview questions and answers
+// Each route (/generate-questions, /text-to-speech, /transcribe, /get-results) handles a specific task:
+// - /generate-questions: Uses OpenAI's GPT model to create relevant interview questions, answers, and associated skills
 // - /text-to-speech: Converts given text to speech using OpenAI's text-to-speech model
 // - /transcribe: Uploads an audio file to S3, then uses OpenAI's Whisper model to transcribe it
+// - /get-results: Evaluates a candidate's answer to an interview question, considering the job position and related skills
 //
 // Error handling is implemented for each route to manage potential issues with API calls or file handling.
