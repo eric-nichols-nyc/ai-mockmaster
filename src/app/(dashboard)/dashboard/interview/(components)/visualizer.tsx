@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
 import { useBlobStore } from "@/store/interviewStore";
 
@@ -11,7 +11,6 @@ interface VisualizerProps {
 
 const Visualizer: React.FC<VisualizerProps> = ({
   setHasRecordingStopped,
-  setRecordingStarted,
   hasTimedOut,
 }) => {
   const recorderControls = useVoiceVisualizer();
