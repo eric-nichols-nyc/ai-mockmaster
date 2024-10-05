@@ -1,25 +1,9 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { Interview as BaseInterview } from '@/db/schema';
+import { Interview, QuestionData } from '@/types';
 
-export type QuestionData = {
-  id: string;
-  interviewId: string;
-  grade: string | null;
-  question: string;
-  suggested: string | null;
-  answer: string | null;
-  audioUrl: string | null;
-  feedback: string | null;
-  improvements: string[] | null;
-  keyTakeaways: string[] | null;
-  skills: string[] | null; // Added skills property as optional
-  createdAt: Date;
-};
-
-export interface ExtendedInterview extends Omit<BaseInterview, 'questions'> {
+export interface ExtendedInterview extends Interview {
   currentBlob?: Blob;
-  questions: QuestionData[] | Record<string, QuestionData>;
 }
 
 interface InterviewState {

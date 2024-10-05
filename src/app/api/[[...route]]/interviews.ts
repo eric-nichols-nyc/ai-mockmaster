@@ -346,4 +346,44 @@ app.post('/:id/complete', async (c) => {
   }
 })
 
+app.get('/:id/questions/:questionId', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  const interviewId = c.req.param('id')
+  const questionId = c.req.param('questionId')
+
+  try {
+    // First, verify that the interview belongs to the authenticated user
+    const interviewCheck = await db.select({ id: interviews.id })
+      .from(interviews)
+      .where(and(
+        eq(interviews.id, interviewId),
+        eq(interviews.userId, auth.userId)
+      ))
+
+    if (interviewCheck.length === 0) {
+      return c.json({ error: 'Interview not found or unauthorized' }, 404)
+    }
+
+    const question = await db.select()
+      .from(interviewQuestions)
+      .where(and(
+        eq(interviewQuestions.id, questionId),
+        eq(interviewQuestions.interviewId, interviewId)
+      ))
+
+    if (question.length === 0) {
+      return c.json({ error: 'Question not found' }, 404)
+    }
+
+    return c.json(question[0])
+  } catch (error) {
+    console.error(`Error fetching question with id ${questionId} from interview ${interviewId}:`, error)
+    return c.json({ error: 'Failed to fetch question' }, 500)
+  }
+})
+
 export default app
