@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import useInterviewStore, { ExtendedInterview } from '@/store/interviewStore';
 import { QuestionData } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useInterviews } from "@/lib/api";
 import { Button } from '@/components/ui/button';
 
@@ -15,8 +15,10 @@ const Summary: React.FC = () => {
   const [currentQuestion, setCurrentQuestion] = useState<QuestionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
-  const interviewId = params.id as string;
 
+  const interviewId = params.id as string;
+  const qid = params.qid as string
+  console.log('qid = ', qid)
   useEffect(() => {
     const fetchInterviewAndQuestion = async () => {
       if (!interview || interview.id !== interviewId) {
@@ -36,8 +38,7 @@ const Summary: React.FC = () => {
             try {
               const questions = extendedInterview.questions;
               if (Array.isArray(questions) && questions.length > 0) {
-                const firstQuestionId = questions[0].id;
-                const fetchedQuestion = await getQuestionById(interviewId, firstQuestionId);
+                const fetchedQuestion = await getQuestionById(interviewId, qid);
                 console.log('fetched = ', fetchedQuestion)
                 setCurrentQuestion(fetchedQuestion);
               }
@@ -76,10 +77,10 @@ const Summary: React.FC = () => {
       <h1 className="text-2xl font-bold mb-4">Interview Summary</h1>
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle>Job Title: {interview.jobTitle}</CardTitle>
+          <CardTitle>{interview.jobTitle}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Job Description: {interview.jobDescription}</p>
+          <p>{interview.jobDescription}</p>
         </CardContent>
       </Card>
       {currentQuestion && (
@@ -109,7 +110,10 @@ const Summary: React.FC = () => {
               </ul>
             </div>
           </CardContent>
-          <Button>Save question</Button>
+          <CardFooter className="flex">
+            <Button className="flex-1">Save question</Button>
+            <Button className="flex-1">Delete question</Button>
+          </CardFooter>
         </Card>
       )}
     </div>

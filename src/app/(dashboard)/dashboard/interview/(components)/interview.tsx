@@ -160,7 +160,7 @@ export default function Interview() {
           ? [updatedQuestion, ...interview.questions.slice(1)]
           : { ...interview.questions, [updatedQuestion.id]: updatedQuestion }
       });
-      router.push(`/interview/${interview.id}/summary`);
+      router.push(`/dashboard/interview/${interview.id}/summary/${updatedQuestion.id}`);
     }
   }, [interview, updateQuestion, setInterview, router, fetchApi]);
 

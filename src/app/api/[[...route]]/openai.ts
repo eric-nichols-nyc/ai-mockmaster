@@ -66,7 +66,7 @@ app.post('/generate-questions', async (c) => {
 
     // Call OpenAI API to generate questions and answers
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: "You are a helpful assistant that generates interview questions and suggested answers." },
         { role: "user", content: prompt }
@@ -228,7 +228,7 @@ app.post('/get-results', async (c) => {
       .replace('{skills}', skills.join(', '))
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: 'You are an AI assistant that provides interview evaluations in JSON format.' },
         { role: 'user', content: prompt }

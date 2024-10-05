@@ -1,5 +1,5 @@
 import React from 'react'
-import Summary from './summary'
+import Summary from '../../../(components)/summary'
 
 const SummaryPage = () => {
   return (
