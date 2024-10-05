@@ -11,8 +11,6 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Github, Mail } from "lucide-react";
 
 export default function SignInPage() {
   return (
