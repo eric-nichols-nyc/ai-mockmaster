@@ -1,9 +1,9 @@
 import React from 'react'
 import InterviewCard from './interview-card'
-import { Interview } from '@/db/schema';
+import { InterviewRecord } from '@/db/schema';
 
 interface InterviewListProps {
-  interviews: Interview[] | undefined;
+  interviews: InterviewRecord[] | undefined;
 }
 
 const InterviewList: React.FC<InterviewListProps> = ({ interviews }) => {
