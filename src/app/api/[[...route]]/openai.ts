@@ -54,7 +54,8 @@ app.post('/generate-questions', async (c) => {
         {
           "question": "Question text here",
           "suggested": "A detailed suggested answer for the question",
-          "skills": ["skill1", "skill2"]
+          "skills": ["skill1", "skill2"],
+          "saved": false
         },
         ...
       ]

@@ -1,36 +1,40 @@
-export type FeedbackData = {
-  feedback: string;
-  grade: {
-    letter: string;
-    explanation: string;
-  };
-  improvements: string[];
-  keyTakeaways: string[];
-};
-
-export type QuestionData = {
+export interface InterviewQuestion {
   id: string;
-  interviewId: string;
   question: string;
-  suggested: string | null;
-  answer: string | null;
-  feedback: string | null;
-  grade: string | null;
-  improvements: string[] | null;
-  keyTakeaways: string[] | null;
-  audioUrl: string | null;
-  skills: string[] | null;
-  createdAt: Date;
-};
+  suggested: string;
+  answer?: string;
+  audioUrl?: string;
+  feedback?: string;
+  improvements?: string[];
+  keyTakeaways?: string[];
+  grade?: string;
+  saved?: boolean;
+  skills?: string[];
+  createdAt?: Date;
+  interviewId?: string;
+}
 
-export type Interview = {
+export interface Interview {
   id: string;
-  createdAt: Date;
   userId: string;
   jobTitle: string;
   jobDescription: string | null;
   skills: string[];
-  completed: boolean;
-  questions: QuestionData[] | Record<string, QuestionData>;
   date: Date;
-};
+  createdAt: Date;
+  completed: boolean;
+  questions: InterviewQuestion[];
+}
+
+export type QuestionData = InterviewQuestion;
+
+export type FeedbackGrade = {
+  letter: string;
+  feedback?: string;
+}
+export interface FeedbackData {
+  feedback: string;
+  improvements: string[];
+  keyTakeaways: string[];
+  grade: FeedbackGrade;
+}

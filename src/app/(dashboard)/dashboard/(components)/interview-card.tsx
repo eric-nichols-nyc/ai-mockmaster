@@ -1,9 +1,10 @@
 import React from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Interview } from '@/db/schema';
+import { InterviewRecord } from '@/db/schema';
 
-const InterviewCard: React.FC<Interview> = ({ id, jobTitle,  jobDescription }) => {
+const InterviewCard: React.FC<InterviewRecord> = ({ id, jobTitle, jobDescription, questions }) => {
+  console.log('questions ', questions)
   return (
     <Link href={`/dashboard/interview/${id}`} className="block">
       <Card className="w-full hover:shadow-md transition-shadow duration-200">
@@ -11,8 +12,13 @@ const InterviewCard: React.FC<Interview> = ({ id, jobTitle,  jobDescription }) =
           <CardTitle>{jobTitle}</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* <p className="text-gray-500">{date}</p> */}
           <p className="mt-2">{jobDescription}</p>
+          {questions && questions.length > 0 && (
+            <div className="mt-4">
+              <p className="font-semibold">Your Question:</p>
+              <p>{questions[0].question}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </Link>

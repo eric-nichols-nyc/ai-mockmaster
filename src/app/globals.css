@@ -14,33 +14,61 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
+
 
 @layer base {
   :root  {
-    --primary: 187 100% 34%;
+    --primary: 220 90% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 187 30% 75%;
-    --secondary-foreground: 187 30% 15%;
-    --background: 180 10% 96%;
-    --foreground: 187 100% 19%;
-    --card: 180 10% 94%;
-    --card-foreground: 187 100% 14%;
-    --popover: 180 10% 93%;
-    --popover-foreground: 187 100% 9%;
-    --muted: 180 12% 90%;
-    --muted-foreground: 180 12% 30%;
-    --accent: 180 10% 81%;
-    --accent-foreground: 180 10% 21%;
-    --destructive: 4 86% 41%;
+    --secondary: 0 0% 80%;
+    --secondary-foreground: 210 20% 10%;
+    --background: 210 100% 98%;
+    --foreground: 210 20% 20%;
+    --card: 210 100% 95%;
+    --card-foreground: 210 20% 10%;
+    --popover: 210 100% 95%;
+    --popover-foreground: 210 20% 20%;
+    --muted: 210 100% 90%;
+    --muted-foreground: 210 20% 30%;
+    --accent: 340 80% 70%;
+    --accent-foreground: 210 20% 10%;
+    --destructive: 0 100% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 91%;
-    --input: 0 0% 88%;
-    --ring: 187 100% 34%;
+    --border: 210 20% 90%;
+    --input: 210 100% 100%;
+    --ring: 220 90% 50%;
+    --chart-1: 220 90% 60%;
+    --chart-2: 340 80% 70%;
+    --chart-3: 60 80% 50%;
+    --chart-4: 0 100% 40%;
+    --chart-5: 120 60% 50%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 210 20% 15%;
+    --foreground: 210 90% 85%;
+    --card: 210 20% 20%;
+    --card-foreground: 210 90% 90%;
+    --popover: 210 20% 20%;
+    --popover-foreground: 210 90% 85%;
+    --primary: 220 90% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 60%;
+    --secondary-foreground: 210 90% 90%;
+    --muted: 210 20% 25%;
+    --muted-foreground: 210 90% 80%;
+    --accent: 340 80% 60%;
+    --accent-foreground: 210 90% 90%;
+    --destructive: 0 100% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 20% 40%;
+    --input: 210 20% 30%;
+    --ring: 220 90% 50%;
+    --chart-1: 220 90% 50%;
+    --chart-2: 340 80% 60%;
+    --chart-3: 60 80% 40%;
+    --chart-4: 0 100% 30%;
+    --chart-5: 120 60% 40%;
   }
 }
 
@@ -50,6 +78,12 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
@@ -70,10 +104,13 @@ body {
   @apply bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold transition-all duration-300;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  @apply font-bold text-purple-800;
-}
-
 .input-focus {
   @apply focus:ring-2 focus:ring-purple-300 focus:border-transparent;
+}
+
+html, body{
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: auto;
 }

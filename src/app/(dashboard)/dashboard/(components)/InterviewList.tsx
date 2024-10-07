@@ -1,15 +1,15 @@
 import React from 'react'
-import InterviewCard from './Interview'
+import InterviewCard from './interview-card'
 import { Interview } from '@/db/schema';
 
 interface InterviewListProps {
   interviews: Interview[] | undefined;
 }
 
-const InterviewList: React.FC<InterviewListProps> = ({ interviews }) => { 
+const InterviewList: React.FC<InterviewListProps> = ({ interviews }) => {
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6">Your Interviews</h2>
+      <h2 className="text-2xl font-semibold mb-6">Your Interview Questions</h2>
       {interviews&&interviews.length > 0 ? (
         <div className="space-y-4">
           {interviews.map((interview) => (
@@ -20,7 +20,7 @@ const InterviewList: React.FC<InterviewListProps> = ({ interviews }) => {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500">No interviews found. Start a new one!</p>
+        <p className="text-gray-500">No interviews questions found. Start a new interview!</p>
       )}
     </div>
   )

@@ -76,5 +76,33 @@ export const useInterviews = () => {
     }
   };
 
-  return { getInterviewById, getQuestionById, getCompletedInterviews };
+  const updateQuestionSaved = async (interviewId: string, questionId: string, saved: boolean): Promise<void> => {
+    try {
+      await fetchApi(`/interviews/${interviewId}/questions/${questionId}/save`, {
+        method: 'PUT',
+        body: { saved },
+      });
+    } catch (error) {
+      console.error('Error updating question saved status:', error);
+      throw error;
+    }
+  };
+
+  const getSavedInterviewQuestions = async (): Promise<Interview[]> => {
+    try {
+      const interviewsWithSavedQuestions = await fetchApi('/interviews/list/saved-questions', { method: 'GET' });
+      return interviewsWithSavedQuestions;
+    } catch (error) {
+      console.error('Error fetching interviews with saved questions:', error);
+      return [];
+    }
+  };
+
+  return { 
+    getInterviewById, 
+    getQuestionById, 
+    getCompletedInterviews, 
+    updateQuestionSaved,
+    getSavedInterviewQuestions
+  };
 };

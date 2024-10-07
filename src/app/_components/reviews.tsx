@@ -43,7 +43,7 @@ const reviewData = [
 
 const Reviews: React.FC = () => {
   return (
-    <section className="reviews py-12 bg-gray-100">
+    <section className="reviews py-12 bg-muted/40">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-8">What Our Users Say</h2>
         <div className="flex flex-col space-y-6 md:flex-row md:space-y-0 md:space-x-6">

@@ -13,8 +13,7 @@ import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import CountdownTimer from "@/components/countdown-timer";
-import {FeedbackData} from '@/types';
-import { InterviewQuestion } from "@/db/schema";
+import { FeedbackData, InterviewQuestion } from '@/types';
 
 export default function Interview() {
   const router = useRouter();
@@ -30,6 +29,7 @@ export default function Interview() {
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
+  // const [questionFinished, setQuestionFinished] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleTimerComplete = useCallback(() => {
@@ -81,7 +81,7 @@ export default function Interview() {
       if (interview && currentBlob) {
         const currentQuestion = Array.isArray(interview.questions) 
           ? interview.questions[0] 
-          : Object.values(interview.questions)[0];
+          : Object.values(interview.questions)[0] as InterviewQuestion;
         
         const audioFile = new File([currentBlob], "audio.webm", {
           type: currentBlob.type,
@@ -134,7 +134,7 @@ export default function Interview() {
     if (interview && (Array.isArray(interview.questions) ? interview.questions.length > 0 : Object.keys(interview.questions).length > 0)) {
       const currentQuestion = Array.isArray(interview.questions) 
         ? interview.questions[0] 
-        : Object.values(interview.questions)[0];
+        : Object.values(interview.questions)[0] as InterviewQuestion;
 
       const updatedQuestion: InterviewQuestion = {
         ...currentQuestion,
@@ -153,22 +153,15 @@ export default function Interview() {
       console.log('update ', update)
 
       updateQuestion(updatedQuestion.id, updatedQuestion);
-
-      setInterview({
-        ...interview,
-        questions: Array.isArray(interview.questions)
-          ? [updatedQuestion, ...interview.questions.slice(1)]
-          : { ...interview.questions, [updatedQuestion.id]: updatedQuestion }
-      });
       router.push(`/dashboard/interview/${interview.id}/summary/${updatedQuestion.id}`);
     }
-  }, [interview, updateQuestion, setInterview, router, fetchApi]);
+  }, [interview, updateQuestion, router, fetchApi]);
 
   const handleNextQuestion = useCallback(async () => {
     if (interview && interview.jobTitle && interview.questions) {
       const currentQuestion = Array.isArray(interview.questions) 
         ? interview.questions[0] 
-        : Object.values(interview.questions)[0];
+        : Object.values(interview.questions)[0] as InterviewQuestion;
 
       try {
         const response = await fetchApi(`/openai/get-results`, {
@@ -195,7 +188,7 @@ export default function Interview() {
       try {
         const currentQuestion = Array.isArray(interview.questions) 
           ? interview.questions[0] 
-          : Object.values(interview.questions)[0];
+          : Object.values(interview.questions)[0] as InterviewQuestion;
 
         const response = await fetchApi("/openai/text-to-speech", {
           method: "POST",
@@ -229,7 +222,7 @@ export default function Interview() {
 
   const currentQuestion = Array.isArray(interview.questions) 
     ? interview.questions[0] 
-    : Object.values(interview.questions)[0];
+    : Object.values(interview.questions)[0] as InterviewQuestion;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 gradient-bg">
@@ -315,8 +308,8 @@ export default function Interview() {
             <div className="flex justify-center mt-6">
               <Button onClick={handleNextQuestion} className="button-gradient">
                 {Array.isArray(interview.questions) 
-                  ? (interview.questions.length > 1 ? "Next Question" : "Finish Interview")
-                  : (Object.keys(interview.questions).length > 1 ? "Next Question" : "Finish Interview")}
+                  ? (interview.questions.length > 1 ? "Get Feedback" : "Finish Interview")
+                  : (Object.keys(interview.questions).length > 1 ? "Get Feedback" : "Finish Interview")}
               </Button>
             </div>
           )}

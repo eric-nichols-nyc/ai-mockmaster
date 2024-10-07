@@ -1,38 +1,72 @@
-"use client"
-import React from "react";
-import { useParams } from "next/navigation";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { useInterviews } from "@/lib/api";
-import { Interview } from "@/db/schema";
+"use client";
 
-const InterviewReviewPage: React.FC = () => {
+import React, { useEffect, useState } from "react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { useParams } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useInterviews } from "@/lib/api";
+import { Interview, InterviewQuestion } from "@/types";
+import { format } from "date-fns";
+
+const InterviewPage = () => {
+  const [interview, setInterview] = useState<Interview | null>(null);
+  const [savedQuestions, setSavedQuestions] = useState<InterviewQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { getInterviewById } = useInterviews();
   const params = useParams();
   const id = params.id as string;
-  const { getInterviewById } = useInterviews();
-  const [interview, setInterview] = React.useState<Interview | null>(null);
-  const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
-    const fetchInterview = async () => {
-      const fetchedInterview = await getInterviewById(id);
-      console.log(fetchedInterview)
-      setInterview(fetchedInterview);
-      setLoading(false);
+  useEffect(() => {
+    const fetchInterviewData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Assuming we have the interview ID. You might need to adjust this based on your routing.
+        const interviewId = id; // Replace with actual ID or fetch from route params
+        const fetchedInterview = await getInterviewById(interviewId);
+        if (fetchedInterview) {
+          setInterview(fetchedInterview);
+          // Filter saved questions
+          const savedQuestions = fetchedInterview.questions.filter(
+            (q) => q.saved === true
+          );
+          setSavedQuestions(savedQuestions);
+        } else {
+          setError("Interview not found.");
+        }
+      } catch (err) {
+        console.error("Error fetching interview:", err);
+        setError("Failed to fetch the interview. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
     };
-    fetchInterview();
-  }, [id]);
 
-  if (loading) {
-    return <div>Loading...</div>;
+    fetchInterviewData();
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading interview data...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
   }
 
   if (!interview) {
-    return <div>Interview not found</div>;
+    return <div>No interview data available.</div>;
   }
 
   return (
-    <div className="container max-w-2xl mx-auto p-4">
+    <div className="container mx-auto p-4">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -40,15 +74,49 @@ const InterviewReviewPage: React.FC = () => {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Interview Review: {interview.jobTitle}</BreadcrumbPage>
+            <BreadcrumbPage>
+              Interview Review: {interview.jobTitle}
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>{interview.jobTitle}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-2">
+            <strong>Date:</strong>{" "}
+            {format(new Date(interview.date), "MMMM d, yyyy")}
+          </p>
+          <p>
+            <strong>Job Description:</strong> {interview.jobDescription}
+          </p>
+        </CardContent>
+      </Card>
 
-      
-      <Card><CardTitle></CardTitle><CardContent>review summary goes here...</CardContent></Card>
+      <h2 className="text-xl font-semibold mb-4">Saved Questions</h2>
+      {savedQuestions.length === 0 ? (
+        <p>No saved questions for this interview.</p>
+      ) : (
+        savedQuestions.map((question, index) => (
+          <Card key={question.id} className="mb-4">
+            <CardHeader>
+              <CardTitle>Question {index + 1}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-2">
+                <strong>Your Answer:</strong> {question.answer}
+              </p>
+              <p>
+                <strong>Feedback:</strong> {question.feedback}
+              </p>
+            </CardContent>
+          </Card>
+        ))
+      )}
     </div>
   );
 };
 
-export default InterviewReviewPage;
+export default InterviewPage;

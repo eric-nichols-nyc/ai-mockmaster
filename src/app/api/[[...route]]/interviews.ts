@@ -1,11 +1,12 @@
 import { Hono } from 'hono'
 import { db } from '@/db'
 import { interviews, interviewQuestions } from '@/db/schema'
-import { desc, eq, and } from 'drizzle-orm'
+import { desc, eq, and, exists } from 'drizzle-orm'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { v4 as uuidv4 } from 'uuid';
+import { InterviewQuestion } from '@/types'
 
 const app = new Hono()
 
@@ -48,6 +49,13 @@ const updateQuestionSchema = z.object({
   }),
 })
 
+// New schema for updating the saved status of a question
+const updateQuestionSavedSchema = z.object({
+  body: z.object({
+    saved: z.boolean()
+  })
+})
+
 // GET / - List all interviews for the authenticated user
 app.get('/', async (c) => {
   const auth = getAuth(c);
@@ -88,10 +96,14 @@ app.post('/', zValidator('json', createInterviewSchema.shape.body), async (c) =>
         skills,
         date: new Date(),
         completed: false,
-        questions: questions // This is already an array of objects
+        questions: questions.map(q => ({
+          ...q,
+          id: uuidv4(), // Generate a new UUID for each question
+        })) as InterviewQuestion[]
       }).returning()
 
       const interviewQuestionValues = questions.map(q => ({
+        id: uuidv4(), // Generate a new UUID for each question
         interviewId: interview.id,
         question: q.question,
         suggested: q.suggested,
@@ -383,6 +395,167 @@ app.get('/:id/questions/:questionId', async (c) => {
   } catch (error) {
     console.error(`Error fetching question with id ${questionId} from interview ${interviewId}:`, error)
     return c.json({ error: 'Failed to fetch question' }, 500)
+  }
+})
+
+// Corrected route: GET /saved-questions - Fetch all interviews with saved questions for the authenticated user
+app.get('/saved-questions', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  try {
+    const interviewsWithSavedQuestions = await db
+      .select({
+        id: interviews.id,
+        jobTitle: interviews.jobTitle,
+        date: interviews.date,
+      })
+      .from(interviews)
+      .where(
+        and(
+          eq(interviews.userId, auth.userId),
+          exists(
+            db.select()
+              .from(interviewQuestions)
+              .where(
+                and(
+                  eq(interviewQuestions.interviewId, interviews.id),
+                  eq(interviewQuestions.saved, true)
+                )
+              )
+          )
+        )
+      )
+      .orderBy(desc(interviews.date));
+
+    // Fetch saved questions for each interview
+    const interviewsWithQuestions = await Promise.all(
+      interviewsWithSavedQuestions.map(async (interview) => {
+        const savedQuestions = await db
+          .select()
+          .from(interviewQuestions)
+          .where(
+            and(
+              eq(interviewQuestions.interviewId, interview.id),
+              eq(interviewQuestions.saved, true)
+            )
+          );
+
+        return {
+          ...interview,
+          questions: savedQuestions,
+        };
+      })
+    );
+
+    return c.json(interviewsWithQuestions);
+  } catch (error) {
+    console.error('Error fetching interviews with saved questions:', error);
+    return c.json({ error: 'Failed to fetch interviews with saved questions' }, 500);
+  }
+});
+
+// Corrected route: GET /list/saved-questions - Fetch all interviews with saved questions for the authenticated user
+app.get('/list/saved-questions', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  try {
+    const interviewsWithSavedQuestions = await db
+      .select({
+        id: interviews.id,
+        jobTitle: interviews.jobTitle,
+        date: interviews.date,
+      })
+      .from(interviews)
+      .where(
+        and(
+          eq(interviews.userId, auth.userId),
+          exists(
+            db.select()
+              .from(interviewQuestions)
+              .where(
+                and(
+                  eq(interviewQuestions.interviewId, interviews.id),
+                  eq(interviewQuestions.saved, true)
+                )
+              )
+          )
+        )
+      )
+      .orderBy(desc(interviews.date));
+
+    // Fetch saved questions for each interview
+    const interviewsWithQuestions = await Promise.all(
+      interviewsWithSavedQuestions.map(async (interview) => {
+        const savedQuestions = await db
+          .select()
+          .from(interviewQuestions)
+          .where(
+            and(
+              eq(interviewQuestions.interviewId, interview.id),
+              eq(interviewQuestions.saved, true)
+            )
+          );
+
+        return {
+          ...interview,
+          questions: savedQuestions,
+        };
+      })
+    );
+      return c.json(interviewsWithQuestions);
+    } catch (error) {
+      console.error('Error fetching interviews with saved questions:', error);
+      return c.json({ error: 'Failed to fetch interviews with saved questions' }, 500);
+    }
+  });
+
+  // New route: PUT /:id/questions/:questionId/save - Update the saved status of a specific question
+app.put('/:id/questions/:questionId/save', zValidator('json', updateQuestionSavedSchema.shape.body), async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  const interviewId = c.req.param('id')
+  const questionId = c.req.param('questionId')
+  const { saved } = c.req.valid('json')
+
+  try {
+    // First, verify that the interview belongs to the authenticated user
+    const interviewCheck = await db.select({ id: interviews.id })
+      .from(interviews)
+      .where(and(
+        eq(interviews.id, interviewId),
+        eq(interviews.userId, auth.userId)
+      ))
+
+    if (interviewCheck.length === 0) {
+      return c.json({ error: 'Interview not found or unauthorized' }, 404)
+    }
+
+    // Update the saved status of the question
+    const updatedQuestion = await db.update(interviewQuestions)
+      .set({ saved })
+      .where(and(
+        eq(interviewQuestions.id, questionId),
+        eq(interviewQuestions.interviewId, interviewId)
+      ))
+      .returning()
+
+    if (updatedQuestion.length === 0) {
+      return c.json({ error: 'Question not found' }, 404)
+    }
+
+    return c.json(updatedQuestion[0])
+  } catch (error) {
+    console.error(`Error updating saved status for question ${questionId} in interview ${interviewId}:`, error)
+    return c.json({ error: 'Failed to update question saved status' }, 500)
   }
 })
 
