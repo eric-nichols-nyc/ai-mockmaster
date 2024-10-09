@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import InterviewList from './(components)/InterviewList'
 import { useInterviews } from "@/lib/api"
 import { InterviewRecord } from '@/db/schema';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
 
 const DashboardPage = () => {
   const { getSavedInterviewQuestions } = useInterviews();
@@ -32,7 +33,15 @@ const DashboardPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="container mx-auto max-w-4xl px-4 py-8">
-        <header className="mb-8 text-center bg-white shadow-md rounded-lg p-6 transition-all duration-300 ease-in-out hover:shadow-lg">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Dashboard</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <header className="mb-8 mt-4 text-center bg-white shadow-md rounded-lg p-6 transition-all duration-300 ease-in-out hover:shadow-lg">
           <div className="flex justify-center mb-6">
             <svg width="200" height="120" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="200" height="120" fill="#F3F4F6"/>

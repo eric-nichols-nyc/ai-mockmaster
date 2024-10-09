@@ -11,11 +11,6 @@ const StickyHeader: React.FC = () => {
           AI MockMaster
         </Link>
         <nav className="flex items-center">
-          <ul className="flex space-x-4 mr-4">
-            <li><Link href="/" className="hover:text-gray-600 dark:hover:text-gray-300">Home</Link></li>
-            <li><Link href="/dashboard" className="hover:text-gray-600 dark:hover:text-gray-300">Dashboard</Link></li>
-            {/* Add more navigation items as needed */}
-          </ul>
           <div className="ml-4">
             <SignedOut>
               <SignInButton mode="modal">
