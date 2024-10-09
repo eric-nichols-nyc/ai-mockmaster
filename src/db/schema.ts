@@ -15,7 +15,7 @@ export const interviews = pgTable('interviews', {
     userId: text('user_id').references(() => users.id).notNull(),
     jobTitle: text('job_title').notNull(),
     jobDescription: text('job_description'),
-    skills: text('skills').array().notNull(),
+    skills: text('skills').array(),
     date: timestamp('date').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     completed: boolean('completed').default(false).notNull(),

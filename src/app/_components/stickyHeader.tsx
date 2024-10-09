@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const StickyHeader: React.FC = () => {
   return (
-    <header className="sticky top-0 z-50 w-full bg-card shadow-md">
+    <header className="sticky top-0 z-50 w-full bg-primary shadow-md">
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <Link href="/" className="text-xl font-bold text-black dark:text-white">
           AI MockMaster

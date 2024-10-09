@@ -30,7 +30,7 @@ const DashboardPage = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full w-full bg-gradient-to-b from-cyan-100 to-sky-100">
+    <div className="flex flex-col h-full w-full">
     <div className="container mx-auto max-w-4xl px-4 py-8 ">
       <header className="mb-8 text-center">
         <h1 className="text-3xl font-bold mb-2">Interview Dashboard</h1>

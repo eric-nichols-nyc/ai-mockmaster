@@ -9,8 +9,8 @@ import { useApi } from '@/lib/api';
 
 const formSchema = z.object({
   jobTitle: z.string().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
-  jobDescription: z.string().min(1, 'Description is required').max(500, 'Description must be 500 characters or less'),
-  skills: z.array(z.string()).min(1, 'At least one skill is required'),
+  jobDescription: z.string(),
+  skills: z.array(z.string()),
 });
 
 const InterviewForm: React.FC = () => {
@@ -18,9 +18,9 @@ const InterviewForm: React.FC = () => {
   const { setInterview } = useInterviewStore();
   const { fetchApi } = useApi();
 
-  const [jobTitle, setTitle] = useState('fullstack developer');
-  const [jobDescription, setDescription] = useState('full-stack dev wanted with node experience');
-  const [skillsInput, setSkillsInput] = useState('node, aws');
+  const [jobTitle, setTitle] = useState('');
+  const [jobDescription, setDescription] = useState('');
+  const [skillsInput, setSkillsInput] = useState('');
   const [interviewId, setInterviewId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -76,6 +76,7 @@ const InterviewForm: React.FC = () => {
           acc[curr.path[0]] = curr.message;
           return acc;
         }, {} as { [key: string]: string });
+        console.log('error', errors)
         setFieldErrors(errors);
       } else if (err instanceof Error) {
         console.error('Error submitting form:', err);
@@ -106,7 +107,7 @@ const InterviewForm: React.FC = () => {
             className="mt-1"
             disabled={isSubmitted}
           />
-          {fieldErrors.title && <p className="text-red-500 text-sm mt-1">{fieldErrors.title}</p>}
+          {fieldErrors.jobTitle && <p className="text-red-500 text-sm mt-1">{fieldErrors.jobTitle}</p>}
         </div>
         <div>
           <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Description</label>
