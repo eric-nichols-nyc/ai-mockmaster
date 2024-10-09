@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import useInterviewStore from '@/store/interviewStore';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useApi } from '@/lib/api';
+import AnimatedButton from './AnimatedButton';
 
 const formSchema = z.object({
   jobTitle: z.string().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
@@ -27,8 +27,12 @@ const InterviewForm: React.FC = () => {
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitted) {
+      handleNext();
+      return;
+    }
     setIsLoading(true);
     setError('');
     setFieldErrors({});
@@ -37,17 +41,14 @@ const InterviewForm: React.FC = () => {
     const formData = { jobTitle, jobDescription, skills };
 
     try {
-      // Validate form data
       const validatedData = formSchema.parse(formData);
    
       const data = await fetchApi('/openai/generate-questions', {
         method: 'POST',
         body: JSON.stringify(validatedData),
       });
-      // check to make sure data.questions is an array
-      console.log('data questions = ', data.questions)
+
       if (Array.isArray(data.questions)) {
-        // Create a new interview in the database
         const newInterview = await fetchApi('/interviews', {
           method: 'POST',
           body: JSON.stringify({ 
@@ -56,16 +57,10 @@ const InterviewForm: React.FC = () => {
           }),
         });
 
-        console.log('new interview = ', newInterview)
-
-        // Set the interview in the store
         setInterview(newInterview);
         setInterviewId(newInterview.id);
-
-        // Set isSubmitted to true to show the Next button
         setIsSubmitted(true);
       } else if (data.error) {
-        console.log('error', data.error);
         throw new Error(data.error);
       } else {
         throw new Error('Invalid response from server');
@@ -76,10 +71,8 @@ const InterviewForm: React.FC = () => {
           acc[curr.path[0]] = curr.message;
           return acc;
         }, {} as { [key: string]: string });
-        console.log('error', errors)
         setFieldErrors(errors);
       } else if (err instanceof Error) {
-        console.error('Error submitting form:', err);
         setError(`An error occurred while submitting the form: ${err.message}`);
       } else {
         setError('An unknown error occurred while submitting the form.');
@@ -95,58 +88,56 @@ const InterviewForm: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 w-full max-w-2xl">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+    <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl mx-auto transition-all duration-300 ease-in-out hover:shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-center">Generate Interview</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
           <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700">Interview Title</label>
           <Input
             type="text"
             id="jobTitle"
             value={jobTitle}
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1"
+            className="w-full transition-all duration-300 ease-in-out focus:ring-2 focus:ring-blue-500"
             disabled={isSubmitted}
           />
           {fieldErrors.jobTitle && <p className="text-red-500 text-sm mt-1">{fieldErrors.jobTitle}</p>}
         </div>
-        <div>
+        <div className="space-y-2">
           <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Description</label>
           <Textarea
             id="jobDescription"
             value={jobDescription}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1"
+            className="w-full transition-all duration-300 ease-in-out focus:ring-2 focus:ring-blue-500"
             disabled={isSubmitted}
+            rows={4}
           />
           {fieldErrors.jobDescription && <p className="text-red-500 text-sm mt-1">{fieldErrors.jobDescription}</p>}
         </div>
-        <div>
+        <div className="space-y-2">
           <label htmlFor="skills" className="block text-sm font-medium text-gray-700">Required Skills (comma-separated)</label>
           <Input
             type="text"
             id="skills"
             value={skillsInput}
             onChange={(e) => setSkillsInput(e.target.value)}
-            className="mt-1"
+            className="w-full transition-all duration-300 ease-in-out focus:ring-2 focus:ring-blue-500"
             disabled={isSubmitted}
             placeholder="e.g. JavaScript, React, Node.js"
           />
           {fieldErrors.skills && <p className="text-red-500 text-sm mt-1">{fieldErrors.skills}</p>}
         </div>
-        {!isSubmitted && (
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Generating Interview...' : 'Generate Interview'}
-          </Button>
-        )}
+        <div className="flex justify-center">
+          <AnimatedButton
+            onClick={handleSubmit}
+            isLoading={isLoading}
+            isSubmitted={isSubmitted}
+          />
+        </div>
       </form>
       
-      {isSubmitted && (
-        <Button onClick={handleNext} className="mt-4">
-          Next
-        </Button>
-      )}
-      
-      {error && <p className="text-red-500 mt-2">{error}</p>}
+      {error && <p className="text-red-500 mt-4 text-center">{error}</p>}
     </div>
   );
 };

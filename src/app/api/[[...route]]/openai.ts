@@ -1,9 +1,9 @@
 // Import necessary dependencies
 import { Hono } from 'hono'
 import { OpenAI } from 'openai'
-import { HTTPException } from 'hono/http-exception'
 import { v4 as uuidv4 } from 'uuid'
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
+import { z } from 'zod'
 
 // Check for required environment variables
 if (!process.env.OPENAI_API_KEY) {
@@ -31,22 +31,40 @@ const s3Client = new S3Client({
   },
 });
 
+// Define Zod schemas for route validation
+const GenerateQuestionsSchema = z.object({
+  jobTitle: z.string().min(1, "Job title is required"),
+  jobDescription: z.string().optional(),
+  skills: z.array(z.string()).optional(),
+})
+
+const TextToSpeechSchema = z.object({
+  text: z.string().min(1, "Text is required"),
+})
+
+const TranscribeSchema = z.object({
+  audio: z.instanceof(File, { message: "Audio file is required" }),
+})
+
+const GetResultsSchema = z.object({
+  question: z.string().min(1, "Question is required"),
+  answer: z.string().min(1, "Answer is required"),
+  position: z.string().min(1, "Position is required"),
+  skills: z.array(z.string()),
+})
+
 // Route: Generate interview questions
 app.post('/generate-questions', async (c) => {
   try {
-    // Extract job details from request body
-    const { jobTitle, jobDescription, skills } = await c.req.json()
-
-    // Validate input
-    if (!jobTitle || !jobDescription || !skills) {
-      return c.json({ error: 'Title, description, and skills are required' }, 400)
-    }
+    // Parse and validate request body
+    const body = await c.req.json()
+    const validatedData = GenerateQuestionsSchema.parse(body)
 
     // Construct prompt for OpenAI
     const prompt = `Generate 5 interview questions based on the following information:
-    Title: ${jobTitle}
-    Description: ${jobDescription}
-    Required Skills: ${skills.join(', ')}
+    Title: ${validatedData.jobTitle}
+    ${validatedData.jobDescription ? `Description: ${validatedData.jobDescription}` : ''}
+    ${validatedData.skills ? `Required Skills: ${validatedData.skills.join(', ')}` : ''}
     
     Provide the questions, suggested answers, and related skills in the following JSON format:
     {
@@ -61,7 +79,7 @@ app.post('/generate-questions', async (c) => {
       ]
     }
     
-    Ensure the questions are relevant to the provided information and cover a range of topics suitable for the position. The suggested answers should be comprehensive and demonstrate a strong understanding of the topic. For each question, include an array of skills that are most relevant to that specific question.`
+    Ensure the questions are relevant to the provided information and cover a range of topics suitable for the position. The suggested answers should be comprehensive and demonstrate a strong understanding of the topic. For each question, include an array of skills that are most relevant to that specific question. If no skills were provided, infer relevant skills based on the job title${validatedData.jobDescription ? ' and description' : ''}.`
 
     // Call OpenAI API to generate questions and answers
     const response = await openai.chat.completions.create({
@@ -81,6 +99,9 @@ app.post('/generate-questions', async (c) => {
 
   } catch (error) {
     console.error('Question and Answer Generation Error:', error)
+    if (error instanceof z.ZodError) {
+      return c.json({ error: error.errors }, 400)
+    }
     return c.json({ error: 'Failed to generate interview questions and answers' }, 500)
   }
 })
@@ -88,13 +109,9 @@ app.post('/generate-questions', async (c) => {
 // Route: Convert text to speech
 app.post('/text-to-speech', async (c) => {
   try {
-    // Extract text from request body
-    const { text } = await c.req.json()
-
-    // Validate input
-    if (!text) {
-      return c.json({ error: 'Text is required' }, 400)
-    }
+    // Parse and validate request body
+    const body = await c.req.json()
+    const { text } = TextToSpeechSchema.parse(body)
 
     // Call OpenAI API to generate speech
     const mp3 = await openai.audio.speech.create({
@@ -126,6 +143,9 @@ app.post('/text-to-speech', async (c) => {
 
   } catch (error) {
     console.error('Text-to-Speech Error:', error)
+    if (error instanceof z.ZodError) {
+      return c.json({ error: error.errors }, 400)
+    }
     return c.json({ error: 'Failed to generate audio' }, 500)
   }
 })
@@ -133,28 +153,22 @@ app.post('/text-to-speech', async (c) => {
 // Route: Transcribe audio
 app.post('/transcribe', async (c) => {
   console.log('Transcribing...')
-  const body = await c.req.parseBody()
-  console.log('Received body:', body)
-
-  // Validate and extract audio file from request
-  let audioFile;
-  if (body.audio && body.audio instanceof File) {
-    audioFile = body.audio;
-    console.log('Audio file received:', audioFile.name, audioFile.type, audioFile.size)
-  } else {
-    console.error('Invalid audio file:', body.audio)
-    throw new HTTPException(400, { message: 'No valid audio file provided' })
-  }
-
   try {
+    const body = await c.req.parseBody()
+    console.log('Received body:', body)
+
+    // Validate and extract audio file from request
+    const { audio } = TranscribeSchema.parse(body)
+    console.log('Audio file received:', audio.name, audio.type, audio.size)
+
     // Upload audio file to S3
     const fileKey = `${uuidv4()}.webm`
-    const arrayBuffer = await audioFile.arrayBuffer()
+    const arrayBuffer = await audio.arrayBuffer()
     const uploadParams = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: fileKey,
       Body: Buffer.from(arrayBuffer),
-      ContentType: audioFile.type,
+      ContentType: audio.type,
     }
 
     await s3Client.send(new PutObjectCommand(uploadParams))
@@ -180,10 +194,12 @@ app.post('/transcribe', async (c) => {
     return c.json({ transcription: transcription.text, audioUrl: s3Url })
   } catch (error) {
     console.error('Error during transcription or upload:', error)
-    if (error instanceof OpenAI.APIError) {
-      throw new HTTPException(500, { message: 'An error occurred with the OpenAI API' })
+    if (error instanceof z.ZodError) {
+      return c.json({ error: error.errors }, 400)
+    } else if (error instanceof OpenAI.APIError) {
+      return c.json({ error: 'An error occurred with the OpenAI API' }, 500)
     } else {
-      throw new HTTPException(500, { message: 'An unexpected error occurred during transcription or upload' })
+      return c.json({ error: 'An unexpected error occurred during transcription or upload' }, 500)
     }
   }
 })
@@ -221,11 +237,8 @@ Ensure that your response is a valid JSON object. Remember to tailor your evalua
 
 app.post('/get-results', async (c) => {
   try {
-    const { question, answer, position, skills } = await c.req.json()
-
-    if (!question || !answer || !position || !skills) {
-      return c.json({ error: 'Missing required fields' }, 400)
-    }
+    const body = await c.req.json()
+    const { question, answer, position, skills } = GetResultsSchema.parse(body)
 
     const prompt = evaluationPrompt
       .replace('{question}', question)
@@ -234,7 +247,7 @@ app.post('/get-results', async (c) => {
       .replace('{skills}', skills.join(', '))
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: 'You are an AI assistant that provides interview evaluations in JSON format.' },
         { role: 'user', content: prompt }
@@ -252,6 +265,9 @@ app.post('/get-results', async (c) => {
     }
   } catch (error) {
     console.error('Error:', error)
+    if (error instanceof z.ZodError) {
+      return c.json({ error: error.errors }, 400)
+    }
     return c.json({ error: 'An error occurred while processing your request' }, 500)
   }
 })
@@ -275,3 +291,4 @@ export default app
 // - /get-results: Evaluates a candidate's answer to an interview question, considering the job position and related skills
 //
 // Error handling is implemented for each route to manage potential issues with API calls or file handling.
+// Zod schemas are used for input validation across all routes.

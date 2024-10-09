@@ -11,7 +11,7 @@ import useInterviewStore, {
 } from "@/store/interviewStore";
 import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mic } from "lucide-react";
 import CountdownTimer from "@/components/countdown-timer";
 import { FeedbackData, InterviewQuestion } from '@/types';
 
@@ -29,7 +29,7 @@ export default function Interview() {
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
-  // const [questionFinished, setQuestionFinished] = useState(false);
+  const [feedbackStatus, setFeedbackStatus] = useState<"generate" | "thinking" | "ready">("generate");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleTimerComplete = useCallback(() => {
@@ -112,6 +112,7 @@ export default function Interview() {
               audioUrl: updatedResponse.audioUrl,
             });
             setSaveStatus("success");
+            setFeedbackStatus("generate");
           } else {
             throw new Error("Invalid response from server");
           }
@@ -142,7 +143,7 @@ export default function Interview() {
         grade: feedbackData.grade.letter,
         improvements: feedbackData.improvements,
         keyTakeaways: feedbackData.keyTakeaways,
-        skills: currentQuestion.skills || [] // Include skills, defaulting to an empty array if not present
+        skills: currentQuestion.skills || []
       };
 
       const update = await fetchApi(`/interviews/${interview.id}/questions/${updatedQuestion.id}`, {
@@ -153,34 +154,47 @@ export default function Interview() {
       console.log('update ', update)
 
       updateQuestion(updatedQuestion.id, updatedQuestion);
-      router.push(`/dashboard/interview/${interview.id}/summary/${updatedQuestion.id}`);
+      setFeedbackStatus("ready");
     }
-  }, [interview, updateQuestion, router, fetchApi]);
+  }, [interview, updateQuestion, fetchApi]);
 
-  const handleNextQuestion = useCallback(async () => {
-    if (interview && interview.jobTitle && interview.questions) {
-      const currentQuestion = Array.isArray(interview.questions) 
-        ? interview.questions[0] 
-        : Object.values(interview.questions)[0] as InterviewQuestion;
+  const handleFeedbackButton = useCallback(async () => {
+    if (feedbackStatus === "generate") {
+      setFeedbackStatus("thinking");
+      if (interview && interview.jobTitle && interview.questions) {
+        const currentQuestion = Array.isArray(interview.questions) 
+          ? interview.questions[0] 
+          : Object.values(interview.questions)[0] as InterviewQuestion;
 
-      try {
-        const response = await fetchApi(`/openai/get-results`, {
-          method: "POST",
-          body: JSON.stringify({
-            question: currentQuestion.question,
-            answer: currentQuestion.answer,
-            position: interview.jobDescription,
-            skills: currentQuestion.skills || [] // Include skills in the request
-          }),
-        });
+        try {
+          const response = await fetchApi(`/openai/get-results`, {
+            method: "POST",
+            body: JSON.stringify({
+              question: currentQuestion.question,
+              answer: currentQuestion.answer,
+              position: interview.jobTitle,
+              skills: currentQuestion.skills || [],
+              saved:true
+            }),
+          });
 
-        console.log('response ', response);
-        updateCurrentQuestionWithFeedback(response)
-      } catch(e) {
-        console.log('error', e)
+          console.log('response ', response);
+          await updateCurrentQuestionWithFeedback(response);
+        } catch(e) {
+          console.log('error', e);
+          setFeedbackStatus("generate");
+          setErrorMessage("Failed to generate feedback. Please try again.");
+        }
+      }
+    } else if (feedbackStatus === "ready") {
+      if (interview && interview.id) {
+        const currentQuestion = Array.isArray(interview.questions) 
+          ? interview.questions[0] 
+          : Object.values(interview.questions)[0] as InterviewQuestion;
+        router.push(`/dashboard/interview/${interview.id}/summary/${currentQuestion.id}`);
       }
     }
-  }, [interview, updateCurrentQuestionWithFeedback, fetchApi]);
+  }, [interview, updateCurrentQuestionWithFeedback, fetchApi, feedbackStatus, router]);
 
   const handleTextToSpeech = useCallback(async () => {
     if (interview && (Array.isArray(interview.questions) ? interview.questions[0] : Object.values(interview.questions)[0])) {
@@ -225,8 +239,8 @@ export default function Interview() {
     : Object.values(interview.questions)[0] as InterviewQuestion;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 gradient-bg">
-      <Card className="w-full max-w-2xl card-shadow">
+    <div className="flex flex-col items-center justify-center p-4">
+      <Card className="w-full max-w-4xl card-shadow">
         <CardContent className="p-6">
           {showTimer && (
             <div className="mb-6">
@@ -236,11 +250,16 @@ export default function Interview() {
               />
             </div>
           )}
-          <h2 className="text-2xl mb-6 text-center">
+          <div className="flex items-center justify-center mb-4 p-2 bg-yellow-100 rounded-md">
+            <Mic className="w-5 h-5 mr-2 text-yellow-600" />
+            <p className="text-yellow-800 font-medium">
+              Please enable your microphone to start the interview.
+            </p>
+          </div>
+          <h2 className="text-2xl mb-6 text-center font-bold">
             {currentQuestion.question}
           </h2>
           <div className="flex justify-center mb-6 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-300 to-purple-300 rounded-full blur opacity-75"></div>
             <Image
               src="/images/interview/avatar.png"
               alt="Interview Avatar"
@@ -266,11 +285,13 @@ export default function Interview() {
             </Button>
           </div>
           <audio ref={audioRef} className="hidden" />
-          <Visualizer
-            hasTimedOut={hasTimedOut}
-            setHasRecordingStopped={setHasRecordingStopped}
-            setRecordingStarted={setHasRecordingStarted}
-          />
+          <div className="relative">
+            <Visualizer
+              hasTimedOut={hasTimedOut}
+              setHasRecordingStopped={setHasRecordingStopped}
+              setRecordingStarted={setHasRecordingStarted}
+            />
+          </div>
           {hasRecordingStopped && saveStatus !== "success" && (
             <div className="flex justify-center mt-6">
               <Button
@@ -289,7 +310,24 @@ export default function Interview() {
               </Button>
             </div>
           )}
-          {saveStatus === "saving" && (
+      
+          {saveStatus === "success" && (
+            <div className="flex justify-center mt-6">
+              <Button onClick={handleFeedbackButton} className="button-gradient" disabled={feedbackStatus === "thinking"}>
+                {feedbackStatus === "generate" && "Generate Results"}
+                {feedbackStatus === "thinking" && (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    AI is thinking...
+                  </>
+                )}
+                {feedbackStatus === "ready" && (Array.isArray(interview.questions) 
+                  ? (interview.questions.length > 1 ? "See Feedback" : "See Results")
+                  : (Object.keys(interview.questions).length > 1 ? "See Feedback" : "See Results"))}
+              </Button>
+            </div>
+          )}
+              {saveStatus === "saving" && (
             <p className="mt-4 text-yellow-600 font-semibold text-center">
               Processing your answer...
             </p>
@@ -303,15 +341,6 @@ export default function Interview() {
             <p className="mt-4 text-red-600 font-semibold text-center">
               There was an error processing your answer. Please try again.
             </p>
-          )}
-          {saveStatus === "success" && (
-            <div className="flex justify-center mt-6">
-              <Button onClick={handleNextQuestion} className="button-gradient">
-                {Array.isArray(interview.questions) 
-                  ? (interview.questions.length > 1 ? "Get Feedback" : "Finish Interview")
-                  : (Object.keys(interview.questions).length > 1 ? "Get Feedback" : "Finish Interview")}
-              </Button>
-            </div>
           )}
           {errorMessage && errorMessage !== "" && (
             <div className="flex flex-col items-center justify-center p-4 gradient-bg">
