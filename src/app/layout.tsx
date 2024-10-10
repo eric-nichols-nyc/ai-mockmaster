@@ -5,7 +5,6 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
 import StickyHeader from "./_components/stickyHeader";
-import Footer from "./_components/footer";
 import { Toaster } from "sonner";
 
 const geistSans = localFont({
@@ -40,7 +39,6 @@ export default function RootLayout({
             <main className="flex-grow">
               {children}
             </main>
-            <Footer />
             <Toaster />
           </ThemeProvider>
         </body>

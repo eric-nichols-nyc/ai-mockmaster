@@ -9,8 +9,8 @@ import AnimatedButton from './AnimatedButton';
 
 const formSchema = z.object({
   jobTitle: z.string().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
-  jobDescription: z.string(),
-  skills: z.array(z.string()),
+  jobDescription: z.string().optional(),
+  skills: z.array(z.string()).optional(),
 });
 
 const InterviewForm: React.FC = () => {
@@ -92,7 +92,7 @@ const InterviewForm: React.FC = () => {
       <h2 className="text-2xl font-bold mb-6 text-center">Generate Interview</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700">Interview Title</label>
+          <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700">Interview Title <span className="text-red-500">*</span></label>
           <Input
             type="text"
             id="jobTitle"
@@ -100,11 +100,12 @@ const InterviewForm: React.FC = () => {
             onChange={(e) => setTitle(e.target.value)}
             className="w-full transition-all duration-300 ease-in-out focus:ring-2 focus:ring-blue-500"
             disabled={isSubmitted}
+            required
           />
           {fieldErrors.jobTitle && <p className="text-red-500 text-sm mt-1">{fieldErrors.jobTitle}</p>}
         </div>
         <div className="space-y-2">
-          <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Description</label>
+          <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Description (optional)</label>
           <Textarea
             id="jobDescription"
             value={jobDescription}
@@ -112,11 +113,12 @@ const InterviewForm: React.FC = () => {
             className="w-full transition-all duration-300 ease-in-out focus:ring-2 focus:ring-blue-500"
             disabled={isSubmitted}
             rows={4}
+            placeholder="Enter a brief description of the job or interview context..."
           />
           {fieldErrors.jobDescription && <p className="text-red-500 text-sm mt-1">{fieldErrors.jobDescription}</p>}
         </div>
         <div className="space-y-2">
-          <label htmlFor="skills" className="block text-sm font-medium text-gray-700">Required Skills (comma-separated)</label>
+          <label htmlFor="skills" className="block text-sm font-medium text-gray-700">Required Skills (optional, comma-separated)</label>
           <Input
             type="text"
             id="skills"

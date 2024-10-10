@@ -138,6 +138,10 @@ html, body{
   margin: 0;
   overflow: auto;
 }
+
+.primaryText {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-foreground to-90% to-primary-foreground;
+}
 .voice-visualizer__buttons-container{
   /* display:flex;
   position:absolute !important;

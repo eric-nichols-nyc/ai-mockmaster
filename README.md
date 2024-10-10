@@ -13,6 +13,9 @@ AI MockMaster is an AI-powered interview simulator designed to help users practi
 - Text-to-speech for question playback
 - Interview progress tracking
 - Summary and feedback after completion
+- Dashboard with interview list and individual interview cards
+- Animated components for enhanced user experience
+- Detailed summary page for each interview question
 
 ## Technology Stack
 
@@ -35,49 +38,50 @@ src/
 ├── app/
 │   ├── (dashboard)/
 │   │   └── dashboard/
+│   │       ├── (components)/
+│   │       │   ├── Interview-card.tsx
+│   │       │   └── InterviewList.tsx
+│   │       ├── page.tsx
 │   │       └── interview/
 │   │           ├── (components)/
 │   │           │   ├── interview.tsx
-│   │           │   ├── interview-form.tsx
-│   │           │   ├── audio-recorder.tsx
-│   │           │   └── visualizer.tsx
-│   │           ├── page.tsx
+│   │           │   ├── interview-generation-form.tsx
+│   │           │   ├── visualizer.tsx
+│   │           │   ├── summary.tsx
+│   │           │   └── AnimatedButton.tsx
 │   │           ├── [id]/
 │   │           │   ├── page.tsx
-│   │           │   ├── start/
-│   │           │   │   └── page.tsx
 │   │           │   └── summary/
-│   │           │       ├── page.tsx
-│   │           │       └── summary.tsx
-│   └── api/
-│       └── [[...route]]/
-│           ├── interviews.ts
-│           ├── openai.ts
-│           ├── route.ts
-│           └── transcript.ts
-├── components/
-│   └── ui/
+│   │           │       └── [qid]/
+│   │           │           └── page.tsx
+│   ├── _components/
+│   │   ├── hero.tsx
+│   │   ├── features.tsx
+│   │   └── stickyHeader.tsx
+│   ├── api/
+│   │   └── [[...route]]/
+│   │       ├── route.ts
+│   │       └── openai.ts
+│   ├── globals.css
+│   └── layout.tsx
 ├── db/
-│   ├── index.ts
 │   └── schema.ts
-├── lib/
-│   └── api.ts
-└── store/
-    └── interviewStore.ts
+└── lib/
+    └── api.ts
 ```
 
 ## How It Works
 
-1. **Interview Initialization**: Users start a new interview or continue an existing one.
-2. **Question Generation**: AI generates interview questions based on the job description.
-3. **Question Presentation**: The app presents questions one at a time.
+1. **Interview Initialization**: Users start a new interview or continue an existing one from the dashboard.
+2. **Question Generation**: AI generates interview questions based on the job description using the interview-generation-form.
+3. **Question Presentation**: The app presents questions one at a time in the interview component.
 4. **Audio Playback**: Users can listen to the question using text-to-speech functionality.
 5. **Answer Recording**: Users record their answers using the built-in audio recorder.
-6. **Real-time Visualization**: The app provides real-time audio visualization during recording.
+6. **Real-time Visualization**: The visualizer component provides real-time audio visualization during recording.
 7. **Transcription**: After recording, the answer is transcribed using a speech-to-text service.
 8. **Answer Processing**: The transcribed answer is saved and associated with the current question.
-9. **Progress Tracking**: Users can move to the next question or finish the interview.
-10. **Summary and Feedback**: Upon completion, users can view a summary of their interview performance, including AI-generated feedback and improvements.
+9. **Progress Tracking**: Users can move to the next question or finish the interview using the AnimatedButton component.
+10. **Summary and Feedback**: Upon completion, users can view a summary of their interview performance, including AI-generated feedback and improvements, in the summary component.
 
 ## Setup and Installation
 
@@ -142,7 +146,7 @@ npm test
 
 ## AI Integration
 
-The project leverages OpenAI's GPT-3.5-turbo model for generating interview questions and the text-to-speech model for audio playback of questions.
+The project leverages OpenAI's GPT models for generating interview questions and providing AI-powered feedback. The OpenAI integration is handled through the `openai.ts` file in the API routes.
 
 ## Contributing
 
@@ -151,4 +155,5 @@ Contributions are welcome! Please read our contributing guidelines and code of c
 ## License
 
 [Add your chosen license here]
+
 # ai-mockmaster
