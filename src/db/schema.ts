@@ -5,13 +5,13 @@ export interface InterviewQuestion {
   interviewId: string;
   question: string;
   suggested: string;
-  answer?: string;
-  audioUrl?: string;
-  feedback?: string;
-  improvements: string[];
-  keyTakeaways: string[];
-  grade?: string;
-  skills: string[];
+  answer: string | null;
+  audioUrl: string | null;
+  feedback: string | null;
+  improvements: string[] | null;
+  keyTakeaways: string[] | null;
+  grade: string | null;
+  skills: string[] | null;
   saved: boolean;
   createdAt: Date;
 }

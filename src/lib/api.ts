@@ -1,5 +1,5 @@
 import { useAuth } from '@clerk/nextjs';
-import { Interview, QuestionData } from '@/types';
+import { InterviewRecord, InterviewQuestionRecord } from '@/db/schema';
 
 // Define a custom type that extends RequestInit
 type CustomRequestInit = Omit<RequestInit, 'body'> & {
@@ -46,33 +46,33 @@ export const useApi = () => {
 export const useInterviews = () => {
   const { fetchApi } = useApi();
 
-  const getInterviewById = async (id: string): Promise<Interview | null> => {
+  const getInterviewById = async (id: string): Promise<InterviewRecord | null> => {
     try {
       const interview = await fetchApi(`/interviews/${id}`, { method: 'GET' });
       return interview;
     } catch (error) {
       console.error('Error fetching interview:', error);
-    return null;
+      return null;
     }
   };
 
-  const getQuestionById = async (interviewId: string, questionId: string): Promise<QuestionData | null> => {
+  const getQuestionById = async (interviewId: string, questionId: string): Promise<InterviewQuestionRecord | null> => {
     try {
       const question = await fetchApi(`/interviews/${interviewId}/questions/${questionId}`, { method: 'GET' });
       return question;
     } catch (error) {
       console.error('Error fetching question:', error);
-    return null;
+      return null;
     }
   };
 
-  const getCompletedInterviews = async (): Promise<Interview[]> => {
+  const getCompletedInterviews = async (): Promise<InterviewRecord[]> => {
     try {
       const completedInterviews = await fetchApi('/interviews/list/completed', { method: 'GET' });
       return completedInterviews;
     } catch (error) {
       console.error('Error fetching completed interviews:', error);
-    return [];
+      return [];
     }
   };
 
@@ -88,20 +88,23 @@ export const useInterviews = () => {
     }
   };
 
-  const getSavedInterviewQuestions = async (): Promise<Interview[]> => {
+  const getSavedInterviewQuestions = async (): Promise<InterviewRecord[]> => {
     try {
       const interviewsWithSavedQuestions = await fetchApi('/interviews/list/saved-questions', { method: 'GET' });
       return interviewsWithSavedQuestions;
     } catch (error) {
       console.error('Error fetching interviews with saved questions:', error);
-    return [];
+      return [];
+    }
   };
-}
 
   const deleteInterview = async (id: string): Promise<void> => {
-    // Placeholder function
-    console.log(`Deleting interview with id: ${id}`);
-    // In a real implementation, this would make an API call to delete the interview
+    try {
+      await fetchApi(`/interviews/${id}`, { method: 'DELETE' });
+    } catch (error) {
+      console.error('Error deleting interview:', error);
+      throw error;
+    }
   };
 
   return {

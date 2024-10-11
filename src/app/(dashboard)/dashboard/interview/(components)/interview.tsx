@@ -5,20 +5,18 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import useInterviewStore, {
-  useBlobStore,
-  ExtendedInterview
-} from "@/store/interviewStore";
+import useBlobStore from "@/store/interviewStore";
 import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
 import { Loader2, Mic } from "lucide-react";
 import CountdownTimer from "@/components/countdown-timer";
-import { FeedbackData, InterviewQuestion } from '@/types';
+import { FeedbackData } from "@/types";
+import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 
 export default function Interview() {
   const router = useRouter();
   const { fetchApi } = useApi();
-  const { interview, setInterview, updateQuestion } = useInterviewStore();
+  const [interview, setInterview] = useState<InterviewRecord>()
   const { currentBlob } = useBlobStore();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,7 +47,7 @@ export default function Interview() {
           method: "GET",
         });
         if (response && JSON.stringify(response) !== JSON.stringify(interview)) {
-          setInterview(response as ExtendedInterview);
+          setInterview(response);
         } else if (!response) {
           setErrorMessage("No current interview found. Please start a new interview.");
         }
@@ -81,7 +79,7 @@ export default function Interview() {
       if (interview && currentBlob) {
         const currentQuestion = Array.isArray(interview.questions) 
           ? interview.questions[0] 
-          : Object.values(interview.questions)[0] as InterviewQuestion;
+          : Object.values(interview.questions)[0] as InterviewQuestionRecord;
         
         const audioFile = new File([currentBlob], "audio.webm", {
           type: currentBlob.type,
@@ -107,10 +105,6 @@ export default function Interview() {
           );
 
           if (updatedResponse && updatedResponse.audioUrl) {
-            updateQuestion(currentQuestion.id, {
-              answer: transcriptResponse.transcription,
-              audioUrl: updatedResponse.audioUrl,
-            });
             setSaveStatus("success");
             setFeedbackStatus("generate");
           } else {
@@ -129,21 +123,24 @@ export default function Interview() {
     } finally {
       setIsSubmittingRecording(false);
     }
-  }, [fetchApi, interview, updateQuestion, currentBlob]);
+  }, [fetchApi, interview, currentBlob]);
 
   const updateCurrentQuestionWithFeedback = useCallback(async (feedbackData: FeedbackData) => {
     if (interview && (Array.isArray(interview.questions) ? interview.questions.length > 0 : Object.keys(interview.questions).length > 0)) {
       const currentQuestion = Array.isArray(interview.questions) 
         ? interview.questions[0] 
-        : Object.values(interview.questions)[0] as InterviewQuestion;
+        : Object.values(interview.questions)[0] as InterviewQuestionRecord;
 
-      const updatedQuestion: InterviewQuestion = {
+      const updatedQuestion: InterviewQuestionRecord = {
         ...currentQuestion,
-        feedback: feedbackData.feedback,
-        grade: feedbackData.grade.letter,
-        improvements: feedbackData.improvements,
-        keyTakeaways: feedbackData.keyTakeaways,
-        skills: currentQuestion.skills || []
+        feedback: feedbackData.feedback || null,
+        grade: feedbackData.grade?.letter || null,
+        improvements: feedbackData.improvements && feedbackData.improvements.length > 0 ? feedbackData.improvements : null,
+        keyTakeaways: feedbackData.keyTakeaways && feedbackData.keyTakeaways.length > 0 ? feedbackData.keyTakeaways : null,
+        skills: currentQuestion.skills || null,
+        answer: currentQuestion.answer || null,
+        audioUrl: currentQuestion.audioUrl || null,
+        saved: true
       };
 
       const update = await fetchApi(`/interviews/${interview.id}/questions/${updatedQuestion.id}`, {
@@ -152,11 +149,9 @@ export default function Interview() {
       });
 
       console.log('update ', update)
-
-      updateQuestion(updatedQuestion.id, updatedQuestion);
       setFeedbackStatus("ready");
     }
-  }, [interview, updateQuestion, fetchApi]);
+  }, [interview, fetchApi]);
 
   const handleFeedbackButton = useCallback(async () => {
     if (feedbackStatus === "generate") {
@@ -164,7 +159,7 @@ export default function Interview() {
       if (interview && interview.jobTitle && interview.questions) {
         const currentQuestion = Array.isArray(interview.questions) 
           ? interview.questions[0] 
-          : Object.values(interview.questions)[0] as InterviewQuestion;
+          : Object.values(interview.questions)[0] as InterviewQuestionRecord;
 
         try {
           const response = await fetchApi(`/openai/get-results`, {
@@ -190,7 +185,7 @@ export default function Interview() {
       if (interview && interview.id) {
         const currentQuestion = Array.isArray(interview.questions) 
           ? interview.questions[0] 
-          : Object.values(interview.questions)[0] as InterviewQuestion;
+          : Object.values(interview.questions)[0] as InterviewQuestionRecord;
         router.push(`/dashboard/interview/${interview.id}/summary/${currentQuestion.id}`);
       }
     }
@@ -202,7 +197,7 @@ export default function Interview() {
       try {
         const currentQuestion = Array.isArray(interview.questions) 
           ? interview.questions[0] 
-          : Object.values(interview.questions)[0] as InterviewQuestion;
+          : Object.values(interview.questions)[0] as InterviewQuestionRecord;
 
         const response = await fetchApi("/openai/text-to-speech", {
           method: "POST",
@@ -236,7 +231,7 @@ export default function Interview() {
 
   const currentQuestion = Array.isArray(interview.questions) 
     ? interview.questions[0] 
-    : Object.values(interview.questions)[0] as InterviewQuestion;
+    : Object.values(interview.questions)[0] as InterviewQuestionRecord;
 
   return (
     <div className="flex flex-col items-center justify-center p-4">

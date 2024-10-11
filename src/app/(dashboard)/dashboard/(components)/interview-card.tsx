@@ -29,7 +29,7 @@ const InterviewCard: React.FC<InterviewCardProps> = ({ id, jobTitle, jobDescript
   };
 
   return (
-    <Link href={`/dashboard/interview/review/${id}${firstSavedQuestionId ? `/${firstSavedQuestionId}` : ''}`} className="block">
+    <Link href={`/dashboard/interview/${id}/review/${firstSavedQuestionId ? `/${firstSavedQuestionId}` : ''}`} className="block">
       <motion.div
         whileHover={{ scale: 1.03 }}
         transition={{ type: "spring", stiffness: 300 }}

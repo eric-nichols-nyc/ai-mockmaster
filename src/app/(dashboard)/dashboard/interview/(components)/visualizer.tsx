@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
-import { useBlobStore } from "@/store/interviewStore";
+import useBlobStore from "@/store/interviewStore";
 
 interface VisualizerProps {
   setHasRecordingStopped: (value: boolean) => void;

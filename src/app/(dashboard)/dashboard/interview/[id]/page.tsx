@@ -12,12 +12,12 @@ import {
 import { useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useInterviews } from "@/lib/api";
-import { Interview, InterviewQuestion } from "@/types";
+import { InterviewRecord, InterviewQuestionRecord } from "@/db/schema";
 import { format } from "date-fns";
 
 const InterviewPage = () => {
-  const [interview, setInterview] = useState<Interview | null>(null);
-  const [savedQuestions, setSavedQuestions] = useState<InterviewQuestion[]>([]);
+  const [interview, setInterview] = useState<InterviewRecord | undefined>(undefined);
+  const [savedQuestions, setSavedQuestions] = useState<InterviewQuestionRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { getInterviewById } = useInterviews();

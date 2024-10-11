@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import useInterviewStore from '@/store/interviewStore';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useApi } from '@/lib/api';
@@ -15,7 +14,6 @@ const formSchema = z.object({
 
 const InterviewForm: React.FC = () => {
   const router = useRouter();
-  const { setInterview } = useInterviewStore();
   const { fetchApi } = useApi();
 
   const [jobTitle, setTitle] = useState('');
@@ -56,8 +54,6 @@ const InterviewForm: React.FC = () => {
             questions: data.questions
           }),
         });
-
-        setInterview(newInterview);
         setInterviewId(newInterview.id);
         setIsSubmitted(true);
       } else if (data.error) {

@@ -13,7 +13,7 @@ const InterviewList: React.FC<InterviewListProps> = ({ interviews, onDeleteInter
     <div className="space-y-6">
       {interviews && interviews.length > 0 ? (
         <motion.div 
-          className="grid gap-6 md:grid-cols-2"
+          className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}

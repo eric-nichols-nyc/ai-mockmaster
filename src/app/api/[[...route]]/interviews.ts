@@ -1,12 +1,11 @@
 import { Hono } from 'hono'
-import { db } from '@/db'
-import { interviews, interviewQuestions } from '@/db/schema'
+import { db } from '../../../db'
+import { interviews, interviewQuestions, InterviewQuestion } from '../../../db/schema'
 import { desc, eq, and, exists } from 'drizzle-orm'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { v4 as uuidv4 } from 'uuid';
-import { InterviewQuestion } from '@/types'
 
 const app = new Hono()
 
@@ -88,28 +87,35 @@ app.post('/', zValidator('json', createInterviewSchema.shape.body), async (c) =>
     const { jobTitle, jobDescription, skills, questions } = c.req.valid('json')
 
     const newInterview = await db.transaction(async (tx) => {
+      const interviewId = uuidv4();
+      const formattedQuestions: InterviewQuestion[] = questions.map(q => ({
+        id: uuidv4(),
+        interviewId: interviewId,
+        question: q.question,
+        suggested: q.suggested,
+        answer: null,
+        audioUrl: null,
+        feedback: null,
+        improvements: null,
+        keyTakeaways: null,
+        grade: null,
+        skills: null,
+        saved: false,
+        createdAt: new Date()
+      }));
+
       const [interview] = await tx.insert(interviews).values({
-        id: uuidv4(), // Generate a new UUID
+        id: interviewId,
         userId: auth.userId,
         jobTitle,
         jobDescription,
         skills,
         date: new Date(),
         completed: false,
-        questions: questions.map(q => ({
-          ...q,
-          id: uuidv4(), // Generate a new UUID for each question
-        })) as InterviewQuestion[]
+        questions: formattedQuestions
       }).returning()
 
-      const interviewQuestionValues = questions.map(q => ({
-        id: uuidv4(), // Generate a new UUID for each question
-        interviewId: interview.id,
-        question: q.question,
-        suggested: q.suggested,
-      }))
-
-      await tx.insert(interviewQuestions).values(interviewQuestionValues)
+      await tx.insert(interviewQuestions).values(formattedQuestions)
       console.log("interview======================", interview)
       return interview
     })

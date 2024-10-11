@@ -5,27 +5,21 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import InterviewList from './(components)/InterviewList'
 import { useInterviews } from "@/lib/api"
-import { InterviewRecord, InterviewQuestionRecord } from '@/db/schema';
+import { InterviewRecord } from "@/db/schema"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
 import { PlusCircle } from 'lucide-react';
 
-type InterviewWithQuestions = Omit<InterviewRecord, 'questions'> & { questions: InterviewQuestionRecord[] };
-
 const DashboardPage = () => {
   const { getSavedInterviewQuestions, deleteInterview } = useInterviews();
-  const [interviews, setInterviews] = useState<InterviewWithQuestions[] | undefined>(undefined);
+  const [interviews, setInterviews] = useState<InterviewRecord[] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchInterviews = async () => {
     try {
       const data = await getSavedInterviewQuestions();
-      const transformedData: InterviewWithQuestions[] = data.map((interview: InterviewRecord) => ({
-        ...interview,
-        questions: interview.questions as InterviewQuestionRecord[],
-        skills: interview.skills || []
-      }));
-      setInterviews(transformedData);
+      console.log('data ', data)
+      setInterviews(data);
     } catch (err) {
       setError('Failed to fetch interviews. Please try again later.');
       console.error('Error fetching interviews:', err);
