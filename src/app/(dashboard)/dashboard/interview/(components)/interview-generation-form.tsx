@@ -71,7 +71,7 @@ const InterviewForm: React.FC = () => {
       } else if (err instanceof Error) {
         setError(`An error occurred while submitting the form: ${err.message}`);
       } else {
-        setError('An unknown error occurred while submitting the form.');
+        setError('An error occurred while submitting the form: Invalid response from server:'+ err);
       }
       console.error('Error submitting form:', err);
     } finally {

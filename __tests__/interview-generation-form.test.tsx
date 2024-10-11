@@ -1,16 +1,16 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import InterviewForm from '../src/app/(dashboard)/dashboard/interview/(components)/interview-generation-form';
+import { useApi } from '@/lib/api';
 
-// Mock the next/navigation module
+// Mocks for external dependencies
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
   }),
 }));
 
-// Mock the custom components
 vi.mock('components/ui/input', () => ({
   Input: ({ id, ...props }: any) => <input id={id} data-testid={id} {...props} />,
 }));
@@ -27,28 +27,82 @@ vi.mock('../src/app/(dashboard)/dashboard/interview/(components)/AnimatedButton'
   ),
 }));
 
-// Mock the lib/api module
+const mockFetchApi = vi.fn();
 vi.mock('lib/api', () => ({
   useApi: () => ({
-    fetchApi: vi.fn(),
+    fetchApi: mockFetchApi,
   }),
 }));
 
-describe('InterviewForm', () => {
-  it('renders the form with all required fields', () => {
+describe('InterviewForm Error Handling', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('displays validation errors for empty required fields', async () => {
     render(<InterviewForm />);
+    
+    const submitButton = screen.getByRole('button', { name: 'Submit' });
+    fireEvent.click(submitButton);
 
-    // Check if the form title is present
-    expect(screen.getByText('Generate Interview')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Title is required')).toBeInTheDocument();
+    });
+  });
 
-    // Check if the required input field is present
-    expect(screen.getByTestId('jobTitle')).toBeInTheDocument();
+  it('displays API error when fetching questions fails', async () => {
+    mockFetchApi.mockRejectedValueOnce(new Error('API Error'));
 
-    // Check if the optional fields are present
-    expect(screen.getByTestId('jobDescription')).toBeInTheDocument();
-    expect(screen.getByTestId('skills')).toBeInTheDocument();
+    render(<InterviewForm />);
+    
+    const titleInput = screen.getByTestId('jobTitle');
+    fireEvent.change(titleInput, { target: { value: 'Test Job' } });
 
-    // Check if the submit button is present
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
+    const submitButton = screen.getByRole('button', { name: 'Submit' });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      const errorElement = screen.getByText(/An error occurred while submitting the form/i);
+      expect(errorElement).toBeInTheDocument();
+      expect(errorElement.textContent).toContain('An error occurred while submitting the form:');
+    });
+  });
+
+  it('displays error for invalid server response', async () => {
+    mockFetchApi.mockResolvedValueOnce({ invalidData: 'Invalid response' });
+
+    render(<InterviewForm />);
+    
+    const titleInput = screen.getByTestId('jobTitle');
+    fireEvent.change(titleInput, { target: { value: 'Test Job' } });
+
+    const submitButton = screen.getByRole('button', { name: 'Submit' });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      const errorElement = screen.getByText(/An error occurred while submitting the form/i);
+      expect(errorElement).toBeInTheDocument();
+      expect(errorElement.textContent).toContain('An error occurred while submitting the form: Failed to parse URL from /api/openai/generate-questions');
+    });
+  });
+
+  it('handles unexpected errors', async () => {
+    mockFetchApi.mockImplementationOnce(() => {
+      throw new Error('Unexpected error');
+    });
+
+    render(<InterviewForm />);
+    
+    const titleInput = screen.getByTestId('jobTitle');
+    fireEvent.change(titleInput, { target: { value: 'Test Job' } });
+
+    const submitButton = screen.getByRole('button', { name: 'Submit' });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      const errorElement = screen.getByText(/An error occurred while submitting the form/i);
+      expect(errorElement).toBeInTheDocument();
+      expect(errorElement.textContent).toContain('An error occurred while submitting the form');
+    });
   });
 });
