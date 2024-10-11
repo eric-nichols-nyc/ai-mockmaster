@@ -90,6 +90,7 @@ const InterviewForm: React.FC = () => {
         <div className="space-y-2">
           <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700">Interview Title <span className="text-red-500">*</span></label>
           <Input
+            data-testid="jobTitle"
             type="text"
             id="jobTitle"
             value={jobTitle}
@@ -103,6 +104,7 @@ const InterviewForm: React.FC = () => {
         <div className="space-y-2">
           <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Description (optional)</label>
           <Textarea
+            data-testid="jobDescription"
             id="jobDescription"
             value={jobDescription}
             onChange={(e) => setDescription(e.target.value)}
@@ -118,6 +120,7 @@ const InterviewForm: React.FC = () => {
           <Input
             type="text"
             id="skills"
+            data-testid="skills"
             value={skillsInput}
             onChange={(e) => setSkillsInput(e.target.value)}
             className="w-full transition-all duration-300 ease-in-out focus:ring-2 focus:ring-blue-500"
