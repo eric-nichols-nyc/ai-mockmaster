@@ -1,5 +1,20 @@
 import { pgTable, text, timestamp, uuid, boolean, jsonb } from 'drizzle-orm/pg-core';
-import { InterviewQuestion } from '@/types';
+
+export interface InterviewQuestion {
+  id: string;
+  interviewId: string;
+  question: string;
+  suggested: string;
+  answer?: string;
+  audioUrl?: string;
+  feedback?: string;
+  improvements: string[];
+  keyTakeaways: string[];
+  grade?: string;
+  skills: string[];
+  saved: boolean;
+  createdAt: Date;
+}
 
 // Users table (unchanged)
 export const users = pgTable('users', {

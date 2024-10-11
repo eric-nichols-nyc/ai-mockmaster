@@ -61,7 +61,7 @@ app.post('/generate-questions', async (c) => {
     const validatedData = GenerateQuestionsSchema.parse(body)
 
     // Construct prompt for OpenAI
-    const prompt = `Generate 5 interview questions based on the following information:
+    const prompt = `Generate 1 interview questions based on the following information:
     Title: ${validatedData.jobTitle}
     ${validatedData.jobDescription ? `Description: ${validatedData.jobDescription}` : ''}
     ${validatedData.skills ? `Required Skills: ${validatedData.skills.join(', ')}` : ''}

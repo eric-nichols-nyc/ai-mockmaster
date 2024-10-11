@@ -5,31 +5,48 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import InterviewList from './(components)/InterviewList'
 import { useInterviews } from "@/lib/api"
-import { InterviewRecord } from '@/db/schema';
+import { InterviewRecord, InterviewQuestionRecord } from '@/db/schema';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
 import { PlusCircle } from 'lucide-react';
 
+type InterviewWithQuestions = Omit<InterviewRecord, 'questions'> & { questions: InterviewQuestionRecord[] };
+
 const DashboardPage = () => {
-  const { getSavedInterviewQuestions } = useInterviews();
-  const [interviews, setInterviews] = useState<InterviewRecord[] | undefined>(undefined);
+  const { getSavedInterviewQuestions, deleteInterview } = useInterviews();
+  const [interviews, setInterviews] = useState<InterviewWithQuestions[] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchInterviews = async () => {
-      try {
-        const data = await getSavedInterviewQuestions();
-        setInterviews(data);
-      } catch (err) {
-        setError('Failed to fetch interviews. Please try again later.');
-        console.error('Error fetching interviews:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchInterviews = async () => {
+    try {
+      const data = await getSavedInterviewQuestions();
+      const transformedData: InterviewWithQuestions[] = data.map((interview: InterviewRecord) => ({
+        ...interview,
+        questions: interview.questions as InterviewQuestionRecord[],
+        skills: interview.skills || []
+      }));
+      setInterviews(transformedData);
+    } catch (err) {
+      setError('Failed to fetch interviews. Please try again later.');
+      console.error('Error fetching interviews:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchInterviews();
   }, []);
+
+  const onDeleteInterview = async (id: string) => {
+    try {
+      await deleteInterview(id);
+      await fetchInterviews(); // Refresh the list after deletion
+    } catch (err) {
+      console.error('Error deleting interview:', err);
+      setError('Failed to delete interview. Please try again.');
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -46,9 +63,9 @@ const DashboardPage = () => {
           <h1 className="text-4xl font-bold mb-4 text-gray-800">Interview Dashboard</h1>
           <p className="text-gray-600 mb-6 text-lg">Manage and review your interviews</p>
           <Link href="/dashboard/interview">
-          <Button className="hover:bg-gray-100">
-            <PlusCircle className="mr-2 h-4 w-4" /> New Interview
-          </Button>
+            <Button className="hover:bg-gray-100">
+              <PlusCircle className="mr-2 h-4 w-4" /> New Interview
+            </Button>
           </Link>
         </header>
 
@@ -61,7 +78,7 @@ const DashboardPage = () => {
             <div className="text-center text-red-500 p-4 bg-red-100 rounded-md">
               <p className="font-semibold">{error}</p>
               <Button 
-                onClick={() => window.location.reload()} 
+                onClick={() => fetchInterviews()} 
                 className="mt-4 bg-red-500 hover:bg-red-600 text-white"
               >
                 Retry
@@ -70,7 +87,7 @@ const DashboardPage = () => {
           ) : (
             <div className="transition-all duration-300 ease-in-out">
               <h2 className="text-2xl font-semibold mb-4 text-gray-800">Your Interviews</h2>
-              <InterviewList interviews={interviews} />
+              <InterviewList interviews={interviews} onDeleteInterview={onDeleteInterview} />
             </div>
           )}
         </main>

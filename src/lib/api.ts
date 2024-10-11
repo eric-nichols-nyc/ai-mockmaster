@@ -52,7 +52,7 @@ export const useInterviews = () => {
       return interview;
     } catch (error) {
       console.error('Error fetching interview:', error);
-      return null;
+    return null;
     }
   };
 
@@ -62,7 +62,7 @@ export const useInterviews = () => {
       return question;
     } catch (error) {
       console.error('Error fetching question:', error);
-      return null;
+    return null;
     }
   };
 
@@ -72,7 +72,7 @@ export const useInterviews = () => {
       return completedInterviews;
     } catch (error) {
       console.error('Error fetching completed interviews:', error);
-      return [];
+    return [];
     }
   };
 
@@ -94,15 +94,22 @@ export const useInterviews = () => {
       return interviewsWithSavedQuestions;
     } catch (error) {
       console.error('Error fetching interviews with saved questions:', error);
-      return [];
-    }
+    return [];
+  };
+}
+
+  const deleteInterview = async (id: string): Promise<void> => {
+    // Placeholder function
+    console.log(`Deleting interview with id: ${id}`);
+    // In a real implementation, this would make an API call to delete the interview
   };
 
-  return { 
-    getInterviewById, 
-    getQuestionById, 
-    getCompletedInterviews, 
+  return {
+    getInterviewById,
+    getQuestionById,
+    getCompletedInterviews,
     updateQuestionSaved,
-    getSavedInterviewQuestions
+    getSavedInterviewQuestions,
+    deleteInterview,
   };
-};
+}

@@ -1,13 +1,14 @@
 import React from 'react'
 import InterviewCard from './interview-card'
-import { InterviewRecord } from '@/db/schema';
+import { InterviewRecord, InterviewQuestionRecord } from '@/db/schema';
 import { motion } from 'framer-motion';
 
 interface InterviewListProps {
-  interviews: InterviewRecord[] | undefined;
+  interviews: (Omit<InterviewRecord, 'questions'> & { questions: InterviewQuestionRecord[] })[] | undefined;
+  onDeleteInterview: (id: string) => void;
 }
 
-const InterviewList: React.FC<InterviewListProps> = ({ interviews }) => {
+const InterviewList: React.FC<InterviewListProps> = ({ interviews, onDeleteInterview }) => {
   return (
     <div className="space-y-6">
       {interviews && interviews.length > 0 ? (
@@ -24,7 +25,18 @@ const InterviewList: React.FC<InterviewListProps> = ({ interviews }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <InterviewCard {...interview} />
+              <InterviewCard
+                id={interview.id}
+                jobTitle={interview.jobTitle}
+                jobDescription={interview.jobDescription}
+                questions={interview.questions}
+                userId={interview.userId}
+                skills={interview.skills || []}
+                date={interview.date}
+                createdAt={interview.createdAt}
+                completed={interview.completed}
+                onDelete={onDeleteInterview}
+              />
             </motion.div>
           ))}
         </motion.div>
