@@ -1,8 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import { Button } from '@/components/ui/button';
 import { BotIcon } from 'lucide-react';
+import { AuthDropdown } from './auth-dropdown';
 const StickyHeader: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 w-full bg-primary shadow-md">
@@ -11,20 +10,7 @@ const StickyHeader: React.FC = () => {
           <BotIcon className="mr-2" />
           AI MockMaster
         </Link>
-        <nav className="flex items-center">
-          <div className="ml-4">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button className="text-white font-bold py-2 px-4 rounded">
-                  Sign In
-                </Button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
-          </div>
-        </nav>
+        <AuthDropdown />
       </div>
     </header>
   );
