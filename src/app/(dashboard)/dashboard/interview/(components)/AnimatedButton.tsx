@@ -33,6 +33,9 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({ onClick, isLoading, isS
 
   return (
     <Button
+      role="button"
+      data-testid="form-button"
+      aria-label={getButtonText()}
       onClick={(e) => onClick(e)}
       disabled={isLoading}
       className={`w-full sm:w-auto px-6 py-2 transition-all duration-300 ease-in-out transform hover:scale-105 ${
