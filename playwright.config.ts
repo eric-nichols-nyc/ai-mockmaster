@@ -1,29 +1,52 @@
-import { PlaywrightTestConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
+import path from "path";
 
-const config: PlaywrightTestConfig = {
-  testDir: './e2e',
+// Use process.env.PORT by default and fallback to port 3000
+const PORT = process.env.PORT || 3000;
+
+// Set webServer.url and use.baseURL with the location of the WebServer respecting the correct set port
+const baseURL = `http://localhost:${PORT}`;
+
+// Reference: https://playwright.dev/docs/test-configuration
+export default defineConfig({
   timeout: 30 * 1000,
-  expect: {
-    timeout: 5000
+  testDir: path.join(__dirname, "e2e"),
+  retries: 1,
+  outputDir: "test-results/",
+  webServer: {
+    command: "npm run dev",
+    url: baseURL,
+    timeout: 120 * 1000,
+    reuseExistingServer: !process.env.CI,
   },
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+
   use: {
-    actionTimeout: 0,
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
+    baseURL,
+    trace: "retry-with-trace",
   },
+
   projects: [
     {
-      name: 'chromium',
+      name: "global setup",
+      testMatch: /global\.setup\.ts/,
+    },
+    {
+      name: "Main tests",
+      testMatch: /.*app.spec.ts/,
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
       },
+      dependencies: ["global setup"],
+    },
+    {
+      name: "Authenticated tests",
+      testMatch: /.*authenticated.spec.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        // Use prepared auth state.
+        storageState: "playwright/.clerk/user.json",
+      },
+      dependencies: ["global setup"],
     },
   ],
-};
-
-export default config;
+});

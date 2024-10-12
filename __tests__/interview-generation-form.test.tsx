@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import InterviewForm from '../src/app/(dashboard)/dashboard/interview/(components)/interview-generation-form';
-import { useApi } from '../src/lib/api';
 
 // Mocks for external dependencies
 const mockPush = vi.fn();
