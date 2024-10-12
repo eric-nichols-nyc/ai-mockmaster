@@ -29,7 +29,7 @@ AI MockMaster is an AI-powered interview simulator designed to help users practi
   - OpenAI for AI-powered features
   - Google Cloud Text-to-Speech
   - AWS S3 for audio storage
-- **Testing**: Vitest, React Testing Library
+- **Testing**: Vitest, React Testing Library, Playwright
 
 ## Project Structure
 
@@ -119,15 +119,48 @@ GOOGLE_APPLICATION_CREDENTIALS_JSON=your_google_credentials_json
 - `npm run build`: Build the production application
 - `npm start`: Start the production server
 - `npm run lint`: Run ESLint
-- `npm test`: Run tests using Vitest
+- `npm test`: Run unit tests using Vitest
+- `npm run test:e2e`: Run end-to-end tests using Playwright
 
 ## Testing
 
-The project uses Vitest for testing. To run the test suite, use the following command:
+The project uses two main testing frameworks:
+
+1. **Vitest** for unit and component testing
+2. **Playwright** for end-to-end testing
+
+### Running Unit Tests
+
+To run the unit tests, use the following command:
 
 ```
 npm test
 ```
+
+This command will run all the tests in the `__tests__` directory using Vitest. You can also run tests in watch mode by adding the `--watch` flag:
+
+```
+npm test -- --watch
+```
+
+### Running End-to-End Tests
+
+To run the end-to-end tests, use the following command:
+
+```
+npm run test:e2e
+```
+
+This command will run all the Playwright tests in the `e2e` directory. Make sure you have the development server running (`npm run dev`) in a separate terminal before running the e2e tests.
+
+### Test Files Structure
+
+- Unit and component tests are located in the `__tests__` directory
+- End-to-end tests are located in the `e2e` directory
+
+### Continuous Integration
+
+The project is set up with GitHub Actions for continuous integration. The workflow runs both unit tests and end-to-end tests on every push and pull request to the main branch.
 
 ## Security Best Practices
 

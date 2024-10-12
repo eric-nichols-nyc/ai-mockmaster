@@ -1,5 +1,5 @@
 "use client";
-import { Cloud, Github, LogOut, User } from "lucide-react";
+import { Cloud, Github, LogOut } from "lucide-react";
 
 import {
   DropdownMenu,
