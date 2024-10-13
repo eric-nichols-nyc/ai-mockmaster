@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 interface BlobState {
   currentBlob: Blob | null;
-  setCurrentBlob: (blob: Blob) => void;
+  setCurrentBlob: (blob: Blob | null) => void;
 }
 
 const useBlobStore = create<BlobState>((set) => ({

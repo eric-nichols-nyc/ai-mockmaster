@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import Interview from '../src/app/(dashboard)/dashboard/interview/(components)/interview';
+import { InterviewRecord } from '../src/db/schema';
 
 // Mock the necessary dependencies
 vi.mock('next/navigation', () => ({
@@ -11,7 +12,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/image', () => ({
-  default: (props: any) => <img {...props} />,
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => React.createElement('img', props),
 }));
 
 vi.mock('../src/store/interviewStore', () => ({
@@ -27,43 +28,33 @@ vi.mock('../src/lib/api', () => ({
 }));
 
 vi.mock('../src/app/(dashboard)/dashboard/interview/(components)/visualizer', () => ({
-  default: () => <div data-testid="mock-visualizer">Mock Visualizer</div>,
+  default: () => React.createElement('div', { 'data-testid': 'mock-visualizer' }, 'Mock Visualizer'),
 }));
 
 describe('Interview Component', () => {
   it('renders without crashing', () => {
-    render(<Interview />);
+    render(<Interview interview={{} as InterviewRecord} />);
     
-    // Check for loading state
-    expect(screen.getByText('Loading interview...')).toBeDefined();
+    // Check for no interview questions available message
+    expect(screen.getByText('No interview questions available.')).toBeDefined();
   });
 
   it('renders interview content when interview data is available', async () => {
-    vi.mock('../src/store/interviewStore', () => ({
-      default: () => ({
-        currentBlob: null,
-      }),
-    }));
-
-    vi.mock('../src/lib/api', () => ({
-      useApi: () => ({
-        fetchApi: vi.fn().mockResolvedValue({
+    const mockInterview: InterviewRecord = {
+      id: '1',
+      jobTitle: 'Software Developer',
+      questions: [
+        {
           id: '1',
-          jobTitle: 'Software Developer',
-          questions: [
-            {
-              id: '1',
-              question: 'What is your experience with React?',
-            },
-          ],
-        }),
-      }),
-    }));
+          question: 'What is your experience with React?',
+        },
+      ],
+    } as InterviewRecord;
 
-    render(<Interview />);
+    render(<Interview interview={mockInterview} />);
 
-    // Wait for the interview content to load
-    const questionElement = await screen.findByText('What is your experience with React?');
+    // Check for the question
+    const questionElement = screen.getByText('What is your experience with React?');
     expect(questionElement).toBeDefined();
 
     // Check for other key elements
