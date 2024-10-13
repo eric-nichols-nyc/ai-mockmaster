@@ -116,3 +116,6 @@ export const useInterviews = () => {
     deleteInterview,
   };
 }
+
+// New function for server-side use
+

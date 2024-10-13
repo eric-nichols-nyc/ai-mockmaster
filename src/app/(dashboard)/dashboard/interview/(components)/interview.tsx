@@ -13,21 +13,25 @@ import CountdownTimer from "@/components/countdown-timer";
 import { FeedbackData } from "@/types";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 
-export default function Interview() {
+interface InterviewProps {
+  interview: InterviewRecord;
+}
+
+export default function Interview({ interview }: InterviewProps) {
   const router = useRouter();
   const { fetchApi } = useApi();
-  const [interview, setInterview] = useState<InterviewRecord>()
   const { currentBlob } = useBlobStore();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
   const [hasRecordingStarted, setHasRecordingStarted] = useState(false);
-  const [isInitialFetch, setIsInitialFetch] = useState(true);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<"generate" | "thinking" | "ready">("generate");
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleTimerComplete = useCallback(() => {
@@ -39,26 +43,6 @@ export default function Interview() {
   }, []);
 
   useEffect(() => {
-    const fetchCurrentInterview = async () => {
-      if (!isInitialFetch) return;
-
-      try {
-        const response = await fetchApi("/interviews/current", {
-          method: "GET",
-        });
-        if (response && JSON.stringify(response) !== JSON.stringify(interview)) {
-          setInterview(response);
-        } else if (!response) {
-          setErrorMessage("No current interview found. Please start a new interview.");
-        }
-      } catch (error) {
-        console.error("Error fetching interview:", error);
-        setErrorMessage("Failed to load the interview. Please try again.");
-      } finally {
-        setIsInitialFetch(false);
-      }
-    };
-
     if (hasRecordingStarted) {
       if (!showTimer) {
         setShowTimer(true);
@@ -67,10 +51,7 @@ export default function Interview() {
     if(hasRecordingStopped){
       setShowTimer(false);
     }
-
-    fetchCurrentInterview();
-    console.log('interview = ', interview)
-  }, [fetchApi, setInterview, interview, isInitialFetch, hasRecordingStarted,hasRecordingStopped]);
+  }, [hasRecordingStarted, hasRecordingStopped]);
 
   const handleSubmitRecording = useCallback(async () => {
     setSaveStatus("saving");
@@ -107,6 +88,7 @@ export default function Interview() {
           if (updatedResponse && updatedResponse.audioUrl) {
             setSaveStatus("success");
             setFeedbackStatus("generate");
+            setAudioUrl(updatedResponse.audioUrl);
           } else {
             throw new Error("Invalid response from server");
           }
@@ -193,38 +175,65 @@ export default function Interview() {
 
   const handleTextToSpeech = useCallback(async () => {
     if (interview && (Array.isArray(interview.questions) ? interview.questions[0] : Object.values(interview.questions)[0])) {
-      setIsLoadingAudio(true);
-      try {
-        const currentQuestion = Array.isArray(interview.questions) 
-          ? interview.questions[0] 
-          : Object.values(interview.questions)[0] as InterviewQuestionRecord;
-
-        const response = await fetchApi("/openai/text-to-speech", {
-          method: "POST",
-          body: JSON.stringify({ text: currentQuestion.question }),
-        });
-        if (response && response.audioUrl) {
-          if (audioRef.current) {
-            audioRef.current.src = response.audioUrl;
-            audioRef.current.play().catch((error) => {
-              console.error("Error playing audio:", error);
-              setErrorMessage("Failed to play audio. Please try again.");
-            });
-          }
+      if (audioUrl) {
+        if (audioRef.current) {
+          audioRef.current.src = audioUrl;
+          setIsPlaying(true);
+          audioRef.current.play().catch((error) => {
+            console.error("Error playing audio:", error);
+            setErrorMessage("Failed to play audio. Please try again.");
+            setIsPlaying(false);
+          });
         }
-      } catch (error) {
-        console.error("Error generating text-to-speech:", error);
-        setErrorMessage("Failed to generate audio. Please try again.");
-      } finally {
-        setIsLoadingAudio(false);
+      } else {
+        setIsLoadingAudio(true);
+        try {
+          const currentQuestion = Array.isArray(interview.questions) 
+            ? interview.questions[0] 
+            : Object.values(interview.questions)[0] as InterviewQuestionRecord;
+
+          const response = await fetchApi("/openai/text-to-speech", {
+            method: "POST",
+            body: JSON.stringify({ text: currentQuestion.question }),
+          });
+          if (response && response.audioUrl) {
+            setAudioUrl(response.audioUrl);
+            if (audioRef.current) {
+              audioRef.current.src = response.audioUrl;
+              setIsPlaying(true);
+              audioRef.current.play().catch((error) => {
+                console.error("Error playing audio:", error);
+                setErrorMessage("Failed to play audio. Please try again.");
+                setIsPlaying(false);
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error generating text-to-speech:", error);
+          setErrorMessage("Failed to generate audio. Please try again.");
+        } finally {
+          setIsLoadingAudio(false);
+        }
       }
     }
-  }, [interview, fetchApi]);
+  }, [interview, fetchApi, audioUrl]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      const handleEnded = () => setIsPlaying(false);
+      audioRef.current.addEventListener('ended', handleEnded);
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.removeEventListener('ended', handleEnded);
+        }
+      };
+    }
+  }, []);
 
   if (!interview || (Array.isArray(interview.questions) ? interview.questions.length === 0 : Object.keys(interview.questions).length === 0)) {
     return (
       <div className="text-center text-2xl font-bold text-purple-800">
-        Loading interview...
+        No interview questions available.
       </div>
     );
   }
@@ -265,15 +274,18 @@ export default function Interview() {
           </div>
           <div className="flex justify-center mb-4">
             <Button
+              data-testid="playaudio"
               onClick={handleTextToSpeech}
               className="button-gradient"
-              disabled={isLoadingAudio}
+              disabled={isLoadingAudio || isPlaying}
             >
               {isLoadingAudio ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Loading Audio...
                 </>
+              ) : isPlaying ? (
+                "Playing..."
               ) : (
                 "Play Question Audio"
               )}

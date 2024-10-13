@@ -1,6 +1,5 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { auth } from "@clerk/nextjs/server";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,53 +8,57 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useInterviews } from "@/lib/api";
 import { InterviewRecord } from "@/db/schema";
-import { format } from "date-fns";
 import InterviewComponent from "../../(components)/interview";
 
-const InterviewStart = () => {
-  const [interview, setInterview] = useState<InterviewRecord | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { getInterviewById } = useInterviews();
-  const params = useParams();
-  const id = params.id as string;
+async function getInterviewById(id: string): Promise<InterviewRecord | null> {
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
 
-  useEffect(() => {
-    const fetchInterviewData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const fetchedInterview = await getInterviewById(id);
-        if (fetchedInterview) {
-          setInterview(fetchedInterview);
-        } else {
-          setError("Interview not found.");
-        }
-      } catch (err) {
-        console.error("Error fetching interview:", err);
-        setError("Failed to fetch the interview. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  try {
+    const { getToken } = auth();
+    const token = await getToken();
 
-    fetchInterviewData();
-  }, []);
+    const response = await fetch(`${baseUrl}/api/interviews/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  if (isLoading) {
-    return <div>Loading interview data...</div>;
+    if (!response.ok) {
+      throw new Error("Failed to fetch interview");
+    }
+
+    const interview = await response.json();
+    return interview;
+  } catch (error) {
+    console.error("Error fetching interview:", error);
+    return null;
   }
+}
 
-  if (error) {
-    return <div>Error: {error}</div>;
+async function getInterview(id: string): Promise<InterviewRecord | null> {
+  try {
+    const interview = await getInterviewById(id);
+    return interview;
+  } catch (error) {
+    console.error("Error fetching interview:", error);
+    return null;
   }
+}
+
+export default async function InterviewStart({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const interview = await getInterview(params.id);
 
   if (!interview) {
-    return <div>No interview data available.</div>;
+    return <div>Error: Interview not found or failed to load.</div>;
   }
 
   return (
@@ -73,23 +76,7 @@ const InterviewStart = () => {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>{interview.jobTitle}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-2">
-            <strong>Date:</strong>{" "}
-            {format(new Date(interview.date), "MMMM d, yyyy")}
-          </p>
-          <p className="mb-4">
-            <strong>Job Description:</strong> {interview.jobDescription}
-          </p>
-          <InterviewComponent />
-        </CardContent>
-      </Card>
+      <InterviewComponent interview={interview} />
     </div>
   );
-};
-
-export default InterviewStart;
+}
