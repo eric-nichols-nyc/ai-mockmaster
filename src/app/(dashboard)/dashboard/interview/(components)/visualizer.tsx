@@ -34,7 +34,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
 
   const { setCurrentBlob } = useBlobStore();
   const [isPlaying, setIsPlaying] = useState(false);
-  
+
   useImperativeHandle(ref, () => ({
     clearCanvas: () => {
       clearCanvas();
@@ -65,15 +65,18 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
       console.log("hasTimedOut");
       stopRecording();
     }
-  }, [isRecordingInProgress, hasTimedOut, stopRecording, setRecordingStarted]);
+  }, [isRecordingInProgress, hasTimedOut, stopRecording, setRecordingStarted, setHasRecordingStopped]);
 
   const handleStartRecording = useCallback(() => {
     startRecording();
     setRecordingStarted(true);
+    setHasRecordingStopped(false)
   }, [startRecording, setRecordingStarted]);
 
   const handleStopRecording = useCallback(() => {
     stopRecording();
+    setRecordingStarted(false);
+    setHasRecordingStopped(true)
   }, [stopRecording]);
 
   const handlePlayPause = useCallback(() => {

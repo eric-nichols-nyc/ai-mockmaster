@@ -386,7 +386,7 @@ export default function Interview({ interview }: InterviewProps) {
           </div>
           {/* Action buttons */}
           <div className="flex justify-center mt-6 space-x-4">
-            {hasRecordingStopped && saveStatus !== "saving" && (
+            {hasRecordingStopped && saveStatus !== "saving" && saveStatus !== "success" &&(
               <>
                 <Button
                   onClick={handleSubmitRecording}

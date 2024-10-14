@@ -10,6 +10,8 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ initialTime, onComplete
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
   useEffect(() => {
+    console.log('Timer is running', isRunning);
+
     if (!isRunning) {
       return; // Don't start the timer if isRunning is false
     }
