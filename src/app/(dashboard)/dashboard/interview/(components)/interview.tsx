@@ -68,14 +68,14 @@ export default function Interview({ interview }: InterviewProps) {
 
   useEffect(() => {
     if (interview && interview.questions.length) {
-      console.log(interview.questions)
      setCurrentQuestion(
         Array.isArray(interview.questions)
           ? interview.questions[0]
           : (Object.values(interview.questions)[0] as InterviewQuestionRecord)
       );
+      console.log('currentQuestion',currentQuestion)
     }
-  }, [currentQuestion?.audioUrl, interview]);
+  }, [currentQuestion, interview]);
 
   // Effect to manage timer visibility
   useEffect(() => {
@@ -112,19 +112,25 @@ export default function Interview({ interview }: InterviewProps) {
         });
 
         if (transcriptResponse && transcriptResponse.transcription) {
+          const answer = transcriptResponse.transcription;
+          const url = transcriptResponse.url;
           // Save the transcribed answer
           const updatedQuestion = await fetchApi(
             `/interviews/${interview.id}/questions/${currentQuestion?.id}/answer`,
             {
               method: "PUT",
               body: JSON.stringify({
-                answer: transcriptResponse.transcription,
-                audioUrl: transcriptResponse.audioUrl,
+                answer: answer,
+                audioUrl: url,
               }),
             }
           );
-
-          console.log('updated question', updatedQuestion)
+          if(currentQuestion){
+            currentQuestion.answer = transcriptResponse.transcription;
+            currentQuestion.audioUrl = transcriptResponse.url;
+          }
+     
+          // add answer and audio url to current question
 
           if (updatedQuestion && updatedQuestion.audioUrl) {
             setSaveStatus("success");
@@ -133,6 +139,9 @@ export default function Interview({ interview }: InterviewProps) {
             //set button test
             setFeedbackStatus("generate");
             setAudioUrl(updatedQuestion.audioUrl);
+            // replace the 
+            
+            
           } else {
             throw new Error("Invalid response from server");
           }
@@ -270,13 +279,13 @@ export default function Interview({ interview }: InterviewProps) {
 
   // Handle feedback button click
   const handleFeedbackButton = useCallback(async () => {
+    if(!currentQuestion?.answer){
+      throw new Error("You don't have a valid answer")
+    }
     if (feedbackStatus === "generate") {
       setFeedbackStatus("thinking");
       if (interview && interview.jobTitle && interview.questions) {
-        const currentQuestion = Array.isArray(interview.questions)
-          ? interview.questions[0]
-          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
-
+    
         try {
           // Generate feedback using OpenAI
           const response = await fetchApi(`/openai/get-results`, {
