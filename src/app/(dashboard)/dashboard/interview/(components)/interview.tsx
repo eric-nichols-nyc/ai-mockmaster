@@ -1,6 +1,5 @@
 "use client";
 
-// ... (keep all the imports as they were)
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -11,17 +10,28 @@ import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
 import { Loader2, Mic } from "lucide-react";
 import CountdownTimer from "@/components/countdown-timer";
-import { FeedbackData } from "@/types";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 import Ripple from "@/components/ui/ripple";
+import { toast } from "sonner";
 
 // Define the props for the Interview component
 interface InterviewProps {
   interview: InterviewRecord;
 }
 
+// Define the structure for feedback data
+interface FeedbackData {
+  feedback: string | null;
+  grade?: {
+    letter: string;
+  };
+  improvements?: string[];
+  keyTakeaways?: string[];
+}
+
 // Main Interview component
 export default function Interview({ interview }: InterviewProps) {
+  console.log(interview);
   // Initialize hooks and state variables
   const router = useRouter();
   const { fetchApi } = useApi();
@@ -36,10 +46,11 @@ export default function Interview({ interview }: InterviewProps) {
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<InterviewQuestionRecord | null>(null);
   const [feedbackStatus, setFeedbackStatus] = useState<
     "generate" | "thinking" | "ready"
   >("generate");
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null | undefined>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const visualizerRef = useRef<{ clearCanvas: () => void } | null>(null);
@@ -54,6 +65,18 @@ export default function Interview({ interview }: InterviewProps) {
     setHasRecordingStopped(true);
     setHasTimedOut(true);
   }, []);
+
+  useEffect(() => {
+    if (interview && interview.questions.length) {
+      console.log(interview.questions)
+     setCurrentQuestion(
+        Array.isArray(interview.questions)
+          ? interview.questions[0]
+          : (Object.values(interview.questions)[0] as InterviewQuestionRecord)
+      );
+      setAudioUrl(currentQuestion?.audioUrl)
+    }
+  }, [currentQuestion?.audioUrl, interview]);
 
   // Effect to manage timer visibility
   useEffect(() => {
@@ -73,9 +96,9 @@ export default function Interview({ interview }: InterviewProps) {
     setIsSubmittingRecording(true);
     try {
       if (interview && currentBlob) {
-        const currentQuestion = Array.isArray(interview.questions)
-          ? interview.questions[0]
-          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+        // const currentQuestion = Array.isArray(interview.questions)
+        //   ? interview.questions[0]
+        //   : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
 
         const audioFile = new File([currentBlob], "audio.webm", {
           type: currentBlob.type,
@@ -91,10 +114,10 @@ export default function Interview({ interview }: InterviewProps) {
 
         if (transcriptResponse && transcriptResponse.transcription) {
           // Save the transcribed answer
-          const updatedResponse = await fetchApi(
-            `/interviews/${interview.id}/questions/${currentQuestion.id}/answer`,
+          const updatedQuestion = await fetchApi(
+            `/interviews/${interview.id}/questions/${currentQuestion?.id}/answer`,
             {
-              method: "POST",
+              method: "PUT",
               body: JSON.stringify({
                 answer: transcriptResponse.transcription,
                 audioUrl: transcriptResponse.audioUrl,
@@ -102,17 +125,24 @@ export default function Interview({ interview }: InterviewProps) {
             }
           );
 
-          if (updatedResponse && updatedResponse.audioUrl) {
+          console.log('updated question', updatedQuestion)
+
+          if (updatedQuestion && updatedQuestion.audioUrl) {
             setSaveStatus("success");
+            // add sonner message
+            toast("Your answer has been processed and saved successfully!")
+            //set button test
             setFeedbackStatus("generate");
-            setAudioUrl(updatedResponse.audioUrl);
+            setAudioUrl(updatedQuestion.audioUrl);
           } else {
             throw new Error("Invalid response from server");
           }
         } else {
           throw new Error("Invalid response from transcription service");
         }
-      } else {
+      } else if(interview && currentQuestion?.audioUrl) {
+          setAudioUrl(currentQuestion.audioUrl);
+      }else{
         throw new Error("No interview or audio blob available");
       }
     } catch (error) {
@@ -124,100 +154,19 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [fetchApi, interview, currentBlob]);
 
-  // Update current question with feedback
-  const updateCurrentQuestionWithFeedback = useCallback(
-    async (feedbackData: FeedbackData) => {
-      if (
-        interview &&
-        (Array.isArray(interview.questions)
-          ? interview.questions.length > 0
-          : Object.keys(interview.questions).length > 0)
-      ) {
-        const currentQuestion = Array.isArray(interview.questions)
-          ? interview.questions[0]
-          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
-
-        const updatedQuestion: InterviewQuestionRecord = {
-          ...currentQuestion,
-          feedback: feedbackData.feedback || null,
-          grade: feedbackData.grade?.letter || null,
-          improvements:
-            feedbackData.improvements && feedbackData.improvements.length > 0
-              ? feedbackData.improvements
-              : null,
-          keyTakeaways:
-            feedbackData.keyTakeaways && feedbackData.keyTakeaways.length > 0
-              ? feedbackData.keyTakeaways
-              : null,
-          skills: currentQuestion.skills || null,
-          answer: currentQuestion.answer || null,
-          audioUrl: currentQuestion.audioUrl || null,
-          saved: true,
-        };
-
-        // Save the updated question with feedback
-        await fetchApi(
-          `/interviews/${interview.id}/questions/${updatedQuestion.id}`,
-          {
-            method: "POST",
-            body: JSON.stringify(updatedQuestion),
-          }
-        );
-
-        setFeedbackStatus("ready");
-      }
-    },
-    [interview, fetchApi]
-  );
-
-  // Handle feedback button click
-  const handleFeedbackButton = useCallback(async () => {
-    if (feedbackStatus === "generate") {
-      setFeedbackStatus("thinking");
-      if (interview && interview.jobTitle && interview.questions) {
-        const currentQuestion = Array.isArray(interview.questions)
-          ? interview.questions[0]
-          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
-
-        try {
-          // Generate feedback using OpenAI
-          const response = await fetchApi(`/openai/get-results`, {
-            method: "POST",
-            body: JSON.stringify({
-              question: currentQuestion.question,
-              answer: currentQuestion.answer,
-              position: interview.jobTitle,
-              skills: currentQuestion.skills || [],
-              saved: true,
-            }),
-          });
-
-          await updateCurrentQuestionWithFeedback(response);
-        } catch (e) {
-          console.error("error", e);
-          setFeedbackStatus("generate");
-          setErrorMessage("Failed to generate feedback. Please try again.");
-        }
-      }
-    } else if (feedbackStatus === "ready") {
-      if (interview && interview.id) {
-        const currentQuestion = Array.isArray(interview.questions)
-          ? interview.questions[0]
-          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
-        router.push(
-          `/dashboard/interview/${interview.id}/summary/${currentQuestion.id}`
-        );
-      }
+  // Handle "Try Again" button click
+  const handleTryAgain = useCallback(() => {
+    if (visualizerRef.current) {
+      visualizerRef.current.clearCanvas();
     }
-  }, [
-    interview,
-    updateCurrentQuestionWithFeedback,
-    fetchApi,
-    feedbackStatus,
-    router,
-  ]);
+    setHasRecordingStopped(false);
+    setHasRecordingStarted(false);
+    setSaveStatus("idle");
+    setErrorMessage(null);
+    setHasTimedOut(false);
+  }, []);
 
-  // Handle text-to-speech conversion and playback
+  // Handle text-to-speech conversion and playback for Avatar
   const handleTextToSpeech = useCallback(async () => {
     if (
       interview &&
@@ -271,18 +220,100 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [interview, fetchApi, audioUrl]);
 
-  // Handle "Try Again" button click
-  const handleTryAgain = useCallback(() => {
-    console.log(visualizerRef.current);
-    if (visualizerRef.current) {
-      visualizerRef.current.clearCanvas();
+  // Update current question with feedback
+  const updateCurrentQuestionWithFeedback = useCallback(
+    async (feedbackData: FeedbackData) => {
+      console.log('feedbackData = ', feedbackData);
+      if (
+        interview &&
+        (Array.isArray(interview.questions)
+          ? interview.questions.length > 0
+          : Object.keys(interview.questions).length > 0)
+      ) {
+        const currentQuestion = Array.isArray(interview.questions)
+          ? interview.questions[0]
+          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+
+        const updatedQuestion: InterviewQuestionRecord = {
+          ...currentQuestion,
+          saved: true,
+          feedback: feedbackData.feedback || null,
+          grade: feedbackData.grade?.letter || null,
+          improvements:
+            feedbackData.improvements && feedbackData.improvements.length > 0
+              ? feedbackData.improvements
+              : null,
+          keyTakeaways:
+            feedbackData.keyTakeaways && feedbackData.keyTakeaways.length > 0
+              ? feedbackData.keyTakeaways
+              : null,
+          skills: currentQuestion.skills || null,
+          answer: currentQuestion.answer || null,
+          audioUrl: currentQuestion.audioUrl || null,
+        };
+        console.log('updatedQuestion', updatedQuestion);
+
+        // Save the updated question with feedback
+        const saved = await fetchApi(
+          `/interviews/${interview.id}/questions/${updatedQuestion.id}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(updatedQuestion),
+          }
+        );
+
+        console.log('saved ', saved);
+        setFeedbackStatus("ready");
+      }
+    },
+    [interview, fetchApi]
+  );
+
+  // Handle feedback button click
+  const handleFeedbackButton = useCallback(async () => {
+    if (feedbackStatus === "generate") {
+      setFeedbackStatus("thinking");
+      if (interview && interview.jobTitle && interview.questions) {
+        const currentQuestion = Array.isArray(interview.questions)
+          ? interview.questions[0]
+          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+
+        try {
+          // Generate feedback using OpenAI
+          const response = await fetchApi(`/openai/get-results`, {
+            method: "POST",
+            body: JSON.stringify({
+              question: currentQuestion.question,
+              answer: currentQuestion.answer,
+              position: interview.jobTitle,
+              skills: currentQuestion.skills || [],
+            }),
+          });
+
+          await updateCurrentQuestionWithFeedback(response);
+        } catch (e) {
+          console.error("error", e);
+          setFeedbackStatus("generate");
+          setErrorMessage("Failed to generate feedback. Please try again.");
+        }
+      }
+    } else if (feedbackStatus === "ready") {
+      if (interview && interview.id) {
+        const currentQuestion = Array.isArray(interview.questions)
+          ? interview.questions[0]
+          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+        router.push(
+          `/dashboard/interview/${interview.id}/summary/${currentQuestion.id}`
+        );
+      }
     }
-    setHasRecordingStopped(true);
-    setHasRecordingStarted(false);
-    setSaveStatus("idle");
-    setErrorMessage(null);
-    setHasTimedOut(false);
-  }, []);
+  }, [
+    interview,
+    updateCurrentQuestionWithFeedback,
+    fetchApi,
+    feedbackStatus,
+    router,
+  ]);
 
   // Effect to handle audio playback completion
   useEffect(() => {
@@ -312,9 +343,11 @@ export default function Interview({ interview }: InterviewProps) {
     );
   }
 
-  const currentQuestion = Array.isArray(interview.questions)
-    ? interview.questions[0]
-    : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+  // const currentQuestion = Array.isArray(interview.questions)
+  //   ? interview.questions[0]
+  //   : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+
+  const hasAudioUrl = currentQuestion?.audioUrl !== null && currentQuestion?.audioUrl !== undefined;
 
   // Render the main interview component
   return (
@@ -322,7 +355,7 @@ export default function Interview({ interview }: InterviewProps) {
       <Card className="w-full max-w-4xl card-shadow bg-white">
         <CardContent className="p-6">
           {/* Timer component */}
-          {hasRecordingStarted && (
+          {hasRecordingStarted && !hasAudioUrl && (
             <div className="mb-6">
               <CountdownTimer
                 initialTime={60}
@@ -332,15 +365,17 @@ export default function Interview({ interview }: InterviewProps) {
             </div>
           )}
           {/* Microphone permission message */}
-          <div className="flex items-center justify-center mb-4 p-2 bg-yellow-100 rounded-md">
-            <Mic className="w-5 h-5 mr-2 text-yellow-600" />
-            <p className="text-yellow-800 font-medium">
-              Please enable your microphone to start the interview.
-            </p>
-          </div>
+          {!hasAudioUrl && (
+            <div className="flex items-center justify-center mb-4 p-2 bg-yellow-100 rounded-md">
+              <Mic className="w-5 h-5 mr-2 text-yellow-600" />
+              <p className="text-yellow-800 font-medium">
+                Please enable your microphone to start the interview.
+              </p>
+            </div>
+          )}
           {/* Current question */}
           <h2 className="text-2xl mb-6 text-center font-bold">
-            {currentQuestion.question}
+            {currentQuestion?.question}
           </h2>
           {/* Avatar image */}
           <div className="flex justify-center mb-6 relative">
@@ -358,7 +393,6 @@ export default function Interview({ interview }: InterviewProps) {
             <Button
               data-testid="playaudio"
               onClick={handleTextToSpeech}
-              className="button-gradient"
               disabled={isLoadingAudio || isPlaying}
             >
               {isLoadingAudio ? (
@@ -376,21 +410,23 @@ export default function Interview({ interview }: InterviewProps) {
           {/* Hidden audio element */}
           <audio ref={audioRef} className="hidden" />
           {/* Visualizer component */}
-          <div className="relative">
-            <Visualizer
-              ref={visualizerRef}
-              hasTimedOut={hasTimedOut}
-              setHasRecordingStopped={setHasRecordingStopped}
-              setRecordingStarted={setHasRecordingStarted}
-            />
-          </div>
+          {(
+            <div className="relative">
+              <Visualizer
+                ref={visualizerRef}
+                hasTimedOut={hasTimedOut}
+                setHasRecordingStopped={setHasRecordingStopped}
+                setRecordingStarted={setHasRecordingStarted}
+                audioUrl={audioUrl}
+              />
+            </div>
+          )}
           {/* Action buttons */}
           <div className="flex justify-center mt-6 space-x-4">
-            {hasRecordingStopped && saveStatus !== "saving" && saveStatus !== "success" &&(
+            {(hasRecordingStopped || hasAudioUrl) && saveStatus !== "saving" && saveStatus !== "success" && (
               <>
                 <Button
                   onClick={handleSubmitRecording}
-                  className="button-gradient"
                   disabled={isSubmittingRecording}
                 >
                   {isSubmittingRecording ? (
@@ -404,8 +440,7 @@ export default function Interview({ interview }: InterviewProps) {
                 </Button>
                 <Button
                   onClick={handleTryAgain}
-                  className="button-gradient"
-                  disabled={!hasRecordingStopped && !hasTimedOut}
+                  disabled={!hasRecordingStopped && !hasTimedOut && !hasAudioUrl}
                 >
                   Try Again
                 </Button>
@@ -418,7 +453,6 @@ export default function Interview({ interview }: InterviewProps) {
             <div className="flex justify-center mt-6">
               <Button
                 onClick={handleFeedbackButton}
-                className="button-gradient"
                 disabled={feedbackStatus === "thinking"}
               >
                 {feedbackStatus === "generate" && "Generate Results"}
@@ -440,7 +474,7 @@ export default function Interview({ interview }: InterviewProps) {
             </div>
           )}
           {/* Status messages */}
-          {saveStatus === "saving" && (
+        {saveStatus === "saving" && (
             <p className="mt-4 text-yellow-600 font-semibold text-center">
               Processing your answer...
             </p>
@@ -449,12 +483,12 @@ export default function Interview({ interview }: InterviewProps) {
             <p className="mt-4 text-green-600 font-semibold text-center">
               Your answer has been processed and saved successfully!
             </p>
-          )}
+          )}   {/*
           {saveStatus === "error" && (
             <p className="mt-4 text-red-600 font-semibold text-center">
               There was an error processing your answer. Please try again.
             </p>
-          )}
+          )} */}
           {/* Error message display */}
           {errorMessage && errorMessage !== "" && (
             <div className="flex flex-col items-center justify-center p-4 gradient-bg">

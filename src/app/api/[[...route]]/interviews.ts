@@ -45,6 +45,7 @@ const updateQuestionSchema = z.object({
     improvements: z.array(z.string()).optional(),
     keyTakeaways: z.array(z.string()).optional(),
     grade: z.string().optional(),
+    saved: z.boolean().optional()
   }),
 })
 
@@ -179,8 +180,8 @@ app.get('/list/completed', async (c) => {
   }
 })
 
-// POST /:id/questions/:questionId/answer - Save the recorded answer for a specific question
-app.post('/:id/questions/:questionId/answer', zValidator('json', saveAnswerSchema.shape.body), async (c) => {
+// PUT /:id/questions/:questionId/answer - Save the recorded answer for a specific question
+app.put('/:id/questions/:questionId/answer', zValidator('json', saveAnswerSchema.shape.body), async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
@@ -282,7 +283,7 @@ app.put('/:id', zValidator('json', updateInterviewSchema.shape.body), async (c) 
 })
 
 // PUT /:id/questions/:questionId - Update a specific question with feedback, improvements, keyTakeaways, and grade
-app.post('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.shape.body), async (c) => {
+app.put('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.shape.body), async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
@@ -292,7 +293,7 @@ app.post('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.s
   const questionId = c.req.param('questionId')
 
   try {
-    const { feedback, improvements, keyTakeaways, grade } = c.req.valid('json')
+    const { feedback, improvements, keyTakeaways, grade, saved } = c.req.valid('json')
 
     // First, verify that the interview belongs to the authenticated user
     const interviewCheck = await db.select({ id: interviews.id })
@@ -312,6 +313,8 @@ app.post('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.s
     if (improvements !== undefined) updateData.improvements = improvements
     if (keyTakeaways !== undefined) updateData.keyTakeaways = keyTakeaways
     if (grade !== undefined) updateData.grade = grade
+    if (saved !== undefined) updateData.saved = saved
+
 
     const updatedQuestion = await db.update(interviewQuestions)
       .set(updateData)
