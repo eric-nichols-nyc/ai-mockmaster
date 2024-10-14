@@ -1,6 +1,6 @@
 "use client";
 
-// Importing necessary dependencies and components
+// ... (keep all the imports as they were)
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";

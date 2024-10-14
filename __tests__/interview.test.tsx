@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import Interview from '../src/app/(dashboard)/dashboard/interview/(components)/interview';
-import { InterviewRecord } from '../src/db/schema';
+import { InterviewRecord, InterviewQuestion } from '../src/db/schema';
 
 // Mock the necessary dependencies
 vi.mock('next/navigation', () => ({
@@ -32,24 +32,53 @@ vi.mock('../src/app/(dashboard)/dashboard/interview/(components)/visualizer', ()
 }));
 
 describe('Interview Component', () => {
-  it('renders without crashing', () => {
-    render(<Interview interview={{} as InterviewRecord} />);
+  it('renders without crashing and shows no questions available message', () => {
+    const emptyInterview: InterviewRecord = {
+      id: '1',
+      userId: 'user1',
+      jobTitle: 'Software Developer',
+      jobDescription: 'A challenging role in software development',
+      skills: ['JavaScript', 'React'],
+      date: new Date(),
+      createdAt: new Date(),
+      completed: false,
+      questions: []
+    };
+
+    render(<Interview interview={emptyInterview} />);
     
     // Check for no interview questions available message
     expect(screen.getByText('No interview questions available.')).toBeDefined();
   });
 
   it('renders interview content when interview data is available', async () => {
+    const mockQuestion: InterviewQuestion = {
+      id: '1',
+      interviewId: '1',
+      question: 'What is your experience with React?',
+      suggested: 'Discuss your projects and expertise with React',
+      answer: null,
+      audioUrl: null,
+      feedback: null,
+      improvements: null,
+      keyTakeaways: null,
+      grade: null,
+      skills: ['React'],
+      saved: false,
+      createdAt: new Date()
+    };
+
     const mockInterview: InterviewRecord = {
       id: '1',
+      userId: 'user1',
       jobTitle: 'Software Developer',
-      questions: [
-        {
-          id: '1',
-          question: 'What is your experience with React?',
-        },
-      ],
-    } as InterviewRecord;
+      jobDescription: 'A challenging role in software development',
+      skills: ['JavaScript', 'React'],
+      date: new Date(),
+      createdAt: new Date(),
+      completed: false,
+      questions: [mockQuestion]
+    };
 
     render(<Interview interview={mockInterview} />);
 

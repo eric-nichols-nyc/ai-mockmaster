@@ -98,7 +98,7 @@ const Summary: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
+    <div className="container mx-auto p-4 max-w-4xl" data-testid="summary-component">
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
