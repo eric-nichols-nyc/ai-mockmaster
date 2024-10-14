@@ -1,5 +1,4 @@
 import React from "react";
-import { auth } from "@clerk/nextjs/server";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,39 +9,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import { InterviewRecord } from "@/db/schema";
 import InterviewComponent from "../../(components)/interview";
-
-async function getInterviewById(id: string): Promise<InterviewRecord | null> {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-  try {
-    const { getToken } = auth();
-    const token = await getToken();
-
-    const response = await fetch(`${baseUrl}/api/interviews/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch interview");
-    }
-
-    const interview = await response.json();
-    return interview;
-  } catch (error) {
-    console.error("Error fetching interview:", error);
-    return null;
-  }
-}
+import { getInterviewById } from "@/actions";
 
 async function getInterview(id: string): Promise<InterviewRecord | null> {
   try {
-    const interview = await getInterviewById(id);
+    const interview = await getInterviewById({ id });
     return interview;
   } catch (error) {
     console.error("Error fetching interview:", error);
