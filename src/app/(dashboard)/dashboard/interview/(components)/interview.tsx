@@ -1,5 +1,6 @@
 "use client";
 
+// Importing necessary dependencies and components
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -13,11 +14,15 @@ import CountdownTimer from "@/components/countdown-timer";
 import { FeedbackData } from "@/types";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 import Ripple from "@/components/ui/ripple";
+
+// Define the props for the Interview component
 interface InterviewProps {
   interview: InterviewRecord;
 }
 
+// Main Interview component
 export default function Interview({ interview }: InterviewProps) {
+  // Initialize hooks and state variables
   const router = useRouter();
   const { fetchApi } = useApi();
   const { currentBlob } = useBlobStore();
@@ -39,6 +44,7 @@ export default function Interview({ interview }: InterviewProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const visualizerRef = useRef<{ clearCanvas: () => void } | null>(null);
 
+  // Handle timer completion
   const handleTimerComplete = useCallback(() => {
     console.log("Interview time is up!");
     setErrorMessage(
@@ -49,6 +55,7 @@ export default function Interview({ interview }: InterviewProps) {
     setHasTimedOut(true);
   }, []);
 
+  // Effect to manage timer visibility
   useEffect(() => {
     if (hasRecordingStarted) {
       if (!showTimer) {
@@ -60,6 +67,7 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [hasRecordingStarted, hasRecordingStopped, showTimer]);
 
+  // Handle submission of recorded answer
   const handleSubmitRecording = useCallback(async () => {
     setSaveStatus("saving");
     setIsSubmittingRecording(true);
@@ -75,12 +83,14 @@ export default function Interview({ interview }: InterviewProps) {
         const formData = new FormData();
         formData.append("audio", audioFile, "audio.webm");
 
+        // Transcribe the audio
         const transcriptResponse = await fetchApi("/openai/transcribe", {
           method: "POST",
           body: formData,
         });
 
         if (transcriptResponse && transcriptResponse.transcription) {
+          // Save the transcribed answer
           const updatedResponse = await fetchApi(
             `/interviews/${interview.id}/questions/${currentQuestion.id}/answer`,
             {
@@ -114,6 +124,7 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [fetchApi, interview, currentBlob]);
 
+  // Update current question with feedback
   const updateCurrentQuestionWithFeedback = useCallback(
     async (feedbackData: FeedbackData) => {
       if (
@@ -144,6 +155,7 @@ export default function Interview({ interview }: InterviewProps) {
           saved: true,
         };
 
+        // Save the updated question with feedback
         await fetchApi(
           `/interviews/${interview.id}/questions/${updatedQuestion.id}`,
           {
@@ -158,6 +170,7 @@ export default function Interview({ interview }: InterviewProps) {
     [interview, fetchApi]
   );
 
+  // Handle feedback button click
   const handleFeedbackButton = useCallback(async () => {
     if (feedbackStatus === "generate") {
       setFeedbackStatus("thinking");
@@ -167,6 +180,7 @@ export default function Interview({ interview }: InterviewProps) {
           : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
 
         try {
+          // Generate feedback using OpenAI
           const response = await fetchApi(`/openai/get-results`, {
             method: "POST",
             body: JSON.stringify({
@@ -203,6 +217,7 @@ export default function Interview({ interview }: InterviewProps) {
     router,
   ]);
 
+  // Handle text-to-speech conversion and playback
   const handleTextToSpeech = useCallback(async () => {
     if (
       interview &&
@@ -229,6 +244,7 @@ export default function Interview({ interview }: InterviewProps) {
                 interview.questions
               )[0] as InterviewQuestionRecord);
 
+          // Generate audio from text
           const response = await fetchApi("/openai/text-to-speech", {
             method: "POST",
             body: JSON.stringify({ text: currentQuestion.question }),
@@ -255,8 +271,9 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [interview, fetchApi, audioUrl]);
 
+  // Handle "Try Again" button click
   const handleTryAgain = useCallback(() => {
-    console.log(visualizerRef.current)  
+    console.log(visualizerRef.current);
     if (visualizerRef.current) {
       visualizerRef.current.clearCanvas();
     }
@@ -267,6 +284,7 @@ export default function Interview({ interview }: InterviewProps) {
     setHasTimedOut(false);
   }, []);
 
+  // Effect to handle audio playback completion
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
@@ -280,6 +298,7 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, []);
 
+  // Render error message if no interview questions are available
   if (
     !interview ||
     (Array.isArray(interview.questions)
@@ -297,27 +316,33 @@ export default function Interview({ interview }: InterviewProps) {
     ? interview.questions[0]
     : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
 
+  // Render the main interview component
   return (
     <div className="flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-4xl card-shadow bg-white">
         <CardContent className="p-6">
+          {/* Timer component */}
           {hasRecordingStarted && (
             <div className="mb-6">
               <CountdownTimer
                 initialTime={60}
                 onComplete={handleTimerComplete}
+                isRunning={hasRecordingStarted && !hasRecordingStopped}
               />
             </div>
           )}
+          {/* Microphone permission message */}
           <div className="flex items-center justify-center mb-4 p-2 bg-yellow-100 rounded-md">
             <Mic className="w-5 h-5 mr-2 text-yellow-600" />
             <p className="text-yellow-800 font-medium">
               Please enable your microphone to start the interview.
             </p>
           </div>
+          {/* Current question */}
           <h2 className="text-2xl mb-6 text-center font-bold">
             {currentQuestion.question}
           </h2>
+          {/* Avatar image */}
           <div className="flex justify-center mb-6 relative">
             <Image
               src="/images/interview/avatar.png"
@@ -326,11 +351,9 @@ export default function Interview({ interview }: InterviewProps) {
               height={200}
               className="rounded-full relative z-10 shadow-xl"
             />
-            {
-              isPlaying && ( <Ripple />)
-            }
-            
+            {isPlaying && <Ripple />}
           </div>
+          {/* Play audio button */}
           <div className="flex justify-center mb-4">
             <Button
               data-testid="playaudio"
@@ -350,7 +373,9 @@ export default function Interview({ interview }: InterviewProps) {
               )}
             </Button>
           </div>
+          {/* Hidden audio element */}
           <audio ref={audioRef} className="hidden" />
+          {/* Visualizer component */}
           <div className="relative">
             <Visualizer
               ref={visualizerRef}
@@ -359,6 +384,7 @@ export default function Interview({ interview }: InterviewProps) {
               setRecordingStarted={setHasRecordingStarted}
             />
           </div>
+          {/* Action buttons */}
           <div className="flex justify-center mt-6 space-x-4">
             {hasRecordingStopped && saveStatus !== "saving" && (
               <>
@@ -387,6 +413,7 @@ export default function Interview({ interview }: InterviewProps) {
             )}
           </div>
 
+          {/* Feedback button */}
           {saveStatus === "success" && (
             <div className="flex justify-center mt-6">
               <Button
@@ -412,6 +439,7 @@ export default function Interview({ interview }: InterviewProps) {
               </Button>
             </div>
           )}
+          {/* Status messages */}
           {saveStatus === "saving" && (
             <p className="mt-4 text-yellow-600 font-semibold text-center">
               Processing your answer...
@@ -427,6 +455,7 @@ export default function Interview({ interview }: InterviewProps) {
               There was an error processing your answer. Please try again.
             </p>
           )}
+          {/* Error message display */}
           {errorMessage && errorMessage !== "" && (
             <div className="flex flex-col items-center justify-center p-4 gradient-bg">
               <Card className="w-full max-w-2xl card-shadow">

@@ -34,10 +34,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
 
   const { setCurrentBlob } = useBlobStore();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-
+  
   useImperativeHandle(ref, () => ({
     clearCanvas: () => {
       clearCanvas();
@@ -89,49 +86,6 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
       setIsPlaying(!isPlaying);
     }
   }, [audioRef, isPlaying]);
-
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-  }, [audioRef]);
-
-  useEffect(() => {
-    const currentAudioRef = audioRef.current;
-    
-    const handleTimeUpdate = () => {
-      if (currentAudioRef) {
-        setCurrentTime(currentAudioRef.currentTime);
-      }
-    };
-
-    const handleDurationChange = () => {
-      if (currentAudioRef) {
-        setDuration(currentAudioRef.duration);
-      }
-    };
-
-    const handleEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-    };
-
-    if (currentAudioRef) {
-      currentAudioRef.addEventListener('timeupdate', handleTimeUpdate);
-      currentAudioRef.addEventListener('durationchange', handleDurationChange);
-      currentAudioRef.addEventListener('ended', handleEnded);
-    }
-
-    return () => {
-      if (currentAudioRef) {
-        currentAudioRef.removeEventListener('timeupdate', handleTimeUpdate);
-        currentAudioRef.removeEventListener('durationchange', handleDurationChange);
-        currentAudioRef.removeEventListener('ended', handleEnded);
-      }
-    };
-  }, [audioRef]);
 
   return (
     <div className="flex flex-col items-center">
