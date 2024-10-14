@@ -44,14 +44,15 @@ const InterviewForm: React.FC = () => {
    
       const data = await generateQuestions(validatedData);
 
-      if (data && data.questions && Array.isArray(data.questions)) {
+      if (data && data.result.questions && Array.isArray(data.result.questions)) {
         const newInterview = await fetchApi('/interviews', {
           method: 'POST',
           body: JSON.stringify({ 
             ...validatedData,
-            questions: data.questions
+            questions: data.result.questions
           }),
         });
+        console.log(data.timeTaken)
         setInterviewId(newInterview.id);
         setIsSubmitted(true);
       } else {

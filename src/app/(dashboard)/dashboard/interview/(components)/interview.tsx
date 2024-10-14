@@ -285,7 +285,6 @@ export default function Interview({ interview }: InterviewProps) {
     if (feedbackStatus === "generate") {
       setFeedbackStatus("thinking");
       if (interview && interview.jobTitle && interview.questions) {
-    
         try {
           // Generate feedback using OpenAI
           const response = await fetchApi(`/openai/get-results`, {

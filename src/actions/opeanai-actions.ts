@@ -15,6 +15,7 @@ const openai = new OpenAI()
 export async function generateQuestions(data: z.infer<typeof GenerateQuestionsSchema>) {
   try {
     const validatedData = GenerateQuestionsSchema.parse(data)
+    const start = performance.now()
 
     // Construct prompt for OpenAI
     const prompt = `Generate 1 interview questions based on the following information:
@@ -22,13 +23,12 @@ export async function generateQuestions(data: z.infer<typeof GenerateQuestionsSc
     ${validatedData.jobDescription ? `Description: ${validatedData.jobDescription}` : ''}
     ${validatedData.skills ? `Required Skills: ${validatedData.skills.join(', ')}` : ''}
     
-    Provide the questions, suggested answers, and related skills in the following JSON format:
+    Provide the questions, suggested answers should include the related skills in the following JSON format:
     {
       "questions": [
         {
           "question": "Question text here",
           "suggested": "A detailed suggested answer for the question",
-          "skills": ["skill1", "skill2"],
           "saved": false
         },
         ...
@@ -51,7 +51,9 @@ export async function generateQuestions(data: z.infer<typeof GenerateQuestionsSc
     // Parse and return the generated questions and answers
     const questionsAndAnswers = JSON.parse(response.choices[0].message.content || '{"questions": []}')
     console.log('questionsAndAnswers = ', questionsAndAnswers)
-    return questionsAndAnswers
+    const end = performance.now()
+
+    return {result:questionsAndAnswers, timeTaken: end - start}
 
   } catch (error) {
     console.error('Question and Answer Generation Error:', error)
