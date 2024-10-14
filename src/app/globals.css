@@ -155,3 +155,6 @@ html, body{
 .voice-visualizer__btn{
  display:none;
 }
+.voice-visualizer__btn-left {
+  display:none !important;
+}

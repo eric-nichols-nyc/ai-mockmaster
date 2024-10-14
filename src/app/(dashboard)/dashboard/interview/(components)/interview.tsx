@@ -12,7 +12,7 @@ import { Loader2, Mic } from "lucide-react";
 import CountdownTimer from "@/components/countdown-timer";
 import { FeedbackData } from "@/types";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
-
+import Ripple from "@/components/ui/ripple";
 interface InterviewProps {
   interview: InterviewRecord;
 }
@@ -299,9 +299,9 @@ export default function Interview({ interview }: InterviewProps) {
 
   return (
     <div className="flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-4xl card-shadow">
+      <Card className="w-full max-w-4xl card-shadow bg-white">
         <CardContent className="p-6">
-          {showTimer && (
+          {hasRecordingStarted && (
             <div className="mb-6">
               <CountdownTimer
                 initialTime={60}
@@ -324,8 +324,12 @@ export default function Interview({ interview }: InterviewProps) {
               alt="Interview Avatar"
               width={200}
               height={200}
-              className="rounded-full relative z-10"
+              className="rounded-full relative z-10 shadow-xl"
             />
+            {
+              isPlaying && ( <Ripple />)
+            }
+            
           </div>
           <div className="flex justify-center mb-4">
             <Button

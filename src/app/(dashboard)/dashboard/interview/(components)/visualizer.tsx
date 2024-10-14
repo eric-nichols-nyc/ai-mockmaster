@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useImperativeHandle, forwardRef, useCallback, useRef } from "react";
+import React, { useEffect, useImperativeHandle, forwardRef, useCallback, useState } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
 import useBlobStore from "@/store/interviewStore";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,23 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
   hasTimedOut,
 }, ref) => {
   const recorderControls = useVoiceVisualizer();
-  const { recordedBlob, error, isRecordingInProgress, stopRecording, clearCanvas, audioRef, startRecording } =
-    recorderControls;
+  const { 
+    recordedBlob, 
+    error, 
+    isRecordingInProgress, 
+    stopRecording, 
+    clearCanvas, 
+    audioRef, 
+    startRecording, 
+    isAvailableRecordedAudio,
+    togglePauseResume
+  } = recorderControls;
 
   const { setCurrentBlob } = useBlobStore();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
 
   useImperativeHandle(ref, () => ({
     clearCanvas: () => {
@@ -34,23 +47,18 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
     },
   }));
 
-  // Get the recorded audio blob
   useEffect(() => {
     if (!recordedBlob) return;
-
     console.log(recordedBlob);
     setHasRecordingStopped(true);
-    setCurrentBlob(recordedBlob); // Store the blob in the blobStore
+    setCurrentBlob(recordedBlob);
   }, [recordedBlob, setHasRecordingStopped, setCurrentBlob]);
 
-  // Get the error when it occurs
   useEffect(() => {
     if (!error) return;
-
     console.error(error);
   }, [error]);
 
-  // Reset hasRecordingStopped and start time when starting a new recording
   useEffect(() => {
     if (isRecordingInProgress) {
       console.log("Recording is in progress...");
@@ -71,19 +79,55 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
     stopRecording();
   }, [stopRecording]);
 
+  const handlePlayPause = useCallback(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  }, [audioRef, isPlaying]);
+
+  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+  }, [audioRef]);
+
   useEffect(() => {
     const currentAudioRef = audioRef.current;
     
+    const handleTimeUpdate = () => {
+      if (currentAudioRef) {
+        setCurrentTime(currentAudioRef.currentTime);
+      }
+    };
+
+    const handleDurationChange = () => {
+      if (currentAudioRef) {
+        setDuration(currentAudioRef.duration);
+      }
+    };
+
     const handleEnded = () => {
-      // Handle any logic needed when audio playback ends
+      setIsPlaying(false);
+      setCurrentTime(0);
     };
 
     if (currentAudioRef) {
+      currentAudioRef.addEventListener('timeupdate', handleTimeUpdate);
+      currentAudioRef.addEventListener('durationchange', handleDurationChange);
       currentAudioRef.addEventListener('ended', handleEnded);
     }
 
     return () => {
       if (currentAudioRef) {
+        currentAudioRef.removeEventListener('timeupdate', handleTimeUpdate);
+        currentAudioRef.removeEventListener('durationchange', handleDurationChange);
         currentAudioRef.removeEventListener('ended', handleEnded);
       }
     };
@@ -92,6 +136,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
   return (
     <div className="flex flex-col items-center">
       <VoiceVisualizer
+       isControlPanelShown={false}
         controls={recorderControls}
         width={500}
         height={100}
@@ -106,6 +151,12 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(({
       {isRecordingInProgress && (
         <Button onClick={handleStopRecording} className="mt-4">
           Stop Recording
+        </Button>
+      )}
+      {/* show play/pause button if recordedBlob is available */}
+      {isAvailableRecordedAudio && (
+        <Button onClick={togglePauseResume} className="mt-4">
+          Play
         </Button>
       )}
     </div>
