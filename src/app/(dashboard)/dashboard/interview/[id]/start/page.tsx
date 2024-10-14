@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { InterviewRecord } from "@/db/schema";
 import InterviewComponent from "../../(components)/interview";
-import { getInterviewById } from "@/actions";
+import { getInterviewById } from "@/actions/interview-actions";
 
 async function getInterview(id: string): Promise<InterviewRecord | null> {
   try {

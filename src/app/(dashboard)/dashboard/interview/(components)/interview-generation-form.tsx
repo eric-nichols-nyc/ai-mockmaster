@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useApi } from '@/lib/api';
 import AnimatedButton from './AnimatedButton';
+import { generateQuestions } from '@/actions/opeanai-actions';
 
 const formSchema = z.object({
   jobTitle: z.string().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
@@ -41,12 +42,9 @@ const InterviewForm: React.FC = () => {
     try {
       const validatedData = formSchema.parse(formData);
    
-      const data = await fetchApi('/openai/generate-questions', {
-        method: 'POST',
-        body: JSON.stringify(validatedData),
-      });
+      const data = await generateQuestions(validatedData);
 
-      if (Array.isArray(data.questions)) {
+      if (data && data.questions && Array.isArray(data.questions)) {
         const newInterview = await fetchApi('/interviews', {
           method: 'POST',
           body: JSON.stringify({ 
@@ -56,8 +54,6 @@ const InterviewForm: React.FC = () => {
         });
         setInterviewId(newInterview.id);
         setIsSubmitted(true);
-      } else if (data.error) {
-        throw new Error(data.error);
       } else {
         throw new Error('Invalid response from server');
       }
@@ -71,7 +67,7 @@ const InterviewForm: React.FC = () => {
       } else if (err instanceof Error) {
         setError(`An error occurred while submitting the form: ${err.message}`);
       } else {
-        setError('An error occurred while submitting the form: Invalid response from server:'+ err);
+        setError('An error occurred while submitting the form: Invalid response from server');
       }
       console.error('Error submitting form:', err);
     } finally {

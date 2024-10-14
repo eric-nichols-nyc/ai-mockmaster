@@ -74,7 +74,6 @@ export default function Interview({ interview }: InterviewProps) {
           ? interview.questions[0]
           : (Object.values(interview.questions)[0] as InterviewQuestionRecord)
       );
-      setAudioUrl(currentQuestion?.audioUrl)
     }
   }, [currentQuestion?.audioUrl, interview]);
 
@@ -417,7 +416,6 @@ export default function Interview({ interview }: InterviewProps) {
                 hasTimedOut={hasTimedOut}
                 setHasRecordingStopped={setHasRecordingStopped}
                 setRecordingStarted={setHasRecordingStarted}
-                audioUrl={audioUrl}
               />
             </div>
           )}
