@@ -14,7 +14,6 @@ import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 import Ripple from "@/components/ui/ripple";
 import { toast } from "sonner";
 
-// Define the props for the Interview component
 interface InterviewProps {
   interview: InterviewRecord;
 }
@@ -31,8 +30,6 @@ interface FeedbackData {
 
 // Main Interview component
 export default function Interview({ interview }: InterviewProps) {
-  console.log(interview);
-  // Initialize hooks and state variables
   const router = useRouter();
   const { fetchApi } = useApi();
   const { currentBlob } = useBlobStore();
@@ -113,7 +110,7 @@ export default function Interview({ interview }: InterviewProps) {
 
         if (transcriptResponse && transcriptResponse.transcription) {
           const answer = transcriptResponse.transcription;
-          const url = transcriptResponse.url;
+          const url = transcriptResponse.audioUrl;
           // Save the transcribed answer
           const updatedQuestion = await fetchApi(
             `/interviews/${interview.id}/questions/${currentQuestion?.id}/answer`,
@@ -126,8 +123,8 @@ export default function Interview({ interview }: InterviewProps) {
             }
           );
           if(currentQuestion){
-            currentQuestion.answer = transcriptResponse.transcription;
-            currentQuestion.audioUrl = transcriptResponse.url;
+            currentQuestion.answer = answer;
+            currentQuestion.audioUrl = url;
           }
      
           // add answer and audio url to current question
