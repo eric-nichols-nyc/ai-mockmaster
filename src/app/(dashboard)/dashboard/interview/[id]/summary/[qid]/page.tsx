@@ -1,34 +1,31 @@
 import React from 'react'
 import Summary from '../../../(components)/summary'
 import { InterviewRecord } from '@/db/schema'
-import { auth } from '@clerk/nextjs/server';
+import { z } from "zod"
+import { db } from "@/db"
+import { interviews } from "@/db/schema"
+import { eq } from "drizzle-orm"
 
-async function getInterviewById(id: string, qid:string): Promise<InterviewRecord | null> {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+const getInterviewByIdSchema = z.object({
+  id: z.string().uuid(),
+})
 
+async function getInterviewById(input: z.infer<typeof getInterviewByIdSchema>): Promise<InterviewRecord | null> {
   try {
-    const { getToken } = auth();
-    const token = await getToken();
+    const { id } = getInterviewByIdSchema.parse(input)
 
-    const response = await fetch(`${baseUrl}/api/interviews/${id}/questions/${qid}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const interview = await db.query.interviews.findFirst({
+      where: eq(interviews.id, id),
+    })
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch interview");
-    }
-
-    const interview = await response.json();
-    return interview;
+    return interview || null
   } catch (error) {
-    console.error("Error fetching interview:", error);
-    return null;
+    if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.errors)
+      return null
+    }
+    console.error("Error fetching interview:", error)
+    return null
   }
 }
 
@@ -40,8 +37,8 @@ interface SummaryPageProps {
 }
 
 const SummaryPage = async ({ params }: SummaryPageProps) => {
-  const { id, qid } = params;
-  const interview = await getInterviewById(id, qid);
+  const { id } = params;
+  const interview = await getInterviewById({ id });
   console.log(interview);
 
   if (!interview) {
@@ -50,7 +47,7 @@ const SummaryPage = async ({ params }: SummaryPageProps) => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <Summary />
+      <Summary interview={interview} />
     </div>
   )
 }
