@@ -11,6 +11,7 @@ const getInterviewByIdSchema = z.object({
 })
 
 export async function getInterviewById(input: z.infer<typeof getInterviewByIdSchema>): Promise<InterviewRecord | null> {
+  const start = performance.now();
   try {
     const { userId } = auth()
     if (!userId) {
@@ -36,6 +37,9 @@ export async function getInterviewById(input: z.infer<typeof getInterviewByIdSch
     }
     console.error("Error fetching interview:", error)
     return null
+  } finally {
+    const end = performance.now();
+    console.log(`getInterviewById execution time: ${end - start} milliseconds`);
   }
 }
 

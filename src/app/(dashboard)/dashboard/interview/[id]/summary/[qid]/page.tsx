@@ -39,7 +39,6 @@ interface SummaryPageProps {
 const SummaryPage = async ({ params }: SummaryPageProps) => {
   const { id } = params;
   const interview = await getInterviewById({ id });
-  console.log(interview);
 
   if (!interview) {
     return <div>Error: Failed to load interview</div>;
