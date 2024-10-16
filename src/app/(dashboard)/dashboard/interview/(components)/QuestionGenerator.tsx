@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { generateFeedback } from '@/actions/opeanai-actions';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-
+import React, { useState, useTransition } from 'react';
+import { generateFeedback } from "@/actions/opeanai-actions";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useCompletion } from 'ai/react'
 interface QuestionGeneratorProps {
   question: string;
 }
@@ -12,28 +12,43 @@ interface QuestionGeneratorProps {
 const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({ question }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const { complete, completion, isLoading } = useCompletion({
+    api: '/api/stream',
+  })
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsGenerating(true);
     setFeedback('');
 
-    try {
-      const feedbackResponse = await generateFeedback({
-        question,
-        userAnswer,
-        jobTitle: 'Software Engineer',
-        skills: []
-      });
+    startTransition(async () => {
+      try {
+        const feedbackResponse = await generateFeedback({
+          question,
+          userAnswer,
+          jobTitle: 'Software Engineer',
+          skills: []
+        });
 
-      setFeedback(JSON.stringify(feedbackResponse.result, null, 2));
-    } catch (error) {
-      console.error('Error generating feedback:', error);
-      setFeedback('Error generating feedback. Please try again.');
-    } finally {
-      setIsGenerating(false);
-    }
+        if (feedbackResponse instanceof ReadableStream) {
+          const reader = feedbackResponse.getReader();
+          const decoder = new TextDecoder();
+          let result = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            result += decoder.decode(value);
+            setFeedback(result);
+          }
+        } else {
+          setFeedback('Unexpected response format');
+        }
+      } catch (error) {
+        console.error('Error generating feedback:', error);
+        setFeedback('Error generating feedback. Please try again.');
+      }
+    });
   };
 
   return (
@@ -49,8 +64,8 @@ const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({ question }) => {
           placeholder="Your answer"
           required
         />
-        <Button type="submit" disabled={isGenerating || !question}>
-          {isGenerating ? 'Generating Feedback...' : 'Get Feedback'}
+        <Button type="submit" disabled={isPending || !question}>
+          {isPending ? 'Generating Feedback...' : 'Get Feedback'}
         </Button>
       </form>
       {feedback && (
