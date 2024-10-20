@@ -62,6 +62,7 @@ describe('Interview Component', () => {
       feedback: null,
       improvements: null,
       keyTakeaways: null,
+      suggestedAudioUrl: null,
       grade: null,
       skills: ['React'],
       saved: false,

@@ -123,8 +123,8 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
         <VoiceVisualizer
           isControlPanelShown={false}
           controls={recorderControls}
-          width={500}
-          height={100}
+          width={300}
+          height={75}
           backgroundColor="transparent"
           mainBarColor="black"
         />

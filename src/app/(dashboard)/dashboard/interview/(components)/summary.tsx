@@ -35,6 +35,7 @@ const Summary: React.FC = () => {
       try {
         const fetchedInterview = await getInterviewByIdRef.current(interviewId);
         if (fetchedInterview) {
+          console.log("fetchedInterview", fetchedInterview);
           const extendedInterview: InterviewRecord = {
             ...fetchedInterview,
             questions: Array.isArray(fetchedInterview.questions)
@@ -49,6 +50,7 @@ const Summary: React.FC = () => {
           );
           if (foundQuestion) {
             setQuestion(foundQuestion);
+            setSuggestedAudioUrl(foundQuestion.suggestedAudioUrl);
           } else {
             setError("Question not found.");
           }
