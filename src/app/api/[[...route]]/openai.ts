@@ -215,10 +215,9 @@ You are an expert interviewer and career coach. Your task is to evaluate a candi
 Please provide your evaluation in the following JSON format:
 
 {
-  "feedback": "Detailed feedback on the candidate's answer, considering factors such as relevance, clarity, depth of knowledge, and alignment with the job position and related skills.",
+  "feedback": "Detailed personal feedback on the candidate's answer, considering factors such as relevance, clarity, depth of knowledge, and alignment with the job position and related skills.",
   "grade": {
-    "letter": "A letter grade (A, B, C, D, or F)",
-    "explanation": "A brief explanation of why this grade was given."
+    "letter": "A letter grade (A, B, C, D, or F)"
   },
   "improvements": [
     "Improvement suggestion 1",
@@ -232,7 +231,7 @@ Please provide your evaluation in the following JSON format:
   ]
 }
 
-Ensure that your response is a valid JSON object. Remember to tailor your evaluation to the specific job position and consider industry standards and expectations when providing feedback and suggestions. Pay special attention to how well the candidate's answer addresses the related skills for the question.
+Ensure that your response is a valid JSON object. Remember to tailor your evaluation to the specific job position and consider industry standards and expectations when providing feedback and suggestions. Make your response personal, conversational and engaging. Pay special attention to how well the candidate's answer addresses the related skills for the question.
 `
 
 app.post('/get-results', async (c) => {

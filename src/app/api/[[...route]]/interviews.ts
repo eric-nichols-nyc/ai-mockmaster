@@ -39,15 +39,20 @@ const saveAnswerSchema = z.object({
   }),
 })
 
+// Define a schema for the updateable fields of a question
 const updateQuestionSchema = z.object({
-  body: z.object({
-    feedback: z.string().optional(),
-    improvements: z.array(z.string()).optional(),
-    keyTakeaways: z.array(z.string()).optional(),
-    grade: z.string().optional(),
-    saved: z.boolean().optional()
-  }),
-})
+  question: z.string().optional(),
+  suggested: z.string().optional(),
+  suggestedAudioUrl: z.string().url().optional(),
+  answer: z.string().optional(),
+  audioUrl: z.string().url().optional(),
+  feedback: z.string().optional(),
+  improvements: z.array(z.string()).optional(),
+  keyTakeaways: z.array(z.string()).optional(),
+  grade: z.string().optional(),
+  saved: z.boolean().optional(),
+  skills: z.array(z.string()).optional(),
+});
 
 // New schema for updating the saved status of a question
 const updateQuestionSavedSchema = z.object({
@@ -94,6 +99,7 @@ app.post('/', zValidator('json', createInterviewSchema.shape.body), async (c) =>
         interviewId: interviewId,
         question: q.question,
         suggested: q.suggested,
+        suggestedAudioUrl: null,
         answer: null,
         audioUrl: null,
         feedback: null,
@@ -282,18 +288,20 @@ app.put('/:id', zValidator('json', updateInterviewSchema.shape.body), async (c) 
   }
 })
 
-// PUT /:id/questions/:questionId - Update a specific question with feedback, improvements, keyTakeaways, and grade
-app.put('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.shape.body), async (c) => {
+// PUT /:id/questions/:questionId - Update a specific question with any provided fields
+app.put('/:id/questions/:questionId', async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
   }
 
-  const interviewId = c.req.param('id')
-  const questionId = c.req.param('questionId')
+  const interviewId = c.req.param('id');
+  const questionId = c.req.param('questionId');
 
   try {
-    const { feedback, improvements, keyTakeaways, grade, saved } = c.req.valid('json')
+    const body = await c.req.json();
+    const updateData = updateQuestionSchema.parse(body);
+    console.log("updateData", updateData)
 
     // First, verify that the interview belongs to the authenticated user
     const interviewCheck = await db.select({ id: interviews.id })
@@ -301,20 +309,11 @@ app.put('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.sh
       .where(and(
         eq(interviews.id, interviewId),
         eq(interviews.userId, auth.userId)
-      ))
+      ));
 
     if (interviewCheck.length === 0) {
-      return c.json({ error: 'Interview not found or unauthorized' }, 404)
+      return c.json({ error: 'Interview not found or unauthorized' }, 404);
     }
-
-    const updateData: Partial<typeof interviewQuestions.$inferInsert> = {}
-
-    if (feedback !== undefined) updateData.feedback = feedback
-    if (improvements !== undefined) updateData.improvements = improvements
-    if (keyTakeaways !== undefined) updateData.keyTakeaways = keyTakeaways
-    if (grade !== undefined) updateData.grade = grade
-    if (saved !== undefined) updateData.saved = saved
-
 
     const updatedQuestion = await db.update(interviewQuestions)
       .set(updateData)
@@ -322,21 +321,21 @@ app.put('/:id/questions/:questionId', zValidator('json', updateQuestionSchema.sh
         eq(interviewQuestions.id, questionId),
         eq(interviewQuestions.interviewId, interviewId)
       ))
-      .returning()
+      .returning();
 
     if (updatedQuestion.length === 0) {
-      return c.json({ error: 'Question not found' }, 404)
+      return c.json({ error: 'Question not found' }, 404);
     }
 
-    return c.json(updatedQuestion[0])
+    return c.json(updatedQuestion[0]);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return c.json({ error: 'Invalid input', details: error.errors }, 400)
+      return c.json({ error: 'Invalid input', details: error.errors }, 400);
     }
-    console.error(`Error updating question with id ${questionId} in interview ${interviewId}:`, error)
-    return c.json({ error: 'Failed to update question' }, 500)
+    console.error(`Error updating question with id ${questionId} in interview ${interviewId}:`, error);
+    return c.json({ error: 'Failed to update question' }, 500);
   }
-})
+});
 
 // POST /:id/complete - Mark an interview as complete
 app.post('/:id/complete', async (c) => {

@@ -40,7 +40,20 @@ export const useApi = () => {
     return response.json();
   };
 
-  return { fetchApi };
+  const generateSpeech = async (text: string): Promise<string> => {
+    try {
+      const response = await fetchApi('/openai/text-to-speech', {
+        method: 'POST',
+        body: { text },
+      });
+      return response.audioUrl;
+    } catch (error) {
+      console.error('Error generating speech:', error);
+      throw error;
+    }
+  };
+
+  return { fetchApi, generateSpeech };
 };
 
 export const useInterviews = () => {

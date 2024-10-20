@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useApi } from '@/lib/api';
 import AnimatedButton from './AnimatedButton';
-import { generateQuestions } from '@/actions/opeanai-actions';
-
+//import { generateQuestions } from '@/actions/opeanai-actions';
+import { generateTechInterviewQuestion } from '@/actions/gemini-actions';
 const formSchema = z.object({
   jobTitle: z.string().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
   jobDescription: z.string().optional(),
@@ -28,6 +28,16 @@ const InterviewForm: React.FC = () => {
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // try {
+    //   const ingredientList = ['peas', 'carrot', 'potato'];
+    //   const result = await generateRecipe(ingredientList);
+    //   console.log(result)
+    // } catch (err) {
+    //   console.error(err)
+    // }
+    // return
+
     if (isSubmitted) {
       handleNext();
       return;
@@ -42,17 +52,20 @@ const InterviewForm: React.FC = () => {
     try {
       const validatedData = formSchema.parse(formData);
    
-      const data = await generateQuestions(validatedData);
-
-      if (data && data.result.questions && Array.isArray(data.result.questions)) {
+      const result = await generateTechInterviewQuestion(
+        validatedData.jobTitle,
+        validatedData.jobDescription,
+        validatedData.skills
+      );      console.log([result])
+      if (result && result.question) {
         const newInterview = await fetchApi('/interviews', {
           method: 'POST',
           body: JSON.stringify({ 
             ...validatedData,
-            questions: data.result.questions
+            questions: [result]
           }),
         });
-        console.log(data.timeTaken)
+        console.log(result.timeTaken)
         setInterviewId(newInterview.id);
         setIsSubmitted(true);
       } else {

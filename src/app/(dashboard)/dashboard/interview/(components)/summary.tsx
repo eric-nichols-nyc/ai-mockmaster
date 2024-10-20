@@ -1,9 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { InterviewRecord, InterviewQuestionRecord } from "@/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useInterviews } from "@/lib/api";
+import { useInterviews, useApi } from "@/lib/api";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,6 +12,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const Summary: React.FC = () => {
   const [interview, setInterview] = useState<InterviewRecord | null>(null);
@@ -19,6 +21,7 @@ const Summary: React.FC = () => {
     null
   );
   const { getInterviewById } = useInterviews();
+  const getInterviewByIdRef = useRef(getInterviewById);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
@@ -30,7 +33,7 @@ const Summary: React.FC = () => {
     const fetchInterviewAndQuestion = async () => {
       setError(null);
       try {
-        const fetchedInterview = await getInterviewById(interviewId);
+        const fetchedInterview = await getInterviewByIdRef.current(interviewId);
         if (fetchedInterview) {
           const extendedInterview: InterviewRecord = {
             ...fetchedInterview,
@@ -60,13 +63,12 @@ const Summary: React.FC = () => {
     };
 
     fetchInterviewAndQuestion();
-  }, [interviewId, questionId, getInterviewById]);
+  }, [interviewId, questionId]);
 
   const getGradeColor = (grade: string) => {
-    const numericGrade = grade ? parseFloat(grade) : 0;
-    if (numericGrade >= 90) return "bg-green-100 text-green-800";
-    if (numericGrade >= 80) return "bg-blue-100 text-blue-800";
-    if (numericGrade >= 70) return "bg-yellow-100 text-yellow-800";
+    if (grade === "A" || grade === "B")
+      return "bg-green-100 text-green-800 shadow-md";
+    if (grade === "C") return "bg-yellow-100 text-yellow-800 shadow-md";
     return "bg-red-100 text-red-800 shadow-md";
   };
 
@@ -79,6 +81,62 @@ const Summary: React.FC = () => {
     if (numericGrade >= 70)
       return "Good effort! There's room for improvement, but you're on the right track.";
     return "Keep practicing! Focus on the areas highlighted for improvement.";
+  };
+
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [suggestedAudioUrl, setSuggestedAudioUrl] = useState<string | null>(null);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  const { generateSpeech, fetchApi } = useApi();
+
+  const updateQuestionInDatabase = async (questionId: string, updateData: Partial<InterviewQuestionRecord>) => {
+    try {
+      const filteredUpdateData = Object.fromEntries(
+        Object.entries(updateData).filter((v) => v !== undefined)
+      );
+
+      if (Object.keys(filteredUpdateData).length > 0) {
+        const updatedQuestion = await fetchApi(`/interviews/${interviewId}/questions/${questionId}`, {
+          method: 'PUT',
+          body: filteredUpdateData,
+        });
+        return updatedQuestion;
+      } else {
+        console.warn("No valid properties to update");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error updating question in database:", error);
+      toast.error("Failed to update the question in the database. Please try again.");
+      throw error;
+    }
+  };
+
+  const handleGenerateAudio = async () => {
+    if (!question?.suggested) return;
+    
+    setIsGeneratingAudio(true);
+    try {
+      const audioUrl = await generateSpeech(question.suggested);
+      if (!audioUrl) {
+        throw new Error("Failed to generate audio URL");
+      }
+      setSuggestedAudioUrl(audioUrl);
+
+      const updatedQuestion = await updateQuestionInDatabase(questionId, { suggestedAudioUrl: audioUrl });
+
+      if (updatedQuestion) {
+        setQuestion(prevQuestion => ({...prevQuestion, ...updatedQuestion}));
+        toast.success("Suggested answer audio has been generated and saved successfully.");
+      } else {
+        toast.info("No changes were made to the question in the database.");
+      }
+
+    } catch (error) {
+      console.error("Error generating audio or updating database:", error);
+      toast.error("An error occurred while generating audio or updating the database. Please try again.");
+    } finally {
+      setIsGeneratingAudio(false);
+    }
   };
 
   if (isLoading) {
@@ -98,7 +156,10 @@ const Summary: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl" data-testid="summary-component">
+    <div
+      className="container mx-auto p-4 max-w-4xl"
+      data-testid="summary-component"
+    >
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -120,18 +181,16 @@ const Summary: React.FC = () => {
       <h1 className="text-3xl font-bold mb-6 text-center">Question Summary</h1>
       <Card className="mb-8 shadow-lg">
         <CardHeader className="bg-gray-50">
-          <CardTitle className="text-2xl">{interview.jobTitle}</CardTitle>
-        </CardHeader>
-        <CardContent className="mt-4">
-          <p className="text-gray-700">{interview.jobDescription}</p>
-        </CardContent>
-      </Card>
-      <Card className="mb-8 shadow-lg">
-        <CardHeader className="bg-gray-50">
-          <CardTitle className="text-xl">{question.question}</CardTitle>
+          <CardTitle className="text-lg font-semibold text-gray-600 mb-2">
+            Job Title:{" "}
+            <span className="text-primary">{interview.jobTitle}</span>
+          </CardTitle>
+          <CardTitle className="text-xl font-bold">
+            Question: {question.question}
+          </CardTitle>
         </CardHeader>
         <CardContent className="mt-4 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-start gap-2">
             <p className="font-semibold text-lg">Grade:</p>
             {question.grade && (
               <span
@@ -150,11 +209,40 @@ const Summary: React.FC = () => {
           )}
           <div>
             <p className="font-semibold mb-2">Your Answer:</p>
-            <p className="bg-gray-100 p-3 rounded">{question.answer}</p>
+            {question.audioUrl && (
+              <div className="mt-4">
+                <audio controls>
+                  <source src={question.audioUrl} type="audio/mpeg" />
+                </audio>
+              </div>
+            )}
+            <Button onClick={() => setShowAnswer(!showAnswer)} className="mb-2">
+              {showAnswer ? "Hide" : "Transcribe"}
+            </Button>
+            {showAnswer && (
+              <p className="bg-gray-100 p-3 rounded">{question.answer}</p>
+            )}
           </div>
           <div>
             <p className="font-semibold mb-2">Suggested Answer:</p>
-            <p className="bg-green-50 p-3 rounded">{question.suggested}</p>
+            <p className="bg-green-50 p-3 rounded">{question?.suggested}</p>
+            {!suggestedAudioUrl && (
+              <Button 
+                onClick={handleGenerateAudio} 
+                className="mt-2"
+                disabled={isGeneratingAudio || !question?.suggested}
+              >
+                {isGeneratingAudio ? "Generating..." : "Generate Audio"}
+              </Button>
+            )}
+            {suggestedAudioUrl && (
+              <div className="mt-4">
+                <audio controls>
+                  <source src={suggestedAudioUrl} type="audio/mpeg" />
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            )}
           </div>
           <div>
             <p className="font-semibold mb-2">Feedback:</p>

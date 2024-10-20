@@ -7,6 +7,7 @@ export interface InterviewQuestion {
   suggested: string;
   answer: string | null;
   audioUrl: string | null;
+  suggestedAudioUrl: string| null;
   feedback: string | null;
   improvements: string[] | null;
   keyTakeaways: string[] | null;
@@ -43,6 +44,7 @@ export const interviewQuestions = pgTable('interview_questions', {
     interviewId: uuid('interview_id').references(() => interviews.id).notNull(),
     question: text('question').notNull(),
     suggested: text('suggested').notNull(),
+    suggestedAudioUrl: text('suggested_url'),
     answer: text('answer'),
     audioUrl: text('audio_url'),
     feedback: text('feedback'),

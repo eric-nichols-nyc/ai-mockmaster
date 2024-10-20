@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { BotIcon } from 'lucide-react';
 import { AuthDropdown } from './auth-dropdown';
 import { useAuth } from '@clerk/nextjs';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const StickyHeader: React.FC = () => {
   const { isSignedIn } = useAuth();
@@ -15,7 +16,10 @@ const StickyHeader: React.FC = () => {
           <BotIcon className="mr-2" />
           AI MockMaster
         </Link>
-        {isSignedIn && <AuthDropdown />}
+        <div className="flex items-center space-x-4">
+          <ThemeToggle />
+          {isSignedIn && <AuthDropdown />}
+        </div>
       </div>
     </header>
   );
