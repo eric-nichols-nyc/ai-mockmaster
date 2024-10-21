@@ -568,4 +568,92 @@ app.put('/:id/questions/:questionId/save', zValidator('json', updateQuestionSave
   }
 })
 
+// Add this new route at the end of the file
+
+// DELETE /:id - Delete a specific interview
+app.delete('/:id', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  const id = c.req.param('id')
+
+  try {
+    // First, delete all associated questions
+    await db.delete(interviewQuestions)
+      .where(eq(interviewQuestions.interviewId, id))
+
+    // Then, delete the interview
+    const deletedInterview = await db.delete(interviews)
+      .where(and(
+        eq(interviews.id, id),
+        eq(interviews.userId, auth.userId)
+      ))
+      .returning()
+
+    if (deletedInterview.length === 0) {
+      return c.json({ error: 'Interview not found or unauthorized' }, 404)
+    }
+
+    return c.json({ message: 'Interview deleted successfully' }, 200)
+  } catch (error) {
+    console.error(`Error deleting interview with id ${id}:`, error)
+    return c.json({ error: 'Failed to delete interview' }, 500)
+  }
+})
+
+// Add this new route near the other GET routes
+
+// GET /question/:questionId - Fetch an interview and a specific question by question ID
+app.get('/question/:questionId', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+
+  const questionId = c.req.param('questionId')
+
+  try {
+    // First, fetch the question and its associated interview ID
+    const questionResult = await db.select({
+      question: interviewQuestions,
+      interviewId: interviewQuestions.interviewId
+    })
+    .from(interviewQuestions)
+    .where(eq(interviewQuestions.id, questionId))
+    .limit(1)
+
+    if (questionResult.length === 0) {
+      return c.json({ error: 'Question not found' }, 404)
+    }
+
+    const { question, interviewId } = questionResult[0]
+
+    // Now, fetch the interview
+    const interviewResult = await db.select()
+      .from(interviews)
+      .where(and(
+        eq(interviews.id, interviewId),
+        eq(interviews.userId, auth.userId)
+      ))
+      .limit(1)
+
+    if (interviewResult.length === 0) {
+      return c.json({ error: 'Interview not found or unauthorized' }, 404)
+    }
+
+    const interview = interviewResult[0]
+
+    // Return both the interview and the specific question
+    return c.json({
+      interview,
+      question
+    })
+  } catch (error) {
+    console.error(`Error fetching interview and question for question ID ${questionId}:`, error)
+    return c.json({ error: 'Failed to fetch interview and question' }, 500)
+  }
+})
+
 export default app

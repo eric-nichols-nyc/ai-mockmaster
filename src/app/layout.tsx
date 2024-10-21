@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
 import StickyHeader from "./_components/stickyHeader";
 import { Toaster } from "sonner";
+import  TanstackProvider  from "@/providers/tanstack-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,11 +36,13 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen gradient_body`}
         >
           <ThemeProvider attribute="class" defaultTheme="light">
-            <StickyHeader />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Toaster />
+            <TanstackProvider>
+              <StickyHeader />
+              <main className="flex-grow">
+                {children}
+              </main>
+              <Toaster />
+            </TanstackProvider>
           </ThemeProvider>
         </body>
       </html>

@@ -13,6 +13,7 @@ import CountdownTimer from "@/components/countdown-timer";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 import Ripple from "@/components/ui/ripple";
 import { toast } from "sonner";
+import { useInterviews } from '@/hooks/useInterviews'
 
 interface InterviewProps {
   interview: InterviewRecord;
@@ -51,6 +52,7 @@ export default function Interview({ interview }: InterviewProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const visualizerRef = useRef<{ clearCanvas: () => void } | null>(null);
+  const { data: interviews } = useInterviews()
 
   // Handle timer completion
   const handleTimerComplete = useCallback(() => {
@@ -326,6 +328,14 @@ export default function Interview({ interview }: InterviewProps) {
       };
     }
   }, []);
+
+  // Use the cached interviews data when needed
+  useEffect(() => {
+    if (interviews) {
+      // Do something with the cached interviews data
+      console.log('Cached interviews:', interviews)
+    }
+  }, [interviews])
 
   // Render error message if no interview questions are available
   if (

@@ -18,6 +18,7 @@ const InterviewCard: React.FC<InterviewCardProps> = ({ id, jobTitle, jobDescript
     if (text.length <= maxLength) return text;
     return text.substr(0, maxLength) + '...';
   };
+  console.log(questions)
 
   const firstSavedQuestionId = questions.find(q => q.saved)?.id;
   const firstSavedQuestion = questions.find(q => q.saved)?.question || "No saved questions";

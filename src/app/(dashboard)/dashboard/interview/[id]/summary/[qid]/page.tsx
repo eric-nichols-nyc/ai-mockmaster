@@ -1,33 +1,7 @@
 import React from 'react'
 import Summary from '../../../(components)/summary'
-import { InterviewRecord } from '@/db/schema'
-import { z } from "zod"
-import { db } from "@/db"
-import { interviews } from "@/db/schema"
-import { eq } from "drizzle-orm"
-
-const getInterviewByIdSchema = z.object({
-  id: z.string().uuid(),
-})
-
-async function getInterviewById(input: z.infer<typeof getInterviewByIdSchema>): Promise<InterviewRecord | null> {
-  try {
-    const { id } = getInterviewByIdSchema.parse(input)
-
-    const interview = await db.query.interviews.findFirst({
-      where: eq(interviews.id, id),
-    })
-
-    return interview || null
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error("Validation error:", error.errors)
-      return null
-    }
-    console.error("Error fetching interview:", error)
-    return null
-  }
-}
+import { getInterviewAndQuestion } from '@/actions/interview-actions'
+import { notFound } from 'next/navigation'
 
 interface SummaryPageProps {
   params: {
@@ -37,19 +11,27 @@ interface SummaryPageProps {
 }
 
 const SummaryPage = async ({ params }: SummaryPageProps) => {
-  const { id } = params;
-  const interview = await getInterviewById({ id });
-  console.log(interview);
+  const { qid } = params;
+  
+  try {
+    const result = await getInterviewAndQuestion({ questionId: qid });
+    console.log('Interview and question result:', result);
 
-  if (!interview) {
-    return <div>Error: Failed to load interview</div>;
+    if (!result) {
+      notFound();
+    }
+
+    const { interview, question } = result;
+
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <Summary interview={interview} question={question} />
+      </div>
+    )
+  } catch (error) {
+    console.error('Error fetching interview and question:', error);
+    notFound();
   }
-
-  return (
-    <div className="max-w-4xl mx-auto p-4">
-      <Summary />
-    </div>
-  )
 }
 
 export default SummaryPage
