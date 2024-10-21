@@ -1,4 +1,4 @@
-import DashboardUI from './(components)/DashboardUI'
+import DashboardUI from './(components)/dashboard-ui'
 import { getInterviews } from '@/actions/interview-actions'
 
 export default async function DashboardPage() {
