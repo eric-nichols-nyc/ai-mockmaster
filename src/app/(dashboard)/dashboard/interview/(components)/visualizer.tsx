@@ -127,6 +127,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
           height={75}
           backgroundColor="transparent"
           mainBarColor="black"
+          onlyRecording={true}
         />
         {!isRecordingInProgress && !recordedBlob && (
           <Button onClick={handleStartRecording} className="mt-4">

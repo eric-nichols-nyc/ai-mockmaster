@@ -2,6 +2,9 @@ import { OpenAI } from 'openai';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { db } from "@/db";
+import { interviews, InterviewRecord } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -44,13 +47,11 @@ Please provide your evaluation in the following JSON format:
   },
   "improvements": [
     "Improvement suggestion 1",
-    "Improvement suggestion 2",
-    "Improvement suggestion 3"
+    "Improvement suggestion 2"
   ],
   "keyTakeaways": [
     "Key takeaway 1",
-    "Key takeaway 2",
-    "Key takeaway 3"
+    "Key takeaway 2"
   ]
 }
 
@@ -157,5 +158,55 @@ export async function generateSpeech(data: z.infer<typeof TextToSpeechSchema>) {
     }
     throw new Error('Failed to generate audio');
 
+  }
+}
+
+// Define Zod schema for fetchInterviewAndQuestion input validation
+const FetchInterviewAndQuestionSchema = z.object({
+  interviewId: z.string().uuid(),
+  questionId: z.string().uuid(),
+});
+
+export async function fetchInterviewAndQuestion(data: z.infer<typeof FetchInterviewAndQuestionSchema>) {
+  try {
+    const { interviewId, questionId } = FetchInterviewAndQuestionSchema.parse(data);
+
+    const fetchedInterview = await db.query.interviews.findFirst({
+      where: eq(interviews.id, interviewId),
+      with: {
+        questions: true,
+      },
+    });
+
+    if (!fetchedInterview) {
+      throw new Error("Interview not found.");
+    }
+
+    const extendedInterview: InterviewRecord = {
+      ...fetchedInterview,
+      questions: Array.isArray(fetchedInterview.questions)
+        ? fetchedInterview.questions
+        : Object.values(fetchedInterview.questions || {}),
+    };
+
+    const foundQuestion = extendedInterview.questions.find(
+      (q) => q.id === questionId
+    );
+
+    if (!foundQuestion) {
+      throw new Error("Question not found.");
+    }
+
+    return {
+      interview: extendedInterview,
+      question: foundQuestion,
+    };
+
+  } catch (error) {
+    console.error('Error in fetchInterviewAndQuestion:', error);
+    if (error instanceof z.ZodError) {
+      throw new Error(JSON.stringify(error.errors));
+    }
+    throw error;
   }
 }

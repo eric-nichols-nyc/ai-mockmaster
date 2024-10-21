@@ -95,6 +95,7 @@ const Summary: React.FC = () => {
       const filteredUpdateData = Object.fromEntries(
         Object.entries(updateData).filter((v) => v !== undefined)
       );
+      console.log("filteredUpdateData", filteredUpdateData);
 
       if (Object.keys(filteredUpdateData).length > 0) {
         const updatedQuestion = await fetchApi(`/interviews/${interviewId}/questions/${questionId}`, {

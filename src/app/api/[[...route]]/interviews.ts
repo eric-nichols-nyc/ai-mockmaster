@@ -43,7 +43,7 @@ const saveAnswerSchema = z.object({
 const updateQuestionSchema = z.object({
   question: z.string().optional(),
   suggested: z.string().optional(),
-  suggestedAudioUrl: z.string().url().optional(),
+  suggestedAudioUrl: z.string().url().nullable().optional(),
   answer: z.string().optional(),
   audioUrl: z.string().url().optional(),
   feedback: z.string().optional(),
@@ -51,7 +51,7 @@ const updateQuestionSchema = z.object({
   keyTakeaways: z.array(z.string()).optional(),
   grade: z.string().optional(),
   saved: z.boolean().optional(),
-  skills: z.array(z.string()).optional(),
+  skills: z.array(z.string()).nullable().optional(),
 });
 
 // New schema for updating the saved status of a question

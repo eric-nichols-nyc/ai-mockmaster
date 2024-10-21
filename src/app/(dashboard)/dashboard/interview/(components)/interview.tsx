@@ -96,11 +96,11 @@ export default function Interview({ interview }: InterviewProps) {
         //   ? interview.questions[0]
         //   : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
 
-        const audioFile = new File([currentBlob], "audio.webm", {
+        const audioFile = new File([currentBlob], "audio.mp3", {
           type: currentBlob.type,
         });
         const formData = new FormData();
-        formData.append("audio", audioFile, "audio.webm");
+        formData.append("audio", audioFile, "audio.mp3");
 
         // Transcribe the audio
         const transcriptResponse = await fetchApi("/openai/transcribe", {
@@ -111,6 +111,8 @@ export default function Interview({ interview }: InterviewProps) {
         if (transcriptResponse && transcriptResponse.transcription) {
           const answer = transcriptResponse.transcription;
           const url = transcriptResponse.audioUrl;
+          console.log('Update question')
+
           // Save the transcribed answer
           const updatedQuestion = await fetchApi(
             `/interviews/${interview.id}/questions/${currentQuestion?.id}/answer`,
@@ -122,6 +124,8 @@ export default function Interview({ interview }: InterviewProps) {
               }),
             }
           );
+          console.log('PUT: Update question', updatedQuestion)
+
           if(currentQuestion){
             currentQuestion.answer = answer;
             currentQuestion.audioUrl = url;
@@ -160,16 +164,16 @@ export default function Interview({ interview }: InterviewProps) {
   }, [fetchApi, interview, currentBlob]);
 
   // Handle "Try Again" button click
-  const handleTryAgain = useCallback(() => {
-    if (visualizerRef.current) {
-      visualizerRef.current.clearCanvas();
-    }
-    setHasRecordingStopped(false);
-    setHasRecordingStarted(false);
-    setSaveStatus("idle");
-    setErrorMessage(null);
-    setHasTimedOut(false);
-  }, []);
+  // const handleTryAgain = useCallback(() => {
+  //   if (visualizerRef.current) {
+  //     visualizerRef.current.clearCanvas();
+  //   }
+  //   setHasRecordingStopped(false);
+  //   setHasRecordingStarted(false);
+  //   setSaveStatus("idle");
+  //   setErrorMessage(null);
+  //   setHasTimedOut(false);
+  // }, []);
 
   // Handle text-to-speech conversion and playback for Avatar
   const handleTextToSpeech = useCallback(async () => {
@@ -256,6 +260,7 @@ export default function Interview({ interview }: InterviewProps) {
           answer: currentQuestion.answer || null,
           audioUrl: currentQuestion.audioUrl || null,
         };
+        setCurrentQuestion(updatedQuestion);
         console.log('updatedQuestion', updatedQuestion);
 
         // Save the updated question with feedback
@@ -276,6 +281,7 @@ export default function Interview({ interview }: InterviewProps) {
 
   // Handle feedback button click
   const handleFeedbackButton = useCallback(async () => {
+    console.log('handleFeedbackButton')
     if(!currentQuestion?.answer){
       throw new Error("You don't have a valid answer")
     }
@@ -441,12 +447,12 @@ export default function Interview({ interview }: InterviewProps) {
                     "Submit Recording"
                   )}
                 </Button>
-                <Button
+                {/* <Button
                   onClick={handleTryAgain}
                   disabled={!hasRecordingStopped && !hasTimedOut && !hasAudioUrl}
                 >
                   Try Again
-                </Button>
+                </Button> */}
               </>
             )}
           </div>
