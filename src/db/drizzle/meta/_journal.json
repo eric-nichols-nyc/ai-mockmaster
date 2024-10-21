@@ -127,6 +127,55 @@
       "when": 1729444339084,
       "tag": "0017_numerous_prodigy",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1729531564735,
+      "tag": "0018_useful_lionheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1729532589877,
+      "tag": "0019_stale_gressill",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1729532944246,
+      "tag": "0020_redundant_captain_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1729533423062,
+      "tag": "0021_orange_thor_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1729533472165,
+      "tag": "0022_opposite_talos",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1729533563602,
+      "tag": "0023_sour_dexter_bennett",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1729533650008,
+      "tag": "0024_absent_victor_mancha",
+      "breakpoints": true
     }
   ]
 }

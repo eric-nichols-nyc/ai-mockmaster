@@ -1,0 +1,1 @@
+ALTER TABLE "interview_questions" ALTER COLUMN "interview_id" SET DATA TYPE text;

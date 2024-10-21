@@ -10,6 +10,16 @@ const getInterviewByIdSchema = z.object({
   id: z.string().uuid(),
 })
 
+export async function getInterviews() {
+  const { userId } = auth()
+  
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
+  return await db.select().from(interviews).where(eq(interviews.userId, userId))
+}
+
 export async function getInterviewById(input: z.infer<typeof getInterviewByIdSchema>): Promise<InterviewRecord | null> {
   try {
     const { userId } = auth()

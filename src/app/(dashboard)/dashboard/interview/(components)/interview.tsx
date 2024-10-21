@@ -163,18 +163,6 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [fetchApi, interview, currentBlob]);
 
-  // Handle "Try Again" button click
-  // const handleTryAgain = useCallback(() => {
-  //   if (visualizerRef.current) {
-  //     visualizerRef.current.clearCanvas();
-  //   }
-  //   setHasRecordingStopped(false);
-  //   setHasRecordingStarted(false);
-  //   setSaveStatus("idle");
-  //   setErrorMessage(null);
-  //   setHasTimedOut(false);
-  // }, []);
-
   // Handle text-to-speech conversion and playback for Avatar
   const handleTextToSpeech = useCallback(async () => {
     if (

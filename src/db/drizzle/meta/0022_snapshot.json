@@ -1,6 +1,6 @@
 {
-  "id": "e88914b0-5db8-4923-a190-d3d423b74f1b",
-  "prevId": "487925eb-a0a5-4ae2-a4ba-22fd13fc81f9",
+  "id": "fdc2cfce-f0ed-4d52-87a4-bcaa615710f1",
+  "prevId": "51d4d820-a199-487b-8f84-9b246522ae2f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -10,14 +10,13 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "interview_id": {
           "name": "interview_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -27,8 +26,26 @@
           "primaryKey": false,
           "notNull": true
         },
+        "suggested": {
+          "name": "suggested",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "suggested_url": {
+          "name": "suggested_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "answer": {
           "name": "answer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "audio_url": {
+          "name": "audio_url",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -39,41 +56,36 @@
           "primaryKey": false,
           "notNull": false
         },
+        "improvements": {
+          "name": "improvements",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "key_takeaways": {
+          "name": "key_takeaways",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
         "grade": {
           "name": "grade",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "improvements": {
-          "name": "improvements",
-          "type": "jsonb",
+        "skills": {
+          "name": "skills",
+          "type": "text[]",
           "primaryKey": false,
           "notNull": false
         },
-        "key_takeaways": {
-          "name": "key_takeaways",
-          "type": "jsonb",
+        "saved": {
+          "name": "saved",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": false
-        },
-        "audio_url": {
-          "name": "audio_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "suggested": {
-          "name": "suggested",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "suggested_audio_url": {
-          "name": "suggested_audio_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -82,12 +94,11 @@
           "notNull": true,
           "default": "now()"
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
+        "explanation": {
+          "name": "explanation",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
+          "notNull": false
         }
       },
       "indexes": {},
@@ -115,10 +126,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
@@ -132,6 +142,24 @@
           "primaryKey": false,
           "notNull": true
         },
+        "job_description": {
+          "name": "job_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "skills": {
+          "name": "skills",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date": {
+          "name": "date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -139,16 +167,36 @@
           "notNull": true,
           "default": "now()"
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
+        "completed": {
+          "name": "completed",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "now()"
+          "default": false
+        },
+        "questions": {
+          "name": "questions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "interviews_user_id_users_id_fk": {
+          "name": "interviews_user_id_users_id_fk",
+          "tableFrom": "interviews",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },

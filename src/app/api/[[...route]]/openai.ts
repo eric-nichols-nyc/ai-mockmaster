@@ -222,16 +222,13 @@ Please provide your evaluation in the following JSON format:
   },
   "improvements": [
     "Improvement suggestion 1",
-    "Improvement suggestion 2",
-    "Improvement suggestion 3"
+    "Improvement suggestion 2"
   ],
   "keyTakeaways": [
     "Key takeaway 1",
-    "Key takeaway 2",
-    "Key takeaway 3"
+    "Key takeaway 2"
   ]
 }
-
 
 Here's an example of the expected response format:
 
@@ -243,12 +240,10 @@ Here's an example of the expected response format:
   },
   "improvements": [
     "Discuss potential drawbacks or challenges of using dependency injection",
-    "Relate dependency injection to other SOLID principles or design patterns",
     "Provide a more complex real-world scenario where DI significantly improves code quality or maintainability"
   ],
   "keyTakeaways": [
     "Strong understanding of dependency injection and its benefits",
-    "Ability to explain complex concepts clearly with relevant examples",
     "Awareness of how DI is used in popular frameworks, indicating practical knowledge"
   ]
 }

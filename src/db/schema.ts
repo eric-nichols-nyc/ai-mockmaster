@@ -12,6 +12,7 @@ export interface InterviewQuestion {
   improvements: string[] | null;
   keyTakeaways: string[] | null;
   grade: string | null;
+  explanation: string | null;
   skills: string[] | null;
   saved: boolean;
   createdAt: Date;
@@ -51,6 +52,7 @@ export const interviewQuestions = pgTable('interview_questions', {
     improvements: text('improvements').array(),
     keyTakeaways: text('key_takeaways').array(),
     grade: text('grade'),
+    explanation: text('explanation'),
     skills: text('skills').array(),
     saved: boolean('saved').default(false),
     createdAt: timestamp('created_at').defaultNow().notNull()

@@ -170,12 +170,6 @@ const Summary: React.FC = () => {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/dashboard/interview/${interviewId}`}>
-              Interview
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
             <BreadcrumbPage>Question Summary</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

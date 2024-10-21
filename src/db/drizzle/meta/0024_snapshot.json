@@ -1,6 +1,6 @@
 {
-  "id": "c87d71dd-5b5d-4937-8c0c-56f869b2e444",
-  "prevId": "e88914b0-5db8-4923-a190-d3d423b74f1b",
+  "id": "95c4a588-8b6e-4210-9141-c89c3a1c8ff2",
+  "prevId": "a683e3f5-5c32-4805-845f-fa199769afee",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -71,6 +71,12 @@
         },
         "grade": {
           "name": "grade",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "explanation": {
+          "name": "explanation",
           "type": "text",
           "primaryKey": false,
           "notNull": false
