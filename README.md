@@ -1,5 +1,7 @@
 # AI MockMaster
 
+![AI MockMaster Logo](https://via.placeholder.com/800x400?text=AI+MockMaster+Logo)
+
 ## Project Overview
 
 AI MockMaster is an AI-powered interview simulator designed to help users practice and improve their interviewing skills. It provides a realistic interview experience by generating questions, allowing users to record their answers, and providing feedback through transcription and analysis.
