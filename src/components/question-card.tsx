@@ -2,15 +2,9 @@
 import React from 'react';
 import Link from 'next/link';
 import { InterviewQuestion } from '@/db/schema';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Calendar, ArrowRight } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { Separator } from './ui/separator';
 
 interface QuestionCardProps {
@@ -37,24 +31,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }
     <Link href={`/dashboard/interview/${question.interviewId}/summary/${question.id}`} passHref>
       <Card className="w-full h-full flex flex-col hover:shadow-lg transition-shadow duration-300 cursor-pointer relative">
         <CardHeader className="flex-grow">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <CardTitle className="text-md font-semibold pr-8 line-clamp-2">
-                  {question.question}
-                </CardTitle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs">{question.question}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
           <div 
             className="absolute top-2 right-2 p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
             onClick={handleDelete}
           >
             <Trash2 className="h-5 w-5 text-gray-500 hover:text-red-500" />
           </div>
+            <p className="text-md font-semibold pr-6">{question.question}</p> {/* Full question text */}
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -72,6 +55,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }
         </CardContent>
         <Separator />
         <CardFooter className="text-sm text-gray-500 flex items-center bg-white pt-3">
+          {/* Removed the div above the calendar component */}
           <Calendar className="h-4 w-4 mr-1" />
           {formatDate(question.createdAt)}
           <div className="ml-auto flex items-center text-blue-500 cursor-pointer">
