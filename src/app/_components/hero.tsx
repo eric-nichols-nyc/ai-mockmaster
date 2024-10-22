@@ -3,9 +3,16 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import AnimatedShinyText from "@/components/ui/animated-shiny-text";
 import { ArrowRightIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Hero: React.FC = () => {
   const { isSignedIn } = useAuth();
+
+  // Define animation variants
+  const variants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { opacity: 1, y: 0 },
+  };
 
   return (
     <div className="flex size-full bg-black">
@@ -18,15 +25,31 @@ const Hero: React.FC = () => {
         >
           {/* Content */}
           <div className="relative z-10 w-full h-full flex flex-col justify-center items-start p-12">
-            <div>
-              <h1 className="text-5xl font-bold mb-6 text-white">
-                AI-Powered Interview Practice
-              </h1>
-              <p className="text-xl mb-10 text-gray-200">
-                Discover amazing features and benefits that will transform your
-                experience.
-              </p>
-              {isSignedIn ? (
+            <motion.h1 
+              className="text-5xl font-bold mb-6 text-white"
+              initial="hidden"
+              animate="visible"
+              variants={variants}
+              transition={{ duration: 0.5 }}
+            >
+              AI-Powered Interview Practice
+            </motion.h1>
+            <motion.p 
+              className="text-xl mb-10 text-gray-200"
+              initial="hidden"
+              animate="visible"
+              variants={variants}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              Discover amazing features and benefits that will transform your experience.
+            </motion.p>
+            {isSignedIn ? (
+              <motion.div 
+                initial="hidden"
+                animate="visible"
+                variants={variants}
+                transition={{ duration: 0.5, delay: 0.4 }} // Delay for the Link animation
+              >
                 <Link href="/dashboard">
                   <div className="z-10 flex items-center justify-center">
                     <div className="group rounded-full border border-black/5 bg-white text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-200 dark:border-white/5 dark:bg-neutral-900 dark:hover:bg-neutral-800">
@@ -37,7 +60,14 @@ const Hero: React.FC = () => {
                     </div>
                   </div>
                 </Link>
-              ) : (
+              </motion.div>
+            ) : (
+              <motion.div 
+                initial="hidden"
+                animate="visible"
+                variants={variants}
+                transition={{ duration: 0.5, delay: 0.4 }} // Delay for the Link animation
+              >
                 <Link href="/dashboard">
                   <div className="z-10 flex min-h-64 items-center justify-center">
                     <div className="group rounded-full border border-black/5 bg-white text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-200 dark:border-white/5 dark:bg-neutral-900 dark:hover:bg-neutral-800">
@@ -48,8 +78,8 @@ const Hero: React.FC = () => {
                     </div>
                   </div>
                 </Link>
-              )}
-            </div>
+              </motion.div>
+            )}
           </div>
         </section>
       </div>
