@@ -1,11 +1,14 @@
-import DashboardUI from './(components)/dashboard-ui'
-import { getInterviews } from '@/actions/interview-actions'
+import { DashboardQuestionsList } from './(components)/dashboard-questions-list'
+import { getAllUserQuestions } from '@/actions/interview-actions'
 
 export default async function DashboardPage() {
-  const interviews = await getInterviews()
-  console.log(interviews)
+  const allQuestions = await getAllUserQuestions()
+  console.log('All User Questions:', allQuestions)
 
   return (
-      <DashboardUI initialInterviews={interviews} />
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <DashboardQuestionsList questions={allQuestions} />
+    </div>
   )
 }

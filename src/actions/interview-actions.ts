@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "../db"
-import { interviews, interviewQuestions, InterviewRecord } from "../db/schema"
+import { interviews, interviewQuestions, InterviewRecord, InterviewQuestionRecord } from "../db/schema"
 import { eq, and } from "drizzle-orm"
 import { z } from "zod"
 import { auth } from '@clerk/nextjs/server';
@@ -105,5 +105,28 @@ export async function getInterviewAndQuestion(input: z.infer<typeof getInterview
   } catch (error) {
     console.error(`Error fetching interview and question for question ID ${input.questionId}:`, error)
     throw new Error("Failed to fetch interview and question")
+  }
+}
+
+export async function getAllUserQuestions(): Promise<InterviewQuestionRecord[]> {
+  const { userId } = auth()
+  
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
+  try {
+    const questions = await db
+      .select({
+        question: interviewQuestions
+      })
+      .from(interviewQuestions)
+      .innerJoin(interviews, eq(interviews.id, interviewQuestions.interviewId))
+      .where(eq(interviews.userId, userId))
+
+    return questions.map(q => q.question)
+  } catch (error) {
+    console.error("Error fetching user questions:", error)
+    throw new Error("Failed to fetch user questions")
   }
 }
