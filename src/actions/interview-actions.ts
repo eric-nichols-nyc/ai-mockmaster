@@ -2,9 +2,10 @@
 
 import { db } from "../db"
 import { interviews, interviewQuestions, InterviewRecord, InterviewQuestionRecord } from "../db/schema"
-import { eq, and } from "drizzle-orm"
+import { eq, and, desc } from "drizzle-orm"
 import { z } from "zod"
 import { auth } from '@clerk/nextjs/server';
+import { revalidatePath } from 'next/cache';
 
 const getInterviewByIdSchema = z.object({
   id: z.string().uuid(),
@@ -13,6 +14,10 @@ const getInterviewByIdSchema = z.object({
 const getInterviewAndQuestionSchema = z.object({
   questionId: z.string().uuid(),
 })
+
+const deleteQuestionSchema = z.object({
+  questionId: z.string().uuid(),
+});
 
 export async function getInterviews() {
   const { userId } = auth()
@@ -123,10 +128,49 @@ export async function getAllUserQuestions(): Promise<InterviewQuestionRecord[]> 
       .from(interviewQuestions)
       .innerJoin(interviews, eq(interviews.id, interviewQuestions.interviewId))
       .where(eq(interviews.userId, userId))
+      .orderBy(desc(interviewQuestions.createdAt))
 
     return questions.map(q => q.question)
   } catch (error) {
     console.error("Error fetching user questions:", error)
     throw new Error("Failed to fetch user questions")
+  }
+}
+
+export async function deleteQuestionAndInterview(input: z.infer<typeof deleteQuestionSchema>) {
+  const { userId } = auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const { questionId } = deleteQuestionSchema.parse(input);
+
+  try {
+    // Start a transaction
+    await db.transaction(async (tx) => {
+      // Get the interview ID associated with the question
+      const question = await tx.query.interviewQuestions.findFirst({
+        where: eq(interviewQuestions.id, questionId),
+        columns: { interviewId: true }
+      });
+
+      if (!question) {
+        throw new Error("Question not found");
+      }
+
+      // Delete the question
+      await tx.delete(interviewQuestions).where(eq(interviewQuestions.id, questionId));
+
+      // Delete the associated interview
+      await tx.delete(interviews).where(eq(interviews.id, question.interviewId));
+    });
+
+    // Revalidate the dashboard page to reflect the changes
+    revalidatePath('/dashboard');
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting question and interview:", error);
+    return { success: false, error: "Failed to delete question and interview" };
   }
 }

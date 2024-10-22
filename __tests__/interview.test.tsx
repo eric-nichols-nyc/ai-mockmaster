@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ImgHTMLAttributes } from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import Interview from '../src/app/(dashboard)/dashboard/interview/(components)/interview';
@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/image', () => ({
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => React.createElement('img', props),
+  default: (props: ImgHTMLAttributes<HTMLImageElement>) => React.createElement('img', props),
 }));
 
 vi.mock('../src/store/interviewStore', () => ({
@@ -64,6 +64,7 @@ describe('Interview Component', () => {
       keyTakeaways: null,
       suggestedAudioUrl: null,
       grade: null,
+      explanation: null,
       skills: ['React'],
       saved: false,
       createdAt: new Date()

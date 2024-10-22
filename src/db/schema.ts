@@ -14,7 +14,7 @@ export interface InterviewQuestion {
   grade: string | null;
   explanation: string | null;
   skills: string[] | null;
-  saved: boolean;
+  saved: boolean | false;
   createdAt: Date;
 }
 

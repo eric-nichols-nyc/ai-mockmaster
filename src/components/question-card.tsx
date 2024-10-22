@@ -2,9 +2,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { InterviewQuestion } from '@/db/schema';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2 } from 'lucide-react';
+import { Trash2, Calendar, ArrowRight } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Separator } from './ui/separator';
 
 interface QuestionCardProps {
   question: InterviewQuestion;
@@ -18,11 +25,30 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }
     onDelete(question.id);
   };
 
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
-    <Link href={`/dashboard/interview/${question.interviewId}/review/${question.id}`} passHref>
-      <Card className="w-full mb-4 hover:shadow-lg transition-shadow duration-300 cursor-pointer relative">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold pr-8">{question.question}</CardTitle>
+    <Link href={`/dashboard/interview/${question.interviewId}/summary/${question.id}`} passHref>
+      <Card className="w-full h-full flex flex-col hover:shadow-lg transition-shadow duration-300 cursor-pointer relative">
+        <CardHeader className="flex-grow">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <CardTitle className="text-md font-semibold pr-8 line-clamp-2">
+                  {question.question}
+                </CardTitle>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{question.question}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div 
             className="absolute top-2 right-2 p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
             onClick={handleDelete}
@@ -34,16 +60,25 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }
           <div className="space-y-2">
             {question.skills && question.skills.length > 0 && (
               <div>
-                <strong>Skills:</strong>
+                <strong className="text-sm text-gray-600">Skills:</strong>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {question.skills.map((skill, index) => (
-                    <Badge key={index} variant="secondary">{skill}</Badge>
+                    <Badge key={index} variant="secondary" className="text-xs">{skill}</Badge>
                   ))}
                 </div>
               </div>
             )}
           </div>
         </CardContent>
+        <Separator />
+        <CardFooter className="text-sm text-gray-500 flex items-center bg-white pt-3">
+          <Calendar className="h-4 w-4 mr-1" />
+          {formatDate(question.createdAt)}
+          <div className="ml-auto flex items-center text-blue-500 cursor-pointer">
+            <span className="mr-1">View Details</span>
+            <ArrowRight className="h-4 w-4" /> {/* Right arrow icon */}
+          </div>
+        </CardFooter>
       </Card>
     </Link>
   );
