@@ -25,7 +25,7 @@ const SummaryPage = async ({ params }: SummaryPageProps) => {
 
     return (
       <div className="max-w-4xl mx-auto p-4">
-        <Summary interview={interview} question={question} />
+        <Summary interview={interview} question={question} interviewId={interview.id}/>
       </div>
     )
   } catch (error) {
