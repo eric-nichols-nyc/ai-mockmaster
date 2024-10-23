@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-
-interface Job {
-  title: string;
-}
+import { Job } from '@/types'; // Importing Job type from types.ts
 
 interface InterviewFormProps {
   onSubmit: (data: unknown) => void;
@@ -16,6 +13,15 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
   const [jobTitle, setJobTitle] = useState(jobs.length > 0 ? jobs[0].title : '');
   const [jobDescription, setJobDescription] = useState('');
   const [skills, setSkills] = useState('JavaScript, React');
+
+  const handleJobChange = (selectedTitle: string) => {
+    const selectedJob = jobs.find(job => job.title === selectedTitle);
+    if (selectedJob) {
+      setJobTitle(selectedJob.title);
+      setJobDescription(selectedJob.description);
+      setSkills(selectedJob.skills.join(', ')); // Assuming skills is an array
+    }
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -38,7 +44,7 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
           <div>
             <Label className="block text-lg font-bold text-blue-600 text-center">Select A Job Title</Label>
-            <RadioGroup value={jobTitle} onValueChange={setJobTitle} className="flex flex-wrap justify-center space-x-2">
+            <RadioGroup value={jobTitle} onValueChange={handleJobChange} className="flex flex-wrap justify-center space-x-2">
               {jobs.length > 0 && jobs.map((job, index) => (
                 <div key={index} className="flex items-center">
                   <RadioGroupItem value={job.title} id={`job-${index}`} className="peer sr-only" />

@@ -11,12 +11,25 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Loader2 } from "lucide-react";
+import { Job } from '@/types'; // Importing Job type
 
-type Job = {
+export type FeedbackGrade = {
+  letter: string;
+  feedback?: string;
+}
+
+export interface FeedbackData {
+  feedback: string;
+  improvements: string[];
+  keyTakeaways: string[];
+  grade: FeedbackGrade;
+}
+
+export type Job = {
   title: string;
   description: string;
   skills: string[];
-};
+}
 
 const QuestionGeneratorPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
