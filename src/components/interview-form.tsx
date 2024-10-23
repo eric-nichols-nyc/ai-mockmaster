@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,9 +13,8 @@ interface InterviewFormProps {
 const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
   const [jobTitle, setJobTitle] = useState(jobs.length > 0 ? jobs[0].title : '');
   const [jobDescription, setJobDescription] = useState('');
-  const [skills, setSkills] = useState<Option[]>([]); // State for selected skills
-  // add a state for selectedSkills
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [skills, setSkills] = useState<Option[]>([]); // State for available skills
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]); // State for selected skills
 
   const handleJobChange = (selectedTitle: string) => {
     const selectedJob = jobs.find(job => job.title === selectedTitle);
@@ -41,6 +40,10 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
     console.log('Form Values:', formData); // Log the form values
     onSubmit(formData);
   };
+
+  const handleSelectedSkillsChange = useCallback((newSelectedSkills: string[]) => {
+    setSelectedSkills(newSelectedSkills);
+  }, []);
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -73,20 +76,18 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
               id="jobDescription"
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 h-32"
               placeholder="Enter job description here..."
             />
           </div>
 
           <div>
             <Label htmlFor="skills" className="block text-sm font-medium text-gray-700">Skills</Label>
-            <div className="mt-1 relative flex flex-wrap gap-1 ">
               <MultipleSelector
-                onChange={setSelectedSkills} // Set selected skills
+                onChange={handleSelectedSkillsChange} // Use the memoized callback
                 placeholder="Select skills"
                 options={skills} // Pass the skills array as options
               />
-            </div>
           </div>
 
           <button type="submit" className="mt-4 w-full bg-blue-500 text-white rounded-md p-3 hover:bg-blue-600 transition">Submit</button>
