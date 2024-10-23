@@ -68,7 +68,7 @@ export const UpdateQuestionSavedSchema = z.object({
 // You    export const interviewFormSchema = z.object({
 export const interviewFormSchema = z.object({
   jobTitle: z.string().min(1, 'Job title is required'),
-  jobDescription: z.string().min(1, 'Job description is required'),
+  jobDescription: z.string().optional(),
   skills: z.array(z.string()).min(1, 'At least one skill is required'),
 });
 

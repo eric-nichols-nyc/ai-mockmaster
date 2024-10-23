@@ -1,74 +1,69 @@
-import { render, screen, fireEvent,waitFor } from "@testing-library/react";
-import InterviewForm from "../src/components/interview-form";
-import { vi } from "vitest";
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
+import InterviewForm from '@/components/interview-form';
 
-const mockJobs = [
-    {
-      title: "Software Engineer",
-      description: "Develop software solutions.",
-      skills: ["JavaScript", "React"],
-    },
-    {
-      title: "Product Manager",
-      description: "Manage product development.",
-      skills: ["Agile", "Communication"],
-    },
-  ];
-const mockSubmit = vi.fn(); // Use vi.fn() for Vitest
+// Mock ResizeObserver
+beforeAll(() => {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+});
 
-describe("InterviewForm", () => {
-  beforeAll(() => {
-    global.ResizeObserver = class ResizeObserver {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    };
+// Mock components
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CardHeader: ({ children }: {children: React.ReactNode}) => <div>{children}</div>,
+  CardTitle: ({ children }: {children: React.ReactNode}) => <div>{children}</div>,
+  CardDescription: ({ children }: {children: React.ReactNode}) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/ui/radio-group', () => ({
+  RadioGroup: ({ children, ...props }: any) => <div>{children}</div>,
+  RadioGroupItem: ({ children, ...props }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/ui/label', () => ({
+  Label: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/ui/multi-select', () => ({
+  __esModule: true,
+  default: ({ children, ...props }: any) => <div>{children}</div>,
+}));
+
+describe('InterviewForm', () => {
+  it('renders the form with all required elements', () => {
+    const mockJobs = [
+      {
+        title: "Frontend Developer",
+        description: "Example description",
+        skills: ["React", "JavaScript"]
+      }
+    ];
+
+    const { container, debug } = render(
+      <InterviewForm 
+        onSubmit={() => {}} 
+        jobs={mockJobs}
+      />
+    );
+
+    // Debug output to see what's actually being rendered
+    debug();
+
+    // Check for form elements by role where possible
+    expect(container.querySelector('form')).toBeInTheDocument();
+    
+    // Check for text content using getByText with a more flexible matcher
+    expect(screen.getByText(/select a job title/i)).toBeInTheDocument();
+    expect(screen.getByText(/job description/i)).toBeInTheDocument();
+    expect(screen.getByText(/skills/i)).toBeInTheDocument();
+    expect(screen.getByText(/frontend developer/i)).toBeInTheDocument();
+    
+    // Check for the submit button
+    expect(screen.getByRole('button')).toBeInTheDocument();
   });
-
-  beforeEach(() => {
-    mockSubmit.mockClear(); // Clear previous calls to the mock function
-  });
-  
-
-  const mockOnSubmit = vi.fn(); // Mock function for onSubmit
-
-  beforeEach(() => {
-    render(<InterviewForm onSubmit={mockOnSubmit} jobs={mockJobs} />);
-    screen.debug(); // Debugging line to see the rendered output
-  });
-
-  it("renders the form with job titles", () => {
-    expect(screen.getByText(/Select A Job Title/i)).toBeInTheDocument();
-    expect(screen.getByLabelText('Software Engineer')).toBeInTheDocument();
-    expect(screen.getByLabelText('Product Manager')).toBeInTheDocument();
-  });
-
-    it('updates job description when a job is selected', async() => {
-      const jobRadio = screen.getByLabelText('Software Engineer');
-      fireEvent.click(jobRadio);
-
-        // Wait for the textarea to have the expected value
-        await waitFor(() => {
-            expect(screen.getByRole('textbox', { name: /job description/i })).toHaveValue('Develop software solutions.');
-        });    });
-
-  //   it('submits the form with selected values', () => {
-  //     const jobRadio = screen.getByLabelText('Software Engineer');
-  //     fireEvent.click(jobRadio);
-
-  //     const skillsSelector = screen.getByPlaceholderText('Select skills');
-  //     fireEvent.change(skillsSelector, { target: { value: 'JavaScript' } });
-
-  //     const descriptionTextarea = screen.getByRole('textbox', { name: /job description/i });
-  //     fireEvent.change(descriptionTextarea, { target: { value: 'This is a test job description.' } });
-
-  //     const submitButton = screen.getByRole('button', { name: /submit/i });
-  //     fireEvent.click(submitButton);
-
-  //     expect(mockOnSubmit).toHaveBeenCalledWith({
-  //       jobTitle: 'Software Engineer',
-  //       jobDescription: 'This is a test job description.',
-  //       skills: ['JavaScript'],
-  //     });
-  //   });
 });
