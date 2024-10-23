@@ -28,27 +28,35 @@ export interface Option {
 interface MultiSelectComboboxProps {
   options: Option[]
   placeholder?: string
+  onChange: (selectedValues: string[]) => void;
 }
 
 export default function MultiSelectCombobox({ 
   options, 
-  placeholder = "Select options..." 
+  placeholder = "Select options..." ,
+  onChange
 }: MultiSelectComboboxProps) {
   console.log(options);
   const [open, setOpen] = React.useState(false)
   const [selectedValues, setSelectedValues] = React.useState<string[]>([])
 
   const handleSelect = (currentValue: string) => {
-    setSelectedValues((prev) =>
+   setSelectedValues((prev) =>
       prev.includes(currentValue)
         ? prev.filter((value) => value !== currentValue)
         : [...prev, currentValue]
     )
+
   }
 
   const handleRemove = (valueToRemove: string) => {
     setSelectedValues((prev) => prev.filter((value) => value !== valueToRemove))
   }
+
+  // add useEffect to call onChange with the selected values
+  React.useEffect(() => {
+    onChange(selectedValues);
+  }, [selectedValues]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

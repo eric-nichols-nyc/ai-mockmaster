@@ -13,7 +13,9 @@ interface InterviewFormProps {
 const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
   const [jobTitle, setJobTitle] = useState(jobs.length > 0 ? jobs[0].title : '');
   const [jobDescription, setJobDescription] = useState('');
-  const [skills, setSkills] = useState<Option[]>([]); // Changed to an array of Option objects
+  const [skills, setSkills] = useState<Option[]>([]); // State for selected skills
+  // add a state for selectedSkills
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
   const handleJobChange = (selectedTitle: string) => {
     const selectedJob = jobs.find(job => job.title === selectedTitle);
@@ -34,7 +36,7 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
     const formData = {
       jobTitle,
       jobDescription,
-      skills: skills.map(skill => skill.value), // Extracting values for submission
+      skills: selectedSkills, // Extracting values for submission
     };
     console.log('Form Values:', formData); // Log the form values
     onSubmit(formData);
@@ -80,10 +82,10 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
             <Label htmlFor="skills" className="block text-sm font-medium text-gray-700">Skills</Label>
             <div className="mt-1 relative flex flex-wrap gap-1 ">
               <MultipleSelector
-                onChange={setSkills}
-              placeholder="Select skills"
-              options={skills} // Pass the skills array as options
-            />
+                onChange={setSelectedSkills} // Set selected skills
+                placeholder="Select skills"
+                options={skills} // Pass the skills array as options
+              />
             </div>
           </div>
 
