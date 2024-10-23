@@ -13,6 +13,7 @@ import { interviewFormSchema, InterviewFormData } from "@/lib/schemas"; // Adjus
 import { z } from "zod";
 import { StatefulButton } from "@/components/stateful-button";
 import useButtonState from '@/hooks/use-button-state';
+import { generateTechInterviewQuestion } from '@/actions/gemini-actions';
 
 interface InterviewFormProps {
   onSubmit: (data: unknown) => void;
@@ -67,6 +68,20 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
     try {
       interviewFormSchema.parse(formData);
       setErrors({});
+      // Validate the form data
+      interviewFormSchema.parse(formData);
+      setErrors({});
+      
+      // Generate the interview question
+      const question = await generateTechInterviewQuestion(
+        formData.jobTitle,
+        formData.jobDescription,
+        formData.skills
+      );
+
+      if (!question) {
+        throw new Error('Failed to generate interview question');
+      }
       onSubmit(formData);
       return true;
     } catch (error) {
