@@ -1,98 +1,84 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { CreateInterviewSchema } from '@/lib/schemas';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-const InterviewForm: React.FC<{ onSubmit: (data: unknown) => void }> = ({ onSubmit }) => {
-  const [questions, setQuestions] = useState([{ question: '', suggested: '' }]);
+interface Job {
+  title: string;
+}
 
-  const form = useForm({
-    resolver: zodResolver(CreateInterviewSchema),
-    defaultValues: {
-      jobTitle: '',
-      jobDescription: '',
-      skills: [],
-      questions: questions,
-    },
-  });
+interface InterviewFormProps {
+  onSubmit: (data: unknown) => void;
+  jobs: Job[];
+}
 
-  const handleAddQuestion = () => {
-    setQuestions([...questions, { question: '', suggested: '' }]);
-  };
+const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
+  const [jobTitle, setJobTitle] = useState(jobs.length > 0 ? jobs[0].title : '');
+  const [jobDescription, setJobDescription] = useState('');
+  const [skills, setSkills] = useState('JavaScript, React');
 
-  const handleRemoveQuestion = (index: number) => {
-    const updatedQuestions = questions.filter((_, i) => i !== index);
-    setQuestions(updatedQuestions);
-  };
-
-  const handleQuestionChange = (index: number, field: string, value: string) => {
-    const updatedQuestions = questions.map((q, i) => 
-      i === index ? { ...q, [field]: value } : q
-    );
-    setQuestions(updatedQuestions);
-  };
-
-  const onSubmitForm = (data: { jobTitle: string; jobDescription: string; skills: string[] }) => {
-    onSubmit({ ...data, questions });
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const formData = {
+      jobTitle,
+      jobDescription,
+      skills,
+    };
+    console.log('Form Values:', formData); // Log the form values
+    onSubmit(formData);
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-4">
-      <div>
-        <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700">Job Title</label>
-        <input
-          id="jobTitle"
-          {...form.register('jobTitle')}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-        />
-        {form.formState.errors.jobTitle && <p className="text-red-500">{form.formState.errors.jobTitle.message}</p>}
-      </div>
-
-      <div>
-        <label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Job Description</label>
-        <textarea
-          id="jobDescription"
-          {...form.register('jobDescription')}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="skills" className="block text-sm font-medium text-gray-700">Skills</label>
-        <input
-          id="skills"
-          {...form.register('skills')}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-          placeholder="Comma separated skills"
-        />
-      </div>
-
-      <div>
-        <h3 className="text-lg font-medium">Questions</h3>
-        {questions.map((q, index) => (
-          <div key={index} className="flex space-x-2">
-            <input
-              type="text"
-              placeholder="Question"
-              value={q.question}
-              onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-            />
-            <input
-              type="text"
-              placeholder="Suggested Answer"
-              value={q.suggested}
-              onChange={(e) => handleQuestionChange(index, 'suggested', e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-            />
-            <button type="button" onClick={() => handleRemoveQuestion(index)} className="text-red-500">Remove</button>
+    <div className="max-w-2xl mx-auto p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Interview Form</CardTitle>
+          <CardDescription>Please fill out the details below.</CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit} className="space-y-6 p-6">
+          <div>
+            <Label className="block text-lg font-bold text-blue-600 text-center">Select A Job Title</Label>
+            <RadioGroup value={jobTitle} onValueChange={setJobTitle} className="flex flex-wrap justify-center space-x-2">
+              {jobs.length > 0 && jobs.map((job, index) => (
+                <div key={index} className="flex items-center">
+                  <RadioGroupItem value={job.title} id={`job-${index}`} className="peer sr-only" />
+                  <Label
+                    htmlFor={`job-${index}`}
+                    className="flex items-center justify-center px-4 py-2 text-sm font-medium border rounded-full cursor-pointer bg-white text-black shadow-md hover:bg-gray-100 peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground"
+                  >
+                    {job.title}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
-        ))}
-        <button type="button" onClick={handleAddQuestion} className="mt-2 text-blue-500">Add Question</button>
-      </div>
 
-      <button type="submit" className="mt-4 bg-blue-500 text-white rounded-md p-2">Submit</button>
-    </form>
+          <div>
+            <Label htmlFor="jobDescription" className="block text-sm font-medium text-gray-700">Job Description</Label>
+            <textarea
+              id="jobDescription"
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
+              placeholder="Enter job description here..."
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="skills" className="block text-sm font-medium text-gray-700">Skills</Label>
+            <input
+              id="skills"
+              value={skills}
+              onChange={(e) => setSkills(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
+              placeholder="Comma separated skills"
+            />
+          </div>
+
+          <button type="submit" className="mt-4 w-full bg-blue-500 text-white rounded-md p-3 hover:bg-blue-600 transition">Submit</button>
+        </form>
+      </Card>
+    </div>
   );
 };
 
