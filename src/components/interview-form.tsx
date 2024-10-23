@@ -3,6 +3,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Job } from '@/types'; // Importing Job type from types.ts
+import MultipleSelector, { Option } from '@/components/ui/multi-select'; // Importing MultipleSelector
 
 interface InterviewFormProps {
   onSubmit: (data: unknown) => void;
@@ -12,14 +13,19 @@ interface InterviewFormProps {
 const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
   const [jobTitle, setJobTitle] = useState(jobs.length > 0 ? jobs[0].title : '');
   const [jobDescription, setJobDescription] = useState('');
-  const [skills, setSkills] = useState('JavaScript, React');
+  const [skills, setSkills] = useState<Option[]>([]); // Changed to an array of Option objects
 
   const handleJobChange = (selectedTitle: string) => {
     const selectedJob = jobs.find(job => job.title === selectedTitle);
     if (selectedJob) {
       setJobTitle(selectedJob.title);
       setJobDescription(selectedJob.description);
-      setSkills(selectedJob.skills.join(', ')); // Assuming skills is an array
+      // Create an array of Option objects for skills
+      const skillOptions: Option[] = selectedJob.skills.map(skill => ({
+        value: skill,
+        label: skill,
+      }));
+      setSkills(skillOptions);
     }
   };
 
@@ -28,7 +34,7 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
     const formData = {
       jobTitle,
       jobDescription,
-      skills,
+      skills: skills.map(skill => skill.value), // Extracting values for submission
     };
     console.log('Form Values:', formData); // Log the form values
     onSubmit(formData);
@@ -72,13 +78,13 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
 
           <div>
             <Label htmlFor="skills" className="block text-sm font-medium text-gray-700">Skills</Label>
-            <input
-              id="skills"
-              value={skills}
-              onChange={(e) => setSkills(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
-              placeholder="Comma separated skills"
+            <div className="mt-1 relative flex flex-wrap gap-1 ">
+              <MultipleSelector
+                onChange={setSkills}
+              placeholder="Select skills"
+              options={skills} // Pass the skills array as options
             />
+            </div>
           </div>
 
           <button type="submit" className="mt-4 w-full bg-blue-500 text-white rounded-md p-3 hover:bg-blue-600 transition">Submit</button>
