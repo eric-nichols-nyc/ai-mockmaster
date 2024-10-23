@@ -34,13 +34,11 @@ Here's an example of the expected response format:
   },
   "improvements": [
     "Discuss potential drawbacks or challenges of using dependency injection",
-    "Relate dependency injection to other SOLID principles or design patterns",
-    "Provide a more complex real-world scenario where DI significantly improves code quality or maintainability"
+    "Relate dependency injection to other SOLID principles or design patterns"
   ],
   "keyTakeaways": [
     "Strong understanding of dependency injection and its benefits",
-    "Ability to explain complex concepts clearly with relevant examples",
-    "Awareness of how DI is used in popular frameworks, indicating practical knowledge"
+    "Ability to explain complex concepts clearly with relevant examples"
   ]
 }
 

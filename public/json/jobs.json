@@ -2,6 +2,7 @@
     "jobs": [
       {
         "title": "Prompt Engineer",
+        "description": "Join our innovative AI team as a Prompt Engineer! We're seeking a creative problem-solver to design and optimize AI interactions for our cutting-edge language models. You'll work directly with our AI researchers and product teams to develop intuitive and ethical AI solutions that power the next generation of user experiences.",
         "skills": [
           "Natural Language Processing",
           "Machine Learning Fundamentals",
@@ -19,6 +20,7 @@
       },
       {
         "title": "Full Stack Developer",
+        "description": "We are looking for an experienced Full Stack Developer to join our dynamic team! As a key member of our engineering department, you'll build scalable web applications from concept to deployment. This role offers the opportunity to work with cutting-edge technologies and shape the future of our product architecture.",
         "skills": [
           "JavaScript",
           "TypeScript",
@@ -42,6 +44,7 @@
       },
       {
         "title": "Frontend Developer",
+        "description": "We are seeking a talented and motivated Frontend Developer to join our fast-paced startup! In this role, you'll create beautiful, responsive user interfaces and collaborate with our design team to bring wireframes to life. If you're passionate about creating exceptional user experiences and writing clean, efficient code, we want to hear from you!",
         "skills": [
           "HTML5",
           "CSS3",
@@ -64,6 +67,7 @@
       },
       {
         "title": "Backend Developer",
+        "description": "Growing tech company seeks a skilled Backend Developer to strengthen our engineering team! You'll architect robust server-side applications, optimize database performance, and build secure, scalable APIs. This is an excellent opportunity to work on challenging problems and make a significant impact on our platform's infrastructure.",
         "skills": [
           "Python",
           "Java",
@@ -83,6 +87,7 @@
       },
       {
         "title": "Data Scientist",
+        "description": "Exciting opportunity for a Data Scientist to join our analytics team! We're looking for someone who can turn complex data into actionable insights. You'll work with stakeholders across the organization to drive data-informed decisions and build predictive models that shape our business strategy.",
         "skills": [
           "Python",
           "R",
@@ -97,6 +102,7 @@
       },
       {
         "title": "DevOps Engineer",
+        "description": "Fast-growing SaaS company seeks a DevOps Engineer to streamline our deployment processes and enhance our infrastructure! You'll automate workflows, implement CI/CD pipelines, and ensure the reliability and scalability of our cloud-based systems. Join us in building a world-class DevOps culture!",
         "skills": [
           "Linux",
           "Unix Administration",
@@ -114,6 +120,7 @@
       },
       {
         "title": "Cloud Architect",
+        "description": "Leading enterprise software company is seeking an experienced Cloud Architect to lead our cloud transformation initiatives! You'll design scalable cloud solutions, optimize costs, and guide our technical strategy. This is a unique opportunity to shape the future of our cloud infrastructure.",
         "skills": [
           "AWS",
           "Azure",
@@ -129,6 +136,7 @@
       },
       {
         "title": "Security Engineer",
+        "description": "Join our cybersecurity team! We're looking for a Security Engineer who's passionate about protecting systems and data. You'll implement security measures, conduct penetration testing, and respond to security incidents. Help us build and maintain a robust security infrastructure in an ever-evolving threat landscape.",
         "skills": [
           "Network Security",
           "Penetration Testing",
@@ -142,6 +150,7 @@
       },
       {
         "title": "Machine Learning Engineer",
+        "description": "Innovative tech company seeks a Machine Learning Engineer to build next-generation AI solutions! You'll develop and deploy machine learning models, collaborate with research teams, and push the boundaries of what's possible with AI. Join us in creating cutting-edge ML applications that solve real-world problems.",
         "skills": [
           "Python",
           "Deep Learning",
@@ -157,6 +166,7 @@
       },
       {
         "title": "Mobile Developer",
+        "description": "Rapidly growing startup looking for a talented Mobile Developer to join our product team! You'll build and maintain native mobile applications for iOS and Android platforms. If you're passionate about creating seamless mobile experiences and staying up-to-date with the latest mobile technologies, we want you on our team!",
         "skills": [
           "Swift",
           "iOS Development",
@@ -172,6 +182,7 @@
       },
       {
         "title": "Database Administrator",
+        "description": "Leading financial services company seeks an experienced Database Administrator to maintain and optimize our critical database systems! You'll ensure data integrity, implement backup strategies, and tune database performance. Join us in managing and securing our most valuable asset - our data.",
         "skills": [
           "SQL",
           "Database Design",
@@ -185,6 +196,7 @@
       },
       {
         "title": "UI/UX Designer",
+        "description": "Creative technology company seeking a talented UI/UX Designer to create beautiful and intuitive digital experiences! You'll work closely with product managers and developers to design user-centered solutions. If you have a passion for clean, modern design and a user-first mindset, we'd love to talk to you!",
         "skills": [
           "Figma",
           "Sketch",
@@ -200,6 +212,7 @@
       },
       {
         "title": "Product Manager",
+        "description": "Dynamic tech company seeking an experienced Product Manager to drive our product strategy! You'll work with cross-functional teams to define product vision, gather requirements, and deliver exceptional user experiences. Join us in building products that make a difference in our users' lives.",
         "skills": [
           "Agile Methodologies",
           "Product Strategy",
