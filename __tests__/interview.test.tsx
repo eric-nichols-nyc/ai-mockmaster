@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import Interview from '../src/app/(dashboard)/dashboard/interview/(components)/interview';
 import { InterviewRecord, InterviewQuestion } from '../src/db/schema';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; // Import QueryClient and QueryClientProvider
 
 // Mock the necessary dependencies
 vi.mock('next/navigation', () => ({
@@ -31,6 +32,9 @@ vi.mock('../src/app/(dashboard)/dashboard/interview/(components)/visualizer', ()
   default: () => React.createElement('div', { 'data-testid': 'mock-visualizer' }, 'Mock Visualizer'),
 }));
 
+// Create a new QueryClient instance
+const queryClient = new QueryClient();
+
 describe('Interview Component', () => {
   it('renders without crashing and shows no questions available message', () => {
     const emptyInterview: InterviewRecord = {
@@ -45,7 +49,12 @@ describe('Interview Component', () => {
       questions: []
     };
 
-    render(<Interview interview={emptyInterview} />);
+    // Wrap the component with QueryClientProvider
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Interview interview={emptyInterview} />
+      </QueryClientProvider>
+    );
     
     // Check for no interview questions available message
     expect(screen.getByText('No interview questions available.')).toBeDefined();
@@ -82,7 +91,12 @@ describe('Interview Component', () => {
       questions: [mockQuestion]
     };
 
-    render(<Interview interview={mockInterview} />);
+    // Wrap the component with QueryClientProvider
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Interview interview={mockInterview} />
+      </QueryClientProvider>
+    );
 
     // Check for the question
     const questionElement = screen.getByText('What is your experience with React?');

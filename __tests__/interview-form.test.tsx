@@ -21,17 +21,17 @@ vi.mock('@/components/ui/card', () => ({
 }));
 
 vi.mock('@/components/ui/radio-group', () => ({
-  RadioGroup: ({ children, ...props }: any) => <div>{children}</div>,
-  RadioGroupItem: ({ children, ...props }: any) => <div>{children}</div>,
+  RadioGroup: ({ children }: {children: React.ReactNode}) => <div>{children}</div>,
+  RadioGroupItem: ({ children }: {children: React.ReactNode}) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/ui/label', () => ({
-  Label: ({ children }: any) => <div>{children}</div>,
+  Label: ({ children }: {children: React.ReactNode}) => <div>{children}</div>,
 }));
 
 vi.mock('@/components/ui/multi-select', () => ({
   __esModule: true,
-  default: ({ children, ...props }: any) => <div>{children}</div>,
+  default: ({ children }: {children: React.ReactNode}) => <div>{children}</div>,
 }));
 
 describe('InterviewForm', () => {
