@@ -65,4 +65,11 @@ export const UpdateQuestionSavedSchema = z.object({
   })
 });
 
-// You can add more schemas here as needed
+// You    export const interviewFormSchema = z.object({
+export const interviewFormSchema = z.object({
+  jobTitle: z.string().min(1, 'Job title is required'),
+  jobDescription: z.string().min(1, 'Job description is required'),
+  skills: z.array(z.string()).min(1, 'At least one skill is required'),
+});
+
+export type InterviewFormData = z.infer<typeof interviewFormSchema>;

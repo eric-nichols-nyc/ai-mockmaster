@@ -1,16 +1,8 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent,waitFor } from "@testing-library/react";
 import InterviewForm from "../src/components/interview-form";
 import { vi } from "vitest";
 
-describe("InterviewForm", () => {
-  beforeAll(() => {
-    global.ResizeObserver = class ResizeObserver {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    };
-  });
-  const mockJobs = [
+const mockJobs = [
     {
       title: "Software Engineer",
       description: "Develop software solutions.",
@@ -22,6 +14,21 @@ describe("InterviewForm", () => {
       skills: ["Agile", "Communication"],
     },
   ];
+const mockSubmit = vi.fn(); // Use vi.fn() for Vitest
+
+describe("InterviewForm", () => {
+  beforeAll(() => {
+    global.ResizeObserver = class ResizeObserver {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  });
+
+  beforeEach(() => {
+    mockSubmit.mockClear(); // Clear previous calls to the mock function
+  });
+  
 
   const mockOnSubmit = vi.fn(); // Mock function for onSubmit
 
@@ -36,12 +43,14 @@ describe("InterviewForm", () => {
     expect(screen.getByLabelText('Product Manager')).toBeInTheDocument();
   });
 
-  //   it('updates job description when a job is selected', () => {
-  //     const jobRadio = screen.getByLabelText('Software Engineer');
-  //     fireEvent.click(jobRadio);
+    it('updates job description when a job is selected', async() => {
+      const jobRadio = screen.getByLabelText('Software Engineer');
+      fireEvent.click(jobRadio);
 
-  //     expect(screen.getByRole('textbox', { name: /job description/i })).toHaveValue('Develop software solutions.');
-  //   });
+        // Wait for the textarea to have the expected value
+        await waitFor(() => {
+            expect(screen.getByRole('textbox', { name: /job description/i })).toHaveValue('Develop software solutions.');
+        });    });
 
   //   it('submits the form with selected values', () => {
   //     const jobRadio = screen.getByLabelText('Software Engineer');
