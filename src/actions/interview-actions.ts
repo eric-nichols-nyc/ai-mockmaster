@@ -6,18 +6,11 @@ import { eq, and, desc } from "drizzle-orm"
 import { z } from "zod"
 import { auth } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
-
-const getInterviewByIdSchema = z.object({
-  id: z.string().uuid(),
-})
-
-const getInterviewAndQuestionSchema = z.object({
-  questionId: z.string().uuid(),
-})
-
-const deleteQuestionSchema = z.object({
-  questionId: z.string().uuid(),
-});
+import { 
+  GetInterviewByIdSchema, 
+  GetInterviewAndQuestionSchema, 
+  DeleteQuestionSchema 
+} from '@/lib/schemas';
 
 export async function getInterviews() {
   const { userId } = auth()
@@ -29,23 +22,18 @@ export async function getInterviews() {
   return await db.select().from(interviews).where(eq(interviews.userId, userId))
 }
 
-export async function getInterviewById(input: z.infer<typeof getInterviewByIdSchema>): Promise<InterviewRecord | null> {
+export async function getInterviewById(input: z.infer<typeof GetInterviewByIdSchema>): Promise<InterviewRecord | null> {
   try {
     const { userId } = auth()
     if (!userId) {
       throw new Error("Unauthorized")
     }
 
-    const { id } = getInterviewByIdSchema.parse(input)
+    const { id } = GetInterviewByIdSchema.parse(input)
 
     const interview = await db.query.interviews.findFirst({
       where: eq(interviews.id, id),
     })
-
-    // Optionally, you can add a check here to ensure the interview belongs to the current user
-    // if (interview && interview.userId !== userId) {
-    //   throw new Error("Unauthorized")
-    // }
 
     return interview || null
   } catch (error) {
@@ -63,14 +51,14 @@ export async function getCurrentUserId(): Promise<string | null> {
   return userId
 }
 
-export async function getInterviewAndQuestion(input: z.infer<typeof getInterviewAndQuestionSchema>) {
+export async function getInterviewAndQuestion(input: z.infer<typeof GetInterviewAndQuestionSchema>) {
   try {
     const { userId } = auth()
     if (!userId) {
       throw new Error("Unauthorized")
     }
 
-    const { questionId } = getInterviewAndQuestionSchema.parse(input)
+    const { questionId } = GetInterviewAndQuestionSchema.parse(input)
 
     // First, fetch the question and its associated interview ID
     const questionResult = await db.select({
@@ -102,7 +90,6 @@ export async function getInterviewAndQuestion(input: z.infer<typeof getInterview
 
     const interview = interviewResult[0]
 
-    // Return both the interview and the specific question
     return {
       interview,
       question
@@ -137,13 +124,13 @@ export async function getAllUserQuestions(): Promise<InterviewQuestionRecord[]> 
   }
 }
 
-export async function deleteQuestionAndInterview(input: z.infer<typeof deleteQuestionSchema>) {
+export async function deleteQuestionAndInterview(input: z.infer<typeof DeleteQuestionSchema>) {
   const { userId } = auth();
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
-  const { questionId } = deleteQuestionSchema.parse(input);
+  const { questionId } = DeleteQuestionSchema.parse(input);
 
   try {
     // Start a transaction

@@ -1,0 +1,215 @@
+{
+    "jobs": [
+      {
+        "title": "Prompt Engineer",
+        "skills": [
+          "Natural Language Processing",
+          "Machine Learning Fundamentals",
+          "LLM Architecture Understanding",
+          "Python",
+          "API Integration",
+          "Context Engineering",
+          "Conversation Design",
+          "Ethical AI Principles",
+          "Fine-tuning Techniques",
+          "Data Annotation",
+          "UX Writing",
+          "Technical Documentation"
+        ]
+      },
+      {
+        "title": "Full Stack Developer",
+        "skills": [
+          "JavaScript",
+          "TypeScript",
+          "React",
+          "Angular",
+          "Vue",
+          "Node.js",
+          "Python",
+          "Java",
+          "C#",
+          "SQL",
+          "NoSQL databases",
+          "REST APIs",
+          "Git",
+          "AWS",
+          "Azure",
+          "GCP",
+          "Docker",
+          "CI/CD"
+        ]
+      },
+      {
+        "title": "Frontend Developer",
+        "skills": [
+          "HTML5",
+          "CSS3",
+          "JavaScript",
+          "TypeScript",
+          "React",
+          "Angular",
+          "Vue",
+          "Responsive Design",
+          "Web Performance Optimization",
+          "Cross-browser Compatibility",
+          "Sass",
+          "Less",
+          "Web Accessibility",
+          "Redux",
+          "Vuex",
+          "Jest",
+          "Cypress"
+        ]
+      },
+      {
+        "title": "Backend Developer",
+        "skills": [
+          "Python",
+          "Java",
+          "C#",
+          "Node.js",
+          "Database Design",
+          "SQL",
+          "API Development",
+          "Authentication",
+          "Authorization",
+          "Microservices Architecture",
+          "Message Queues",
+          "Caching Strategies",
+          "Server Management",
+          "Performance Optimization"
+        ]
+      },
+      {
+        "title": "Data Scientist",
+        "skills": [
+          "Python",
+          "R",
+          "Machine Learning",
+          "SQL",
+          "Statistical Analysis",
+          "Data Visualization",
+          "TensorFlow",
+          "PyTorch",
+          "Big Data Technologies"
+        ]
+      },
+      {
+        "title": "DevOps Engineer",
+        "skills": [
+          "Linux",
+          "Unix Administration",
+          "AWS",
+          "Azure",
+          "GCP",
+          "Infrastructure as Code",
+          "Docker",
+          "Kubernetes",
+          "CI/CD Pipeline Management",
+          "Shell Scripting",
+          "Monitoring Tools",
+          "Security Best Practices"
+        ]
+      },
+      {
+        "title": "Cloud Architect",
+        "skills": [
+          "AWS",
+          "Azure",
+          "GCP",
+          "Network Security",
+          "Microservices",
+          "Serverless Computing",
+          "Infrastructure as Code",
+          "Cost Optimization",
+          "System Design",
+          "Enterprise Architecture"
+        ]
+      },
+      {
+        "title": "Security Engineer",
+        "skills": [
+          "Network Security",
+          "Penetration Testing",
+          "Security Frameworks",
+          "Incident Response",
+          "Cryptography",
+          "Security Tools",
+          "Risk Assessment",
+          "Compliance Standards"
+        ]
+      },
+      {
+        "title": "Machine Learning Engineer",
+        "skills": [
+          "Python",
+          "Deep Learning",
+          "TensorFlow",
+          "PyTorch",
+          "Computer Vision",
+          "Natural Language Processing",
+          "MLOps",
+          "Mathematics",
+          "Statistics",
+          "Distributed Computing"
+        ]
+      },
+      {
+        "title": "Mobile Developer",
+        "skills": [
+          "Swift",
+          "iOS Development",
+          "Kotlin",
+          "Android Development",
+          "React Native",
+          "Flutter",
+          "Mobile UI",
+          "Mobile UX",
+          "RESTful APIs",
+          "Mobile Security"
+        ]
+      },
+      {
+        "title": "Database Administrator",
+        "skills": [
+          "SQL",
+          "Database Design",
+          "Performance Tuning",
+          "Backup and Recovery",
+          "High Availability",
+          "Security Management",
+          "Data Migration",
+          "NoSQL Databases"
+        ]
+      },
+      {
+        "title": "UI/UX Designer",
+        "skills": [
+          "Figma",
+          "Sketch",
+          "User Research",
+          "Wireframing",
+          "Prototyping",
+          "Visual Design",
+          "HTML",
+          "CSS",
+          "Interaction Design",
+          "Usability Testing"
+        ]
+      },
+      {
+        "title": "Product Manager",
+        "skills": [
+          "Agile Methodologies",
+          "Product Strategy",
+          "Data Analytics",
+          "User Story Mapping",
+          "Market Research",
+          "Stakeholder Management",
+          "Technical Communication",
+          "Product Roadmapping"
+        ]
+      }
+    ]
+  }

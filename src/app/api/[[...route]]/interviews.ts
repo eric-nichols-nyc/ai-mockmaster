@@ -6,84 +6,21 @@ import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { v4 as uuidv4 } from 'uuid';
+import { 
+  CreateInterviewSchema,
+  UpdateInterviewSchema,
+  SaveAnswerSchema,
+  UpdateQuestionSchema,
+  UpdateQuestionSavedSchema
+} from '@/lib/schemas';
 
 const app = new Hono()
 
 // Set up Clerk middleware
 app.use('*', clerkMiddleware())
 
-// Zod schemas
-const createInterviewSchema = z.object({
-  body: z.object({
-    jobTitle: z.string().min(1),
-    jobDescription: z.string().optional(),
-    skills: z.array(z.string()),
-    questions: z.array(z.object({
-      question: z.string().min(1),
-      suggested: z.string().min(1),
-    })).nonempty(), // Ensure there's at least one question
-  }),
-})
-
-const updateInterviewSchema = z.object({
-  body: z.object({
-    jobTitle: z.string().min(1).optional(),
-    jobDescription: z.string().optional(),
-  }),
-})
-
-const saveAnswerSchema = z.object({
-  body: z.object({
-    answer: z.string().min(1),
-    audioUrl: z.string().url().optional(),
-  }),
-})
-
-// Define a schema for the updateable fields of a question
-const updateQuestionSchema = z.object({
-  question: z.string().optional(),
-  suggested: z.string().optional(),
-  suggestedAudioUrl: z.string().url().nullable().optional(),
-  answer: z.string().optional(),
-  audioUrl: z.string().url().optional(),
-  feedback: z.string().optional(),
-  improvements: z.array(z.string()).optional(),
-  keyTakeaways: z.array(z.string()).optional(),
-  grade: z.string().optional(),
-  saved: z.boolean().optional(),
-  skills: z.array(z.string()).nullable().optional(),
-});
-
-// New schema for updating the saved status of a question
-const updateQuestionSavedSchema = z.object({
-  body: z.object({
-    saved: z.boolean()
-  })
-})
-
-// GET / - List all interviews for the authenticated user
-app.get('/', async (c) => {
-  const auth = getAuth(c);
-  console.log(auth)
-  if (!auth?.userId) {
-    return c.json({ error: "unauthorized" }, 401);
-  }
-
-  try {
-    const data = await db.select()
-      .from(interviews)
-      .where(eq(interviews.userId, auth.userId))
-      .orderBy(desc(interviews.createdAt))
-    
-    return c.json(data)
-  } catch (error) {
-    console.error('Error fetching interviews:', error)
-    return c.json({ error: 'Failed to fetch interviews' }, 500)
-  }
-})
-
 // POST / - Create a new interview
-app.post('/', zValidator('json', createInterviewSchema.shape.body), async (c) => {
+app.post('/', zValidator('json', CreateInterviewSchema.shape.body), async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
@@ -188,7 +125,7 @@ app.get('/list/completed', async (c) => {
 })
 
 // PUT /:id/questions/:questionId/answer - Save the recorded answer for a specific question
-app.put('/:id/questions/:questionId/answer', zValidator('json', saveAnswerSchema.shape.body), async (c) => {
+app.put('/:id/questions/:questionId/answer', zValidator('json', SaveAnswerSchema.shape.body), async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
@@ -254,7 +191,7 @@ app.get('/:id', async (c) => {
 })
 
 // PUT /:id - Update an existing interview
-app.put('/:id', zValidator('json', updateInterviewSchema.shape.body), async (c) => {
+app.put('/:id', zValidator('json', UpdateInterviewSchema.shape.body), async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
@@ -301,7 +238,7 @@ app.put('/:id/questions/:questionId', async (c) => {
 
   try {
     const body = await c.req.json();
-    const updateData = updateQuestionSchema.parse(body);
+    const updateData = UpdateQuestionSchema.parse(body);
     console.log("updateData", updateData)
 
     // First, verify that the interview belongs to the authenticated user
@@ -525,7 +462,7 @@ app.get('/list/saved-questions', async (c) => {
   });
 
   // New route: PUT /:id/questions/:questionId/save - Update the saved status of a specific question
-app.put('/:id/questions/:questionId/save', zValidator('json', updateQuestionSavedSchema.shape.body), async (c) => {
+app.put('/:id/questions/:questionId/save', zValidator('json', UpdateQuestionSavedSchema.shape.body), async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
