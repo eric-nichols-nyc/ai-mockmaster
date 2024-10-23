@@ -25,17 +25,8 @@ export interface FeedbackData {
   grade: FeedbackGrade;
 }
 
-export type Job = {
-  title: string;
-  description: string;
-  skills: string[];
-}
-
 const QuestionGeneratorPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [jobTitles, setJobTitles] = useState<string[]>([]);
-  const [jobDescriptions, setJobDescriptions] = useState<string[]>([]);
-  const [jobSkills, setJobSkills] = useState<string[][]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,23 +44,7 @@ const QuestionGeneratorPage = () => {
         // Store full jobs data
         setJobs(data.jobs);
 
-        // Extract and store titles separately
-        const titles = data.jobs.map((job: Job) => job.title);
-        setJobTitles(titles);
-
-        // Extract and store descriptions separately
-        const descriptions = data.jobs.map((job: Job) => job.description);
-        setJobDescriptions(descriptions);
-
-        // Extract and store skills separately
-        const skills = data.jobs.map((job: Job) => job.skills);
-        setJobSkills(skills);
-
-        console.log('Loaded data:', {
-          titles,
-          descriptions,
-          skills
-        });
+        console.log('Loaded data:', jobs);
       } catch (error) {
         console.error('Error fetching jobs:', error);
         setError('Failed to load job listings. Please try again later.');
@@ -81,17 +56,6 @@ const QuestionGeneratorPage = () => {
     fetchJobs();
   }, []);
 
-  // Function to get description and skills for a selected job title
-  const getJobDetails = (selectedTitle: string) => {
-    const index = jobTitles.indexOf(selectedTitle);
-    if (index !== -1) {
-      return {
-        description: jobDescriptions[index],
-        skills: jobSkills[index]
-      };
-    }
-    return null;
-  };
 
   return (
     <div className="relative min-h-screen">
@@ -121,10 +85,6 @@ const QuestionGeneratorPage = () => {
           <InterviewForm 
             onSubmit={(data) => console.log(data)} 
             jobs={jobs}
-            jobTitles={jobTitles}
-            jobDescriptions={jobDescriptions}
-            jobSkills={jobSkills}
-            getJobDetails={getJobDetails}
           />
         )}
       </div>
