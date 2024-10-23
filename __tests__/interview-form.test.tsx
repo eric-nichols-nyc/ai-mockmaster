@@ -32,8 +32,8 @@ describe("InterviewForm", () => {
 
   it("renders the form with job titles", () => {
     expect(screen.getByText(/Select A Job Title/i)).toBeInTheDocument();
-    // expect(screen.getByLabelText('Software Engineer')).toBeInTheDocument();
-    // expect(screen.getByLabelText('Product Manager')).toBeInTheDocument();
+    expect(screen.getByLabelText('Software Engineer')).toBeInTheDocument();
+    expect(screen.getByLabelText('Product Manager')).toBeInTheDocument();
   });
 
   //   it('updates job description when a job is selected', () => {
