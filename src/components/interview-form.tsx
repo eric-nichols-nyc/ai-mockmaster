@@ -11,6 +11,8 @@ import { Job } from "@/types"; // Importing Job type from types.ts
 import MultipleSelector, { Option } from "@/components/ui/multi-select"; // Importing MultipleSelector
 import { interviewFormSchema, InterviewFormData } from "@/lib/schemas"; // Adjust the import path
 import { z } from "zod";
+import { StatefulButton } from "@/components/stateful-button";
+import useButtonState from '@/hooks/use-button-state';
 
 interface InterviewFormProps {
   onSubmit: (data: unknown) => void;
@@ -38,30 +40,15 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-
-    // Validate the form data
-    const formData: InterviewFormData = {
-      jobTitle,
-      jobDescription,
-      skills: selectedSkills,
-    };
-
-    try {
-      interviewFormSchema.parse(formData); // Validate the data
-      setErrors({}); // Clear previous errors
-      onSubmit(formData); // Call the onSubmit function if validation passes
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const fieldErrors = error.errors.reduce((acc, curr) => {
-          acc[curr.path[0]] = curr.message; // Map errors to field names
-          return acc;
-        }, {} as { [key: string]: string });
-        setErrors(fieldErrors); // Set validation errors in state
-      }
-    }
-  };
+  const { state, handleButtonSubmit, getButtonText } = useButtonState({
+    initialState: 'idle',
+    onSuccess: () => {
+      console.log('Form submitted successfully');
+    },
+    onError: () => {
+      console.error('Form submission failed');
+    },
+  });
 
   const handleSelectedSkillsChange = useCallback(
     (newSelectedSkills: string[]) => {
@@ -69,6 +56,35 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
     },
     []
   );
+
+  const validateForm = async () => {
+    const formData: InterviewFormData = {
+      jobTitle,
+      jobDescription,
+      skills: selectedSkills,
+    };
+
+    try {
+      interviewFormSchema.parse(formData);
+      setErrors({});
+      onSubmit(formData);
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors = error.errors.reduce((acc, curr) => {
+          acc[curr.path[0]] = curr.message;
+          return acc;
+        }, {} as { [key: string]: string });
+        setErrors(fieldErrors);
+      }
+      return false;
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await handleButtonSubmit(validateForm);
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -144,12 +160,13 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
           </div>
           {errors.skills && <p className="text-red-500">{errors.skills}</p>}{" "}
           {/* Display error */}
-          <button
+          <StatefulButton 
             type="submit"
-            className="mt-4 w-full bg-blue-500 text-white rounded-md p-3 hover:bg-blue-600 transition"
+            state={state}
+            className="mt-4 w-full"
           >
-            Submit
-          </button>
+            {getButtonText()}
+          </StatefulButton>
         </form>
       </Card>
     </div>
