@@ -16,6 +16,7 @@ interface ToneAnalysis {
 
 interface FeedbackResponse {
     suggested_answer: string;
+    answer_feedback: string;
     constructive_feedback: {
         strengths: string[];
         areas_for_improvement: string[];
@@ -48,11 +49,21 @@ export const FeedbackDisplay = ({ feedback }: FeedbackDisplayProps) => {
                     <p className="text-gray-700">{feedback.grade.explanation}</p>
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Detailed Feedback</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="whitespace-pre-line text-gray-700">
+                        {feedback.answer_feedback}
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Suggested Answer */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Detailed Feedback</CardTitle>
+                    <CardTitle>Suggested Answer</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="whitespace-pre-line text-gray-700">

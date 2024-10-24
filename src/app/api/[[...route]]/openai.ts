@@ -6,7 +6,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
 import { z } from 'zod'
 import { evaluationPrompt } from '@/lib/prompts'
 import { GetResultsSchema } from '@/lib/schemas'
-
+import { getFeedbackToolStream } from '@/actions/feedback-action-streaming'
 // Check for required environment variables
 if (!process.env.OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY is not set in the environment variables');
@@ -236,6 +236,41 @@ app.post('/get-results', async (c) => {
     return c.json({ error: 'An error occurred while processing your request' }, 500)
   }
 })
+
+// Route: Get feedback tool stream
+app.post('/get-feedback', async (c) => {
+  try {
+    // Parse and validate request body
+    const body = await c.req.json();
+    const validatedData = GetResultsSchema.parse(body);
+
+    // Call the getFeedbackToolStream function
+    const feedbackStream = await getFeedbackToolStream(validatedData);
+
+    // Process the feedback stream
+    const reader = feedbackStream.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let done = false;
+    let feedback = '';
+
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+      done = streamDone;
+      if (value) {
+        feedback += decoder.decode(value, { stream: true });
+      }
+    }
+
+    return c.json({ feedback });
+
+  } catch (error) {
+    console.error('Feedback Tool Error:', error);
+    if (error instanceof z.ZodError) {
+      return c.json({ error: error.errors }, 400);
+    }
+    return c.json({ error: 'Failed to generate feedback' }, 500);
+  }
+});
 
 export default app
 
