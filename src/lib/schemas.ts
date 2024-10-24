@@ -70,6 +70,10 @@ export const interviewFormSchema = z.object({
   jobTitle: z.string().min(1, 'Job title is required'),
   jobDescription: z.string().optional(),
   skills: z.array(z.string()).min(1, 'At least one skill is required'),
+  questions: z.array(z.object({
+    question: z.string().min(1),
+    suggested: z.string().min(1),
+  })).nonempty(), // Ensure there's at least one question
 });
 
 export type InterviewFormData = z.infer<typeof interviewFormSchema>;

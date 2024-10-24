@@ -17,7 +17,7 @@ const useButtonState = ({ initialState = 'idle', onSuccess, onError }: UseButton
     
     try {
       // Simulate an async operation
-      await new Promise(resolve => setTimeout(resolve, 3500));
+      //await new Promise(resolve => setTimeout(resolve, 3500));
       setState('success');
       if (onSuccess) {
         onSuccess();
@@ -35,13 +35,15 @@ const useButtonState = ({ initialState = 'idle', onSuccess, onError }: UseButton
     
     // Validate form
     const isValid = await validateForm();
-    
+    // console.log any validation errors
+ 
     if (isValid) {
       setState('success');
       onSubmit();
     } else {
       setState('error');
     }
+    return isValid;
   };
 
   const getButtonText = () => {

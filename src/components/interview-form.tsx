@@ -12,21 +12,28 @@ import MultipleSelector, { Option } from "@/components/ui/multi-select"; // Impo
 import { interviewFormSchema, InterviewFormData } from "@/lib/schemas"; // Adjust the import path
 import { z } from "zod";
 import { StatefulButton } from "@/components/stateful-button";
-import useButtonState from '@/hooks/use-button-state';
-import { generateTechInterviewQuestion } from '@/actions/gemini-actions';
+import useButtonState from "@/hooks/use-button-state";
+import { generateTechInterviewQuestion } from "@/actions/gemini-actions";
+import { Button } from "@/components/ui/button"; // Add this import if not already present
 
 interface InterviewFormProps {
   onSubmit: (data: unknown) => void;
   jobs: Job[];
 }
 
+type Question = {
+  question: string;
+  suggested: string;
+};
+
 const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
   const [jobTitle, setJobTitle] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [skills, setSkills] = useState<Option[]>([]); // State for available skills
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]); // State for selected skills
   const [errors, setErrors] = useState<{ [key: string]: string }>({}); // State for validation errors
-
+ 
   const handleJobChange = (selectedTitle: string) => {
     const selectedJob = jobs.find((job) => job.title === selectedTitle);
     if (selectedJob) {
@@ -42,12 +49,13 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
   };
 
   const { state, handleButtonSubmit, getButtonText } = useButtonState({
-    initialState: 'idle',
+    initialState: "idle",
     onSuccess: () => {
-      console.log('Form submitted successfully');
+      console.log("Form submitted successfully");
+      setIsSubmitted(true);
     },
     onError: () => {
-      console.error('Form submission failed');
+      console.error("Form submission failed");
     },
   });
 
@@ -59,30 +67,45 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
   );
 
   const validateForm = async () => {
-    const formData: InterviewFormData = {
+    const formData: Omit<InterviewFormData, "questions"> = {
       jobTitle,
       jobDescription,
       skills: selectedSkills,
     };
 
     try {
-      interviewFormSchema.parse(formData);
+      //log any validation errors
+      console.log("validation errors", errors);
       setErrors({});
-      // Validate the form data
-      interviewFormSchema.parse(formData);
-      setErrors({});
-      
+
       // Generate the interview question
       const question = await generateTechInterviewQuestion(
         formData.jobTitle,
         formData.jobDescription,
         formData.skills
-      );
+      ) as Question;
+      console.log("question", question);
 
       if (!question) {
-        throw new Error('Failed to generate interview question');
+        throw new Error("Failed to generate interview question");
       }
-      onSubmit(formData);
+
+      // Update the generated question
+
+      // Include the generated question in the form data
+      const finalFormData = {
+        ...formData,
+        questions: [
+          {
+            question:  question?.question,
+            suggested: question?.suggested,
+          },
+        ],
+      };
+      console.log("finalFormData", finalFormData);
+      interviewFormSchema.parse(finalFormData);
+
+      onSubmit(finalFormData);
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -90,6 +113,7 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
           acc[curr.path[0]] = curr.message;
           return acc;
         }, {} as { [key: string]: string });
+        console.log("fieldErrors", fieldErrors);
         setErrors(fieldErrors);
       }
       return false;
@@ -98,7 +122,14 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    await handleButtonSubmit(validateForm);
+    const test = await handleButtonSubmit(validateForm);
+    console.log("test", test);
+  };
+
+
+  const handleStartInterview = () => {
+    // router.push('/dashboard/practice'); // commented out for now
+    console.log("Start Interview clicked - ready to begin interview");
   };
 
   return (
@@ -108,7 +139,9 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
           <CardTitle data-testid="card-title" className="text-lg font-semibold">
             Interview Form
           </CardTitle>
-          <CardDescription data-testid="card-description">Please fill out the details below.</CardDescription>
+          <CardDescription data-testid="card-description">
+            Please fill out the details below.
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
           <div>
@@ -174,14 +207,24 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
             />
           </div>
           {errors.skills && <p className="text-red-500">{errors.skills}</p>}{" "}
-          {/* Display error */}
-          <StatefulButton 
-            type="submit"
-            state={state}
-            className="mt-4 w-full"
-          >
-            {getButtonText()}
-          </StatefulButton>
+          <div className="flex justify-end space-x-4">
+            {!isSubmitted ? (
+              <StatefulButton
+                type="submit"
+                state={state}
+                className="mt-4 w-full"
+              >
+                {getButtonText()}
+              </StatefulButton>
+            ) : (
+              <Button
+                onClick={handleStartInterview}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Start Interview
+              </Button>
+            )}
+          </div>
         </form>
       </Card>
     </div>

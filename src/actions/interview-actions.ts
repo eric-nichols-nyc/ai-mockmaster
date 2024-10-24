@@ -9,8 +9,11 @@ import { revalidatePath } from 'next/cache';
 import { 
   GetInterviewByIdSchema, 
   GetInterviewAndQuestionSchema, 
-  DeleteQuestionSchema 
+  DeleteQuestionSchema, 
+  CreateInterviewSchema 
 } from '@/lib/schemas';
+import { v4 as uuidv4 } from 'uuid';
+import { type InterviewQuestion } from '../db/schema';
 
 export async function getInterviews() {
   const { userId } = auth()
@@ -159,5 +162,61 @@ export async function deleteQuestionAndInterview(input: z.infer<typeof DeleteQue
   } catch (error) {
     console.error("Error deleting question and interview:", error);
     return { success: false, error: "Failed to delete question and interview" };
+  }
+}
+
+export async function createInterview(input: z.infer<typeof CreateInterviewSchema>) {
+  const { userId } = auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const { body } = CreateInterviewSchema.parse(input);
+    const { jobTitle, jobDescription, skills, questions } = body;
+
+    const newInterview = await db.transaction(async (tx) => {
+      const interviewId = uuidv4();
+      const formattedQuestions: InterviewQuestion[] = questions.map(q => ({
+        id: uuidv4(),
+        interviewId: interviewId,
+        question: q.question,
+        explanation: null,
+        suggested: q.suggested,
+        suggestedAudioUrl: null,
+        answer: null,
+        audioUrl: null,
+        feedback: null,
+        improvements: null,
+        keyTakeaways: null,
+        grade: null,
+        skills: null,
+        saved: false,
+        createdAt: new Date()
+      }));
+
+      const [interview] = await tx.insert(interviews).values({
+        id: interviewId,
+        userId,
+        jobTitle,
+        jobDescription,
+        skills,
+        date: new Date(),
+        completed: false,
+        questions: formattedQuestions
+      }).returning();
+
+      await tx.insert(interviewQuestions).values(formattedQuestions);
+      return interview;
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true, data: newInterview };
+  } catch (error) {
+    console.error('Error creating interview:', error);
+    if (error instanceof z.ZodError) {
+      return { success: false, error: 'Invalid input data' };
+    }
+    return { success: false, error: 'Failed to create interview' };
   }
 }

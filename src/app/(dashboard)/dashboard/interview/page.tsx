@@ -12,6 +12,9 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Loader2 } from "lucide-react";
 import { Job } from '@/types'; // Importing Job type
+import { createInterview } from '@/actions/interview-actions';
+import { interviewFormSchema } from '@/lib/schemas';
+import { toast } from "sonner";
 
 export type FeedbackGrade = {
   letter: string;
@@ -23,6 +26,19 @@ export interface FeedbackData {
   improvements: string[];
   keyTakeaways: string[];
   grade: FeedbackGrade;
+}
+
+interface FormData {
+  jobTitle: string;
+  jobDescription: string;
+  skills: string[];
+  questions: [{ // This syntax ensures at least one question
+    question: string;
+    suggested: string;
+  }, ...{
+    question: string;
+    suggested: string;
+  }[]]; // The spread operator allows for additional questions
 }
 
 const QuestionGeneratorPage = () => {
@@ -57,6 +73,43 @@ const QuestionGeneratorPage = () => {
   }, []);
 
 
+  const handleSubmit = async (data: FormData) => {
+    console.log('handleSubmit', data);
+    try {
+      // Validate the form data
+      const validationResult = interviewFormSchema.safeParse(data);
+      
+      if (!validationResult.success) {
+        // Format validation errors into a readable message
+        const errorMessages = validationResult.error.errors.map(err => {
+          const field = err.path.join('.');
+          return `${field}: ${err.message}`;
+        });
+        
+        toast.error("Please check your form inputs", {
+          description: errorMessages.join('\n')
+        });
+        setError(errorMessages.join('\n'));
+        return; // Exit early if validation fails
+      }
+
+      const result = await createInterview({
+        body: validationResult.data
+      });
+
+      if (result.success) {
+        toast.success("Interview created successfully");
+      } else {
+        toast.error(result.error || 'Failed to create interview');
+        setError(result.error || 'Failed to create interview');
+      }
+    } catch (error) {
+      console.error('Error creating interview:', error);
+      toast.error('Failed to create interview');
+      setError('Failed to create interview');
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
       <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -83,7 +136,7 @@ const QuestionGeneratorPage = () => {
           <div className="text-red-500">{error}</div>
         ) : (
           <InterviewForm 
-            onSubmit={(data) => console.log(data)} 
+            onSubmit={(data) => handleSubmit(data as FormData)} 
             jobs={jobs}
           />
         )}
