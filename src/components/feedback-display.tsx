@@ -38,11 +38,13 @@ export const FeedbackDisplay = ({ feedback }: FeedbackDisplayProps) => {
     return (
         <div className="space-y-6 max-w-4xl mx-auto p-4">
             {/* Overall Grade */}
-            <Card>
+            <Card className="bg-gradient-to-r from-slate-50 to-slate-100">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                         <span>Overall Grade</span>
-                        <span className="text-2xl font-bold">{feedback.grade.score}%</span>
+                        <span className="text-4xl font-bold text-primary underline decoration-2">
+                            {feedback.grade.score}%
+                        </span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -51,7 +53,7 @@ export const FeedbackDisplay = ({ feedback }: FeedbackDisplayProps) => {
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle>Detailed Feedback</CardTitle>
+                    <CardTitle>Overall Feedback</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="whitespace-pre-line text-gray-700">
@@ -63,7 +65,7 @@ export const FeedbackDisplay = ({ feedback }: FeedbackDisplayProps) => {
             {/* Suggested Answer */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Suggested Answer</CardTitle>
+                    <CardTitle>A strong answer would be: </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="whitespace-pre-line text-gray-700">
