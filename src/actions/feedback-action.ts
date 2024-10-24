@@ -31,7 +31,7 @@ interface FeedbackResponse {
     grade: {
         score: number;
         explanation: string;
-      };
+    };
 }
 
 export async function getFeedbackTool(data: z.infer<typeof GetResultsSchema>): Promise<FeedbackResponse> {
@@ -47,6 +47,47 @@ export async function getFeedbackTool(data: z.infer<typeof GetResultsSchema>): P
         2. Alignment with required skills: ${skills.join(', ')}
         3. Communication effectiveness
         4. Professional context of a ${position} role
+        Please structure your response like this example:
+        {
+            "suggested_answer": "A strong answer would be: 'When faced with conflicting priorities, I follow a systematic approach: First, I assess each task's urgency and impact using a priority matrix. For critical issues, I immediately communicate with stakeholders to set expectations and gather requirements. I use project management tools to track deadlines and dependencies, and I'm not afraid to escalate when necessary. For example, in my last role, I had to balance an urgent client deliverable with a planned system upgrade. I evaluated both tasks' impact, consulted with stakeholders, and ultimately split my team to handle both priorities while keeping everyone informed of progress.'",
+            "feedback_response": "Your answer shows good understanding of basic prioritization, mentions stakeholder communication, and demonstrates awareness of project management tools. However, you could provide more specific examples and expand on managing expectations.",
+            "constructive_feedback": {
+                "strengths": [
+                    "You Show good understanding of basic prioritization",
+                    "Mentions stakeholder communication",
+                    "You Demonstrate awareness of project management tools"
+                ],
+                "areas_for_improvement": [
+                    "You Could provide more specific examples",
+                    "You could mention of risk assessment",
+                    "You Could elaborate on team coordination strategies"
+                ],
+                "actionable_tips": [
+                    "Include a specific example of a challenging prioritization decision you've made",
+                    "Mention how you handle unexpected changes in priorities",
+                    "Describe your communication strategy with different stakeholders"
+                ]
+            },
+            
+            "key_points": [
+                {
+                    "point": "Prioritization Method",
+                    "explanation": "You used a structured approach but you could be more detailed about criteria"
+                },
+                {
+                    "point": "Stakeholder Management",
+                    "explanation": "Good mention of communication but you could expand on managing expectations"
+                }
+            ],
+            
+            "tone_analysis": {
+                "overall_tone": "Professional but you could be more confident",
+                "professionalism": 85,
+                "confidence": 70,
+                "clarity": 80
+            },
+            
+
 
         Important: Provide the response in plain text without any markdown formatting.`;
 
@@ -76,14 +117,15 @@ export async function getFeedbackTool(data: z.infer<typeof GetResultsSchema>): P
                                 },
                                 answer_feedback: {
                                     type: "string",
-                                    description: "An overall analysis of the user answer"
+                                    description: "An overall analysis of the user answer, be sure to address the user with the pronoun 'your'"
                                 },
                                 constructive_feedback: {
                                     type: "object",
                                     properties: {
                                         strengths: {
                                             type: "array",
-                                            items: { type: "string" }
+                                            items: { type: "string" },
+                                            description: "A list of strengths that the user has demonstrated in their answer, be sure to address the user with the pronoun 'your'"
                                         },
                                         areas_for_improvement: {
                                             type: "array",
@@ -103,25 +145,34 @@ export async function getFeedbackTool(data: z.infer<typeof GetResultsSchema>): P
                                     type: "object",
                                     properties: {
                                         overall_tone: { type: "string" },
-                                        professionalism: { type: "number" },
-                                        confidence: { type: "number" },
-                                        clarity: { type: "number" }
+                                        professionalism: {
+                                            type: "number",
+                                            description: "Numerical grade from 0-100"
+                                        },
+                                        confidence: {
+                                            type: "number",
+                                            description: "Numerical grade from 0-100"
+                                        },
+                                        clarity: {
+                                            type: "number",
+                                            description: "Numerical grade from 0-100"
+                                        },
                                     }
                                 },
                                 grade: {
                                     type: "object",
                                     properties: {
-                                      score: {
-                                        type: "number",
-                                        description: "Numerical grade from 0-100"
-                                      },
-                                      explanation: {
-                                        type: "string",
-                                        description: "Explanation of the grade"
-                                      }
+                                        score: {
+                                            type: "number",
+                                            description: "Numerical grade from 0-100"
+                                        },
+                                        explanation: {
+                                            type: "string",
+                                            description: "Explanation of the grade"
+                                        }
                                     },
                                     required: ["score", "explanation"]
-                                  }
+                                }
                             },
                             required: ["suggested_answer", "constructive_feedback", "key_points", "tone_analysis", "grade"]
                         }
