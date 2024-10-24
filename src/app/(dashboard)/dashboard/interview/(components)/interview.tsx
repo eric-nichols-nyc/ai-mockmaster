@@ -12,6 +12,7 @@ import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { toast } from "sonner";
 import { useInterviews } from "@/hooks/useInterviews";
+import { evaluateInterviewAnswer } from '@/actions/gemini-actions';
 
 interface InterviewProps {
   interview: InterviewRecord;
@@ -290,18 +291,26 @@ export default function Interview({ interview }: InterviewProps) {
       if (interview && interview.jobTitle && interview.questions) {
         try {
           // Generate feedback using OpenAI
-          const response = await fetchApi(`/openai/get-results`, {
-            method: "POST",
-            body: JSON.stringify({
-              question: currentQuestion.question,
-              answer: currentQuestion.answer,
-              position: interview.jobTitle,
-              skills: currentQuestion.skills || [],
-            }),
-          });
-          // new functionality to stream feedback
+          // const response = await fetchApi(`/openai/get-results`, {
+          //   method: "POST",
+          //   body: JSON.stringify({
+          //     question: currentQuestion.question,
+          //     answer: currentQuestion.answer,
+          //     position: interview.jobTitle,
+          //     skills: currentQuestion.skills || [],
+          //   }),
+          // });
 
-          await updateCurrentQuestionWithFeedback(response);
+          const evaluationResult = await evaluateInterviewAnswer(
+            currentQuestion.question,
+            currentQuestion.answer,
+            interview.jobTitle,
+            currentQuestion.skills || []
+          );
+          // new functionality to stream feedback
+          console.log("evaluationResult", evaluationResult);
+
+          await updateCurrentQuestionWithFeedback(evaluationResult);
         } catch (e) {
           console.error("error", e);
           setFeedbackStatus("generate");

@@ -1,6 +1,7 @@
 'use server';
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { evaluationPrompt } from '@/lib/prompts'
 
 const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -62,3 +63,37 @@ ${skills ? `skills: ${skills.join(', ')}` : ''}`;
   }
 }
 
+export async function evaluateInterviewAnswer(
+  question: string,
+  answer: string,
+  position: string,
+  skills: string[] | undefined
+) {
+  try {
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: "You are an AI assistant that evaluates interview answers. Provide evaluation results in JSON format with the following structure: { score: number (1-10), feedback: string, strengths: string[], improvements: string[], skillsDemo: string[] }",
+    });
+
+    const prompt = evaluationPrompt
+    .replace('{question}', question)
+    .replace('{answer}', answer)
+    .replace('{position}', position)
+    .replace('{skills}', skills ? skills.join(', ') : ''  )
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response.text();
+
+    // Extract JSON from the response
+    const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      return JSON.parse(jsonMatch[1]);
+    } else {
+      throw new Error('Failed to parse JSON from response');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    throw new Error('Failed to evaluate interview answer');
+  }
+}
