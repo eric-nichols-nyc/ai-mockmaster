@@ -71,7 +71,6 @@ export default function Interview({ interview }: InterviewProps) {
 
   // Handle timer completion
   const handleTimerComplete = useCallback(() => {
-    console.log("Interview time is up!");
     setErrorMessage(
       "Interview time has ended. Please submit your final answer."
     );
@@ -87,7 +86,6 @@ export default function Interview({ interview }: InterviewProps) {
           ? interview.questions[0]
           : (Object.values(interview.questions)[0] as InterviewQuestionRecord)
       );
-      console.log("currentQuestion", currentQuestion);
     }
   }, [currentQuestion, interview]);
 
@@ -106,7 +104,6 @@ export default function Interview({ interview }: InterviewProps) {
    // Update current question with feedback
    const updateCurrentQuestionWithFeedback = useCallback(
     async (feedbackData: FeedbackData) => {
-      console.log("feedbackData = ", feedbackData);
       if (
         interview &&
         (Array.isArray(interview.questions)
@@ -135,7 +132,6 @@ export default function Interview({ interview }: InterviewProps) {
           audioUrl: currentQuestion.audioUrl || null,
         };
         setCurrentQuestion(updatedQuestion);
-        console.log("updatedQuestion", updatedQuestion);
 
         // Save the updated question with feedback
         const saved = await fetchApi(
@@ -155,7 +151,6 @@ export default function Interview({ interview }: InterviewProps) {
 
   // Handle feedback button click
   const getFeedback = useCallback(async () => {
-    console.log("getFeedback");
     if (!currentQuestion?.answer) {
       throw new Error("You don't have a valid answer");
     }
@@ -170,8 +165,6 @@ export default function Interview({ interview }: InterviewProps) {
             currentQuestion.skills || []
           );
           // new functionality to stream feedback
-          console.log("evaluationResult", evaluationResult);
-
           await updateCurrentQuestionWithFeedback(evaluationResult);
         } catch (e) {
           console.error("error", e);
