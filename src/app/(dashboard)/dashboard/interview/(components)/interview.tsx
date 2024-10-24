@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,9 +8,8 @@ import useBlobStore from "@/store/interviewStore";
 import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
 import { Loader2, Mic } from "lucide-react";
-import CountdownTimer from "@/components/countdown-timer";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
-import Ripple from "@/components/ui/ripple";
+import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { toast } from "sonner";
 import { useInterviews } from '@/hooks/useInterviews'
 
@@ -28,6 +26,21 @@ interface FeedbackData {
   improvements?: string[];
   keyTakeaways?: string[];
 }
+/**
+ * 
+ * @param param0 
+ * to start the timer
+ * timer starts when user clicks the mic button in visualizer
+ * visualizer needs to be able to start and stop the timer
+ * visulizer need state from interview component to know when to start and stop the timer
+ * @returns 
+ */
+const renderTime = ({ remainingTime }: { remainingTime: number }) => {
+  if (remainingTime === 0) {
+    return <div className="timer">Interview time is up!</div>;
+  }
+  return <div className="timer text-4xl font-bold">{remainingTime}</div>;  // Add this line
+};  // Add closing bracket
 
 // Main Interview component
 export default function Interview({ interview }: InterviewProps) {
@@ -362,17 +375,6 @@ export default function Interview({ interview }: InterviewProps) {
     <div className="flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-4xl card-shadow bg-white">
         <CardContent className="p-6">
-          {/* Timer component */}
-          {hasRecordingStarted && !hasAudioUrl && (
-            <div className="mb-6">
-              <CountdownTimer
-                initialTime={60}
-                onComplete={handleTimerComplete}
-                isRunning={hasRecordingStarted && !hasRecordingStopped}
-              />
-            </div>
-          )}
-          {/* Microphone permission message */}
           {!hasAudioUrl && (
             <div className="flex items-center justify-center mb-4 p-2 bg-yellow-100 rounded-md">
               <Mic className="w-5 h-5 mr-2 text-yellow-600" />
@@ -382,20 +384,10 @@ export default function Interview({ interview }: InterviewProps) {
             </div>
           )}
           {/* Current question */}
-          <h2 className="text-2xl mb-6 text-center font-bold">
+          <h2 className="text-xl mb-6 text-center font-bold">
             {currentQuestion?.question}
           </h2>
-          {/* Avatar image */}
-          <div className="flex justify-center mb-6 relative">
-            <Image
-              src="/images/interview/avatar.png"
-              alt="Interview Avatar"
-              width={200}
-              height={200}
-              className="rounded-full relative z-10 shadow-xl"
-            />
-            {isPlaying && <Ripple />}
-          </div>
+      
           {/* Play audio button */}
           <div className="flex justify-center mb-4">
             <Button
@@ -415,6 +407,17 @@ export default function Interview({ interview }: InterviewProps) {
               )}
             </Button>
           </div>
+          <div className="timer-wrapper flex justify-center">
+        <CountdownCircleTimer
+          isPlaying={hasRecordingStarted}
+          duration={60}
+          colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
+          colorsTime={[10, 6, 3, 0]}
+          onComplete={() => ({ shouldRepeat: false, delay: 1, handleTimerComplete })}
+        >
+          {renderTime}
+        </CountdownCircleTimer>
+      </div>
           {/* Hidden audio element */}
           <audio ref={audioRef} className="hidden" />
           {/* Visualizer component */}
@@ -422,6 +425,7 @@ export default function Interview({ interview }: InterviewProps) {
             <div className="relative">
               <Visualizer
                 ref={visualizerRef}
+                recordingHasStopped={hasRecordingStopped}
                 hasTimedOut={hasTimedOut}
                 setHasRecordingStopped={setHasRecordingStopped}
                 setRecordingStarted={setHasRecordingStarted}
@@ -431,7 +435,6 @@ export default function Interview({ interview }: InterviewProps) {
           {/* Action buttons */}
           <div className="flex justify-center mt-6 space-x-4">
             {(hasRecordingStopped || hasAudioUrl) && saveStatus !== "saving" && saveStatus !== "success" && (
-              <>
                 <Button
                   onClick={handleSubmitRecording}
                   disabled={isSubmittingRecording}
@@ -445,13 +448,6 @@ export default function Interview({ interview }: InterviewProps) {
                     "Submit Recording"
                   )}
                 </Button>
-                {/* <Button
-                  onClick={handleTryAgain}
-                  disabled={!hasRecordingStopped && !hasTimedOut && !hasAudioUrl}
-                >
-                  Try Again
-                </Button> */}
-              </>
             )}
           </div>
 

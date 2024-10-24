@@ -11,6 +11,7 @@ import useBlobStore from "@/store/interviewStore";
 import { Button } from "@/components/ui/button";
 
 interface VisualizerProps {
+  recordingHasStopped: boolean;
   setHasRecordingStopped: (value: boolean) => void;
   setRecordingStarted: (value: boolean) => void;
   hasTimedOut: boolean;
@@ -23,7 +24,7 @@ export interface VisualizerRef {
 
 const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
   (
-    { setHasRecordingStopped, setRecordingStarted, hasTimedOut, audioUrl },
+    { setHasRecordingStopped, setRecordingStarted, hasTimedOut, audioUrl, recordingHasStopped },
     ref
   ) => {
     const recorderControls = useVoiceVisualizer();
@@ -53,11 +54,12 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
     }));
 
     useEffect(() => {
+      console.log("isAvailableRecordedAudio", isAvailableRecordedAudio);
       if (!recordedBlob) return;
       console.log(recordedBlob);
       setHasRecordingStopped(true);
       setCurrentBlob(recordedBlob);
-    }, [recordedBlob, setHasRecordingStopped, setCurrentBlob, audioUrl]);
+    }, [isAvailableRecordedAudio,recordedBlob, setHasRecordingStopped, setCurrentBlob, audioUrl]);
 
     useEffect(() => {
       if (!error) return;
@@ -105,6 +107,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
       stopRecording();
       setRecordingStarted(false);
       setHasRecordingStopped(true);
+      console.log("Stop Recording");
     }, [stopRecording]);
 
     const handlePlayPause = useCallback(() => {
@@ -129,9 +132,9 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
           mainBarColor="black"
           onlyRecording={true}
         />
-        {!isRecordingInProgress && !recordedBlob && (
+        {!isRecordingInProgress && !recordingHasStopped && (
           <Button onClick={handleStartRecording} className="mt-4">
-            Start Recording
+            Start Recording 
           </Button>
         )}
         {isRecordingInProgress && (

@@ -113,6 +113,7 @@ app.post('/text-to-speech', async (c) => {
       model: "tts-1",
       voice: "onyx",
       input: text,
+      speed: 1.2,
     })
 
     // Get the audio data as a buffer
