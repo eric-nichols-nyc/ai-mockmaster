@@ -45,6 +45,7 @@ const QuestionGeneratorPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [interviewId, setInterviewId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -98,6 +99,7 @@ const QuestionGeneratorPage = () => {
       });
 
       if (result.success) {
+        setInterviewId(result.data?.id || null); // Assuming the API returns interviewId
         toast.success("Interview created successfully");
       } else {
         toast.error(result.error || 'Failed to create interview');
@@ -138,6 +140,7 @@ const QuestionGeneratorPage = () => {
           <InterviewForm 
             onSubmit={(data) => handleSubmit(data as FormData)} 
             jobs={jobs}
+            interviewId={interviewId}
           />
         )}
         </div>

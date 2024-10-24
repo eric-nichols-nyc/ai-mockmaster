@@ -48,6 +48,7 @@ describe('InterviewForm', () => {
       <InterviewForm 
         onSubmit={() => {}} 
         jobs={mockJobs}
+        interviewId={null}
       />
     );
 

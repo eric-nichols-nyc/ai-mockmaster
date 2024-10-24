@@ -15,10 +15,14 @@ import { StatefulButton } from "@/components/stateful-button";
 import useButtonState from "@/hooks/use-button-state";
 import { generateTechInterviewQuestion } from "@/actions/gemini-actions";
 import { Button } from "@/components/ui/button"; // Add this import if not already present
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";  // Add this import at the top
 
 interface InterviewFormProps {
   onSubmit: (data: unknown) => void;
   jobs: Job[];
+  interviewId: string | null;
 }
 
 type Question = {
@@ -26,7 +30,8 @@ type Question = {
   suggested: string;
 };
 
-const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
+const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs, interviewId }) => {
+  const router = useRouter();
   const [jobTitle, setJobTitle] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
@@ -128,8 +133,11 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
 
 
   const handleStartInterview = () => {
-    // router.push('/dashboard/practice'); // commented out for now
-    console.log("Start Interview clicked - ready to begin interview");
+    if (interviewId) {
+        router.push(`/dashboard/interview/${interviewId}/start`);
+    }else{
+      toast.error("Interview ID not found");
+    }
   };
 
   return (
@@ -221,7 +229,7 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs }) => {
                 onClick={handleStartInterview}
                 className="bg-green-600 hover:bg-green-700"
               >
-                Start Interview
+                Start Interview <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}
           </div>
