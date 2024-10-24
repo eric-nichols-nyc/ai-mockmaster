@@ -41,11 +41,15 @@ interface FormData {
   }[]]; // The spread operator allows for additional questions
 }
 
+
+
 const QuestionGeneratorPage = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [interviewId, setInterviewId] = useState<string | null>(null);
+
+
 
   useEffect(() => {
     const fetchJobs = async () => {

@@ -77,3 +77,5 @@ export const interviewFormSchema = z.object({
 });
 
 export type InterviewFormData = z.infer<typeof interviewFormSchema>;
+
+// create a schema 
