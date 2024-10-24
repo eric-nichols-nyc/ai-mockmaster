@@ -103,6 +103,102 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [hasRecordingStarted, hasRecordingStopped, showTimer]);
 
+   // Update current question with feedback
+   const updateCurrentQuestionWithFeedback = useCallback(
+    async (feedbackData: FeedbackData) => {
+      console.log("feedbackData = ", feedbackData);
+      if (
+        interview &&
+        (Array.isArray(interview.questions)
+          ? interview.questions.length > 0
+          : Object.keys(interview.questions).length > 0)
+      ) {
+        const currentQuestion = Array.isArray(interview.questions)
+          ? interview.questions[0]
+          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+
+        const updatedQuestion: InterviewQuestionRecord = {
+          ...currentQuestion,
+          saved: true,
+          feedback: feedbackData.feedback || null,
+          grade: feedbackData.grade?.letter || null,
+          improvements:
+            feedbackData.improvements && feedbackData.improvements.length > 0
+              ? feedbackData.improvements
+              : null,
+          keyTakeaways:
+            feedbackData.keyTakeaways && feedbackData.keyTakeaways.length > 0
+              ? feedbackData.keyTakeaways
+              : null,
+          skills: currentQuestion.skills || null,
+          answer: currentQuestion.answer || null,
+          audioUrl: currentQuestion.audioUrl || null,
+        };
+        setCurrentQuestion(updatedQuestion);
+        console.log("updatedQuestion", updatedQuestion);
+
+        // Save the updated question with feedback
+        const saved = await fetchApi(
+          `/interviews/${interview.id}/questions/${updatedQuestion.id}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(updatedQuestion),
+          }
+        );
+
+        console.log("saved ", saved);
+        setFeedbackStatus("ready");
+      }
+    },
+    [interview, fetchApi]
+  );
+
+  // Handle feedback button click
+  const getFeedback = useCallback(async () => {
+    console.log("getFeedback");
+    if (!currentQuestion?.answer) {
+      throw new Error("You don't have a valid answer");
+    }
+    if (feedbackStatus === "generate") {
+      setFeedbackStatus("thinking");
+      if (interview && interview.jobTitle && interview.questions) {
+        try {
+          const evaluationResult = await evaluateInterviewAnswer(
+            currentQuestion.question,
+            currentQuestion.answer,
+            interview.jobTitle,
+            currentQuestion.skills || []
+          );
+          // new functionality to stream feedback
+          console.log("evaluationResult", evaluationResult);
+
+          await updateCurrentQuestionWithFeedback(evaluationResult);
+        } catch (e) {
+          console.error("error", e);
+          setFeedbackStatus("generate");
+          setErrorMessage("Failed to generate feedback. Please try again.");
+        }
+      }
+    } else if (feedbackStatus === "ready") {
+      if (interview && interview.id) {
+        const currentQuestion = Array.isArray(interview.questions)
+          ? interview.questions[0]
+          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+        router.push(
+          `/dashboard/interview/${interview.id}/summary/${currentQuestion.id}`
+        );
+      }
+    }
+  }, [
+    interview,
+    currentQuestion?.question,
+    currentQuestion?.answer,
+    currentQuestion?.skills,
+    updateCurrentQuestionWithFeedback,
+    feedbackStatus,
+    router,
+  ]);
+
   // Handle submission of recorded answer
   const handleSubmitRecording = useCallback(async () => {
     setSaveStatus("saving");
@@ -174,7 +270,7 @@ export default function Interview({ interview }: InterviewProps) {
     } finally {
       setIsSubmittingRecording(false);
     }
-  }, [fetchApi, interview, currentBlob]);
+  }, [fetchApi, interview, currentBlob, currentQuestion, getFeedback]);
 
   // Handle text-to-speech conversion and playback for Avatar
   const handleTextToSpeech = useCallback(async () => {
@@ -230,110 +326,8 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [interview, fetchApi, audioUrl]);
 
-  // Update current question with feedback
-  const updateCurrentQuestionWithFeedback = useCallback(
-    async (feedbackData: FeedbackData) => {
-      console.log("feedbackData = ", feedbackData);
-      if (
-        interview &&
-        (Array.isArray(interview.questions)
-          ? interview.questions.length > 0
-          : Object.keys(interview.questions).length > 0)
-      ) {
-        const currentQuestion = Array.isArray(interview.questions)
-          ? interview.questions[0]
-          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
+ 
 
-        const updatedQuestion: InterviewQuestionRecord = {
-          ...currentQuestion,
-          saved: true,
-          feedback: feedbackData.feedback || null,
-          grade: feedbackData.grade?.letter || null,
-          improvements:
-            feedbackData.improvements && feedbackData.improvements.length > 0
-              ? feedbackData.improvements
-              : null,
-          keyTakeaways:
-            feedbackData.keyTakeaways && feedbackData.keyTakeaways.length > 0
-              ? feedbackData.keyTakeaways
-              : null,
-          skills: currentQuestion.skills || null,
-          answer: currentQuestion.answer || null,
-          audioUrl: currentQuestion.audioUrl || null,
-        };
-        setCurrentQuestion(updatedQuestion);
-        console.log("updatedQuestion", updatedQuestion);
-
-        // Save the updated question with feedback
-        const saved = await fetchApi(
-          `/interviews/${interview.id}/questions/${updatedQuestion.id}`,
-          {
-            method: "PUT",
-            body: JSON.stringify(updatedQuestion),
-          }
-        );
-
-        console.log("saved ", saved);
-        setFeedbackStatus("ready");
-      }
-    },
-    [interview, fetchApi]
-  );
-
-  // Handle feedback button click
-  const getFeedback = useCallback(async () => {
-    console.log("getFeedback");
-    if (!currentQuestion?.answer) {
-      throw new Error("You don't have a valid answer");
-    }
-    if (feedbackStatus === "generate") {
-      setFeedbackStatus("thinking");
-      if (interview && interview.jobTitle && interview.questions) {
-        try {
-          // Generate feedback using OpenAI
-          // const response = await fetchApi(`/openai/get-results`, {
-          //   method: "POST",
-          //   body: JSON.stringify({
-          //     question: currentQuestion.question,
-          //     answer: currentQuestion.answer,
-          //     position: interview.jobTitle,
-          //     skills: currentQuestion.skills || [],
-          //   }),
-          // });
-
-          const evaluationResult = await evaluateInterviewAnswer(
-            currentQuestion.question,
-            currentQuestion.answer,
-            interview.jobTitle,
-            currentQuestion.skills || []
-          );
-          // new functionality to stream feedback
-          console.log("evaluationResult", evaluationResult);
-
-          await updateCurrentQuestionWithFeedback(evaluationResult);
-        } catch (e) {
-          console.error("error", e);
-          setFeedbackStatus("generate");
-          setErrorMessage("Failed to generate feedback. Please try again.");
-        }
-      }
-    } else if (feedbackStatus === "ready") {
-      if (interview && interview.id) {
-        const currentQuestion = Array.isArray(interview.questions)
-          ? interview.questions[0]
-          : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
-        router.push(
-          `/dashboard/interview/${interview.id}/summary/${currentQuestion.id}`
-        );
-      }
-    }
-  }, [
-    interview,
-    updateCurrentQuestionWithFeedback,
-    fetchApi,
-    feedbackStatus,
-    router,
-  ]);
 
   const seeResults = () => {
     if (interview && currentQuestion) {

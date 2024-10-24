@@ -1,4 +1,4 @@
-import React, { type ImgHTMLAttributes } from 'react';
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import Interview from '../src/app/(dashboard)/dashboard/interview/(components)/interview';
@@ -10,10 +10,6 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: vi.fn(),
   }),
-}));
-
-vi.mock('next/image', () => ({
-  default: (props: ImgHTMLAttributes<HTMLImageElement>) => React.createElement('img', props),
 }));
 
 vi.mock('../src/store/interviewStore', () => ({
