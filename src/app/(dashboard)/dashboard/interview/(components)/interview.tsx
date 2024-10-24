@@ -11,7 +11,7 @@ import { Loader2, Mic } from "lucide-react";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { toast } from "sonner";
-import { useInterviews } from '@/hooks/useInterviews'
+import { useInterviews } from "@/hooks/useInterviews";
 
 interface InterviewProps {
   interview: InterviewRecord;
@@ -27,20 +27,20 @@ interface FeedbackData {
   keyTakeaways?: string[];
 }
 /**
- * 
- * @param param0 
+ *
+ * @param param0
  * to start the timer
  * timer starts when user clicks the mic button in visualizer
  * visualizer needs to be able to start and stop the timer
  * visulizer need state from interview component to know when to start and stop the timer
- * @returns 
+ * @returns
  */
 const renderTime = ({ remainingTime }: { remainingTime: number }) => {
   if (remainingTime === 0) {
     return <div className="timer">Interview time is up!</div>;
   }
-  return <div className="timer text-4xl font-bold">{remainingTime}</div>;  // Add this line
-};  // Add closing bracket
+  return <div className="timer text-4xl font-bold">{remainingTime}</div>; // Add this line
+}; // Add closing bracket
 
 // Main Interview component
 export default function Interview({ interview }: InterviewProps) {
@@ -57,7 +57,8 @@ export default function Interview({ interview }: InterviewProps) {
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState<InterviewQuestionRecord | null>(null);
+  const [currentQuestion, setCurrentQuestion] =
+    useState<InterviewQuestionRecord | null>(null);
   const [feedbackStatus, setFeedbackStatus] = useState<
     "generate" | "thinking" | "ready"
   >("generate");
@@ -65,7 +66,7 @@ export default function Interview({ interview }: InterviewProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const visualizerRef = useRef<{ clearCanvas: () => void } | null>(null);
-  const { data: interviews } = useInterviews()
+  const { data: interviews } = useInterviews();
 
   // Handle timer completion
   const handleTimerComplete = useCallback(() => {
@@ -80,12 +81,12 @@ export default function Interview({ interview }: InterviewProps) {
 
   useEffect(() => {
     if (interview && interview.questions.length) {
-     setCurrentQuestion(
+      setCurrentQuestion(
         Array.isArray(interview.questions)
           ? interview.questions[0]
           : (Object.values(interview.questions)[0] as InterviewQuestionRecord)
       );
-      console.log('currentQuestion',currentQuestion)
+      console.log("currentQuestion", currentQuestion);
     }
   }, [currentQuestion, interview]);
 
@@ -107,10 +108,6 @@ export default function Interview({ interview }: InterviewProps) {
     setIsSubmittingRecording(true);
     try {
       if (interview && currentBlob) {
-        // const currentQuestion = Array.isArray(interview.questions)
-        //   ? interview.questions[0]
-        //   : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
-
         const audioFile = new File([currentBlob], "audio.mp3", {
           type: currentBlob.type,
         });
@@ -126,7 +123,7 @@ export default function Interview({ interview }: InterviewProps) {
         if (transcriptResponse && transcriptResponse.transcription) {
           const answer = transcriptResponse.transcription;
           const url = transcriptResponse.audioUrl;
-          console.log('Update question')
+          console.log("Update question");
 
           // Save the transcribed answer
           const updatedQuestion = await fetchApi(
@@ -139,34 +136,34 @@ export default function Interview({ interview }: InterviewProps) {
               }),
             }
           );
-          console.log('PUT: Update question', updatedQuestion)
+          console.log("PUT: Update question", updatedQuestion);
 
-          if(currentQuestion){
+          if (currentQuestion) {
             currentQuestion.answer = answer;
             currentQuestion.audioUrl = url;
           }
-     
+
           // add answer and audio url to current question
 
           if (updatedQuestion && updatedQuestion.audioUrl) {
             setSaveStatus("success");
             // add sonner message
-            toast("Your answer has been processed and saved successfully!")
+            toast("Your answer has been processed and saved successfully!");
             //set button test
             setFeedbackStatus("generate");
+            // set audio url of user response
             setAudioUrl(updatedQuestion.audioUrl);
-            // replace the 
-            
-            
+            // get feedback from openai
+            getFeedback();
           } else {
             throw new Error("Invalid response from server");
           }
         } else {
           throw new Error("Invalid response from transcription service");
         }
-      } else if(interview && currentQuestion?.audioUrl) {
-          setAudioUrl(currentQuestion.audioUrl);
-      }else{
+      } else if (interview && currentQuestion?.audioUrl) {
+        setAudioUrl(currentQuestion.audioUrl);
+      } else {
         throw new Error("No interview or audio blob available");
       }
     } catch (error) {
@@ -235,7 +232,7 @@ export default function Interview({ interview }: InterviewProps) {
   // Update current question with feedback
   const updateCurrentQuestionWithFeedback = useCallback(
     async (feedbackData: FeedbackData) => {
-      console.log('feedbackData = ', feedbackData);
+      console.log("feedbackData = ", feedbackData);
       if (
         interview &&
         (Array.isArray(interview.questions)
@@ -264,7 +261,7 @@ export default function Interview({ interview }: InterviewProps) {
           audioUrl: currentQuestion.audioUrl || null,
         };
         setCurrentQuestion(updatedQuestion);
-        console.log('updatedQuestion', updatedQuestion);
+        console.log("updatedQuestion", updatedQuestion);
 
         // Save the updated question with feedback
         const saved = await fetchApi(
@@ -275,7 +272,7 @@ export default function Interview({ interview }: InterviewProps) {
           }
         );
 
-        console.log('saved ', saved);
+        console.log("saved ", saved);
         setFeedbackStatus("ready");
       }
     },
@@ -283,10 +280,10 @@ export default function Interview({ interview }: InterviewProps) {
   );
 
   // Handle feedback button click
-  const handleFeedbackButton = useCallback(async () => {
-    console.log('handleFeedbackButton')
-    if(!currentQuestion?.answer){
-      throw new Error("You don't have a valid answer")
+  const getFeedback = useCallback(async () => {
+    console.log("getFeedback");
+    if (!currentQuestion?.answer) {
+      throw new Error("You don't have a valid answer");
     }
     if (feedbackStatus === "generate") {
       setFeedbackStatus("thinking");
@@ -302,6 +299,7 @@ export default function Interview({ interview }: InterviewProps) {
               skills: currentQuestion.skills || [],
             }),
           });
+          // new functionality to stream feedback
 
           await updateCurrentQuestionWithFeedback(response);
         } catch (e) {
@@ -328,6 +326,14 @@ export default function Interview({ interview }: InterviewProps) {
     router,
   ]);
 
+  const seeResults = () => {
+    if (interview && currentQuestion) {
+      router.push(
+        `/dashboard/interview/${interview.id}/summary/${currentQuestion?.id}`
+      );
+    }
+  };
+
   // Effect to handle audio playback completion
   useEffect(() => {
     const audio = audioRef.current;
@@ -346,9 +352,9 @@ export default function Interview({ interview }: InterviewProps) {
   useEffect(() => {
     if (interviews) {
       // Do something with the cached interviews data
-      console.log('Cached interviews:', interviews)
+      console.log("Cached interviews:", interviews);
     }
-  }, [interviews])
+  }, [interviews]);
 
   // Render error message if no interview questions are available
   if (
@@ -363,12 +369,10 @@ export default function Interview({ interview }: InterviewProps) {
       </div>
     );
   }
-
-  // const currentQuestion = Array.isArray(interview.questions)
-  //   ? interview.questions[0]
-  //   : (Object.values(interview.questions)[0] as InterviewQuestionRecord);
-
-  const hasAudioUrl = currentQuestion?.audioUrl !== null && currentQuestion?.audioUrl !== undefined;
+  
+  const hasAudioUrl =
+    currentQuestion?.audioUrl !== null &&
+    currentQuestion?.audioUrl !== undefined;
 
   // Render the main interview component
   return (
@@ -387,7 +391,6 @@ export default function Interview({ interview }: InterviewProps) {
           <h2 className="text-xl mb-6 text-center font-bold">
             {currentQuestion?.question}
           </h2>
-      
           {/* Play audio button */}
           <div className="flex justify-center mb-4">
             <Button
@@ -408,20 +411,24 @@ export default function Interview({ interview }: InterviewProps) {
             </Button>
           </div>
           <div className="timer-wrapper flex justify-center">
-        <CountdownCircleTimer
-          isPlaying={hasRecordingStarted}
-          duration={60}
-          colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
-          colorsTime={[10, 6, 3, 0]}
-          onComplete={() => ({ shouldRepeat: false, delay: 1, handleTimerComplete })}
-        >
-          {renderTime}
-        </CountdownCircleTimer>
-      </div>
+            <CountdownCircleTimer
+              isPlaying={hasRecordingStarted}
+              duration={60}
+              colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
+              colorsTime={[10, 6, 3, 0]}
+              onComplete={() => ({
+                shouldRepeat: false,
+                delay: 1,
+                handleTimerComplete,
+              })}
+            >
+              {renderTime}
+            </CountdownCircleTimer>
+          </div>
           {/* Hidden audio element */}
           <audio ref={audioRef} className="hidden" />
           {/* Visualizer component */}
-          {(
+          {
             <div className="relative">
               <Visualizer
                 ref={visualizerRef}
@@ -431,10 +438,12 @@ export default function Interview({ interview }: InterviewProps) {
                 setRecordingStarted={setHasRecordingStarted}
               />
             </div>
-          )}
+          }
           {/* Action buttons */}
           <div className="flex justify-center mt-6 space-x-4">
-            {(hasRecordingStopped || hasAudioUrl) && saveStatus !== "saving" && saveStatus !== "success" && (
+            {(hasRecordingStopped || hasAudioUrl) &&
+              saveStatus !== "saving" &&
+              saveStatus !== "success" && (
                 <Button
                   onClick={handleSubmitRecording}
                   disabled={isSubmittingRecording}
@@ -445,17 +454,16 @@ export default function Interview({ interview }: InterviewProps) {
                       Submitting...
                     </>
                   ) : (
-                    "Submit Recording"
+                    "Submit for AI feedback"
                   )}
                 </Button>
-            )}
+              )}
           </div>
-
           {/* Feedback button */}
           {saveStatus === "success" && (
             <div className="flex justify-center mt-6">
               <Button
-                onClick={handleFeedbackButton}
+                onClick={seeResults}
                 disabled={feedbackStatus === "thinking"}
               >
                 {feedbackStatus === "generate" && "Generate Results"}
@@ -477,7 +485,7 @@ export default function Interview({ interview }: InterviewProps) {
             </div>
           )}
           {/* Status messages */}
-        {saveStatus === "saving" && (
+          {saveStatus === "saving" && (
             <p className="mt-4 text-yellow-600 font-semibold text-center">
               Processing your answer...
             </p>
@@ -486,7 +494,8 @@ export default function Interview({ interview }: InterviewProps) {
             <p className="mt-4 text-green-600 font-semibold text-center">
               Your answer has been processed and saved successfully!
             </p>
-          )}   {/*
+          )}{" "}
+          {/*
           {saveStatus === "error" && (
             <p className="mt-4 text-red-600 font-semibold text-center">
               There was an error processing your answer. Please try again.
