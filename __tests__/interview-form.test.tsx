@@ -3,6 +3,18 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import InterviewForm from '@/components/interview-form';
 
+// Add this mock at the top with your other mocks
+vi.mock('next/navigation', () => ({
+    useRouter: () => ({
+        push: vi.fn(),
+        replace: vi.fn(),
+        prefetch: vi.fn()
+    }),
+    useSearchParams: () => ({
+        get: vi.fn(),
+    }),
+}));
+
 // Mock ResizeObserver
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
