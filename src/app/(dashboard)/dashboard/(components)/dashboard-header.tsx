@@ -3,8 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@radix-ui/react-icons";
 import Link from 'next/link';
+import { useUser } from '@clerk/clerk-react'
 
 export const DashboardHeader: React.FC = () => {
+  const { isSignedIn, user, isLoaded } = useUser()
+console.log(isSignedIn, isLoaded, user);
   return (
     <Card className="mb-6">
       <CardHeader>
