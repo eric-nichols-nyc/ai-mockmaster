@@ -1,6 +1,7 @@
 import { DashboardHeader } from './(components)/dashboard-header'
 import { DashboardQuestionsList } from './(components)/dashboard-questions-list'
 import { getAllUserQuestions } from '@/actions/interview-actions'
+import { currentUser } from '@clerk/nextjs/server'
 //import { getFeedbackTool } from "@/actions/feedback-action";
 // import { FeedbackDisplay } from '@/components/feedback-display';
 //import { FeedbackStreamComponent } from '@/components/feedback-stream';
@@ -15,6 +16,8 @@ import { getAllUserQuestions } from '@/actions/interview-actions'
 // };
 export default async function DashboardPage() {
   //const test = await testFeedback();
+  const user = await currentUser();
+  console.log(user);  
   const allQuestions = await getAllUserQuestions()
   const questionsWithDefaultSaved = allQuestions.map(q => ({
     ...q,
