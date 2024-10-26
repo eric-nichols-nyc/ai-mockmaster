@@ -320,8 +320,6 @@ export default function Interview({ interview }: InterviewProps) {
   }, [interview, fetchApi, audioUrl]);
 
  
-
-
   const seeResults = () => {
     if (interview && currentQuestion) {
       router.push(

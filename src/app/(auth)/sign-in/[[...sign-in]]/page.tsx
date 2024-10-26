@@ -15,7 +15,7 @@ import Image from "next/image";
 export default function SignInPage() {
   return (
     <div className="flex min-h-screen">
-      <div className="hidden w-1/2 lg:block">
+      <div className="hidden w-1/2 sm:block">
         <Image
           src="/images/landing/ai4.webp"
           alt="Abstract background"
@@ -24,7 +24,7 @@ export default function SignInPage() {
           className="h-full w-full object-cover"
         />
       </div>
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 lg:w-1/2">
+      <div className="sm:block md:flex w-1/2 items-center justify-center min-h-screen bg-gray-100">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Sign In</CardTitle>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import Interview from '../src/app/(dashboard)/dashboard/interview/(components)/interview';
+import Interview from '../src/app/interview/(components)/interview';
 import { InterviewRecord, InterviewQuestion } from '../src/db/schema';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; // Import QueryClient and QueryClientProvider
 
