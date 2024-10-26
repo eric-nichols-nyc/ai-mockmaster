@@ -1,13 +1,14 @@
+"use client"
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@radix-ui/react-icons";
 import Link from 'next/link';
-import { useUser } from '@clerk/clerk-react'
+import { useAuth } from '@clerk/nextjs'
 
 export const DashboardHeader: React.FC = () => {
-  const { isSignedIn, user, isLoaded } = useUser()
-console.log(isSignedIn, isLoaded, user);
+  const { userId, isLoaded } = useAuth()
+console.log(isLoaded, userId);
   return (
     <Card className="mb-6">
       <CardHeader>
