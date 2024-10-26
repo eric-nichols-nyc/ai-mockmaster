@@ -134,7 +134,7 @@ const InterviewForm: React.FC<InterviewFormProps> = ({ onSubmit, jobs, interview
 
   const handleStartInterview = () => {
     if (interviewId) {
-        router.push(`/dashboard/interview/${interviewId}/start`);
+        router.push(`/interview/${interviewId}/start`);
     }else{
       toast.error("Interview ID not found");
     }

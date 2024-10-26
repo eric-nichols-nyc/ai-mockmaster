@@ -13,6 +13,8 @@ import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { toast } from "sonner";
 import { useInterviews } from "@/hooks/useInterviews";
 import { evaluateInterviewAnswer } from '@/actions/gemini-actions';
+import InterviewQuestion from "@/components/interview-question";
+import InterviewResults from "@/components/interview-results";
 
 interface InterviewProps {
   interview: InterviewRecord;
@@ -51,6 +53,7 @@ export default function Interview({ interview }: InterviewProps) {
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "success" | "error"
   >("idle");
+  const [view, setView] = useState<"question" | "results">("question");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
   const [hasRecordingStarted, setHasRecordingStarted] = useState(false);
@@ -371,6 +374,16 @@ export default function Interview({ interview }: InterviewProps) {
   // Render the main interview component
   return (
     <div className="flex flex-col items-center justify-center p-4">
+      {
+        view === "question" && (
+          <InterviewQuestion />
+        )
+      }
+      {
+        view === "results" && (
+          <InterviewResults />
+        )
+      }
       <Card className="w-full max-w-4xl card-shadow bg-white">
         <CardContent className="p-6">
           {!hasAudioUrl && (

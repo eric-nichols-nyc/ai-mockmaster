@@ -16,7 +16,7 @@ console.log(isLoaded, userId);
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground mb-4">Manage and review your interviews</p>
-        <Link href="/dashboard/interview">
+        <Link href="/interview">
           <Button>
             <PlusIcon className="mr-2 h-4 w-4" /> New Interview
           </Button>

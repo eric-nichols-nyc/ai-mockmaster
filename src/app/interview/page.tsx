@@ -104,14 +104,11 @@ const QuestionGeneratorPage = () => {
 
       if (result.success) {
         setInterviewId(result.data?.id || null); // Assuming the API returns interviewId
-        toast.success("Interview created successfully");
       } else {
-        toast.error(result.error || 'Failed to create interview');
         setError(result.error || 'Failed to create interview');
       }
     } catch (error) {
       console.error('Error creating interview:', error);
-      toast.error('Failed to create interview');
       setError('Failed to create interview');
     }
   };
