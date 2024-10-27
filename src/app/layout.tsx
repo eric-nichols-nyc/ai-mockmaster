@@ -22,6 +22,12 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "AI Mockmaster",
   description: "AI Generated interview app",
+  icons: [
+    {
+      url: "/images/bot.svg",
+      href: "/images/bot.svg",
+    },
+  ],
 };
 
 export default function RootLayout({

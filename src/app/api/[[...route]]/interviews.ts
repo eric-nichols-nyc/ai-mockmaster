@@ -19,6 +19,15 @@ const app = new Hono()
 // Set up Clerk middleware
 app.use('*', clerkMiddleware())
 
+app.get('/', async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+  const results = await db.select().from(interviews).where(eq(interviews.userId, auth.userId))
+  return c.json(results)
+})
+
 // POST / - Create a new interview
 app.post('/', zValidator('json', CreateInterviewSchema.shape.body), async (c) => {
   const auth = getAuth(c);

@@ -5,11 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import useBlobStore from "@/store/interviewStore";
-import Visualizer from "./visualizer";
 import { useApi } from "@/lib/api";
-import { Loader2, Mic } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
-import { CountdownCircleTimer } from "react-countdown-circle-timer";
 import { toast } from "sonner";
 import { useInterviews } from "@/hooks/useInterviews";
 import { evaluateInterviewAnswer } from '@/actions/gemini-actions';
@@ -38,15 +36,9 @@ interface FeedbackData {
  * visulizer need state from interview component to know when to start and stop the timer
  * @returns
  */
-const renderTime = ({ remainingTime }: { remainingTime: number }) => {
-  if (remainingTime === 0) {
-    return <div className="timer">Interview time is up!</div>;
-  }
-  return <div className="timer text-4xl font-bold">{remainingTime}</div>; // Add this line
-}; // Add closing bracket
-
 // Main Interview component
 export default function Interview({ interview }: InterviewProps) {
+  console.log("interview", interview);
   const router = useRouter();
   const { fetchApi } = useApi();
   const { currentBlob } = useBlobStore();
@@ -57,7 +49,6 @@ export default function Interview({ interview }: InterviewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
   const [hasRecordingStarted, setHasRecordingStarted] = useState(false);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
@@ -66,9 +57,6 @@ export default function Interview({ interview }: InterviewProps) {
   const [feedbackStatus, setFeedbackStatus] = useState<
     "generate" | "thinking" | "ready"
   >("generate");
-  const [audioUrl, setAudioUrl] = useState<string | null | undefined>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const visualizerRef = useRef<{ clearCanvas: () => void } | null>(null);
   const { data: interviews } = useInterviews();
 
@@ -82,27 +70,6 @@ export default function Interview({ interview }: InterviewProps) {
     setHasTimedOut(true);
   }, []);
 
-  useEffect(() => {
-    if (interview && interview.questions.length) {
-      setCurrentQuestion(
-        Array.isArray(interview.questions)
-          ? interview.questions[0]
-          : (Object.values(interview.questions)[0] as InterviewQuestionRecord)
-      );
-    }
-  }, [currentQuestion, interview]);
-
-  // Effect to manage timer visibility
-  useEffect(() => {
-    if (hasRecordingStarted) {
-      if (!showTimer) {
-        setShowTimer(true);
-      }
-    }
-    if (hasRecordingStopped) {
-      setShowTimer(false);
-    }
-  }, [hasRecordingStarted, hasRecordingStopped, showTimer]);
 
    // Update current question with feedback
    const updateCurrentQuestionWithFeedback = useCallback(
@@ -245,7 +212,6 @@ export default function Interview({ interview }: InterviewProps) {
             //set button test
             setFeedbackStatus("generate");
             // set audio url of user response
-            setAudioUrl(updatedQuestion.audioUrl);
             // get feedback from openai
             getFeedback();
           } else {
@@ -255,7 +221,6 @@ export default function Interview({ interview }: InterviewProps) {
           throw new Error("Invalid response from transcription service");
         }
       } else if (interview && currentQuestion?.audioUrl) {
-        setAudioUrl(currentQuestion.audioUrl);
       } else {
         throw new Error("No interview or audio blob available");
       }
@@ -267,61 +232,6 @@ export default function Interview({ interview }: InterviewProps) {
       setIsSubmittingRecording(false);
     }
   }, [fetchApi, interview, currentBlob, currentQuestion, getFeedback]);
-
-  // Handle text-to-speech conversion and playback for Avatar
-  const handleTextToSpeech = useCallback(async () => {
-    if (
-      interview &&
-      (Array.isArray(interview.questions)
-        ? interview.questions[0]
-        : Object.values(interview.questions)[0])
-    ) {
-      if (audioUrl) {
-        if (audioRef.current) {
-          audioRef.current.src = audioUrl;
-          setIsPlaying(true);
-          audioRef.current.play().catch((error) => {
-            console.error("Error playing audio:", error);
-            setErrorMessage("Failed to play audio. Please try again.");
-            setIsPlaying(false);
-          });
-        }
-      } else {
-        setIsLoadingAudio(true);
-        try {
-          const currentQuestion = Array.isArray(interview.questions)
-            ? interview.questions[0]
-            : (Object.values(
-                interview.questions
-              )[0] as InterviewQuestionRecord);
-
-          // Generate audio from text
-          const response = await fetchApi("/openai/text-to-speech", {
-            method: "POST",
-            body: JSON.stringify({ text: currentQuestion.question }),
-          });
-          if (response && response.audioUrl) {
-            setAudioUrl(response.audioUrl);
-            if (audioRef.current) {
-              audioRef.current.src = response.audioUrl;
-              setIsPlaying(true);
-              audioRef.current.play().catch((error) => {
-                console.error("Error playing audio:", error);
-                setErrorMessage("Failed to play audio. Please try again.");
-                setIsPlaying(false);
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Error generating text-to-speech:", error);
-          setErrorMessage("Failed to generate audio. Please try again.");
-        } finally {
-          setIsLoadingAudio(false);
-        }
-      }
-    }
-  }, [interview, fetchApi, audioUrl]);
-
  
   const seeResults = () => {
     if (interview && currentQuestion) {
@@ -331,19 +241,27 @@ export default function Interview({ interview }: InterviewProps) {
     }
   };
 
-  // Effect to handle audio playback completion
   useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      const handleEnded = () => setIsPlaying(false);
-      audio.addEventListener("ended", handleEnded);
-      return () => {
-        if (audio) {
-          audio.removeEventListener("ended", handleEnded);
-        }
-      };
+    if (interview && interview.questions.length) {
+      setCurrentQuestion(
+        Array.isArray(interview.questions)
+          ? interview.questions[0]
+          : (Object.values(interview.questions)[0] as InterviewQuestionRecord)
+      );
     }
-  }, []);
+  }, [currentQuestion, interview]);
+
+  // Effect to manage timer visibility
+  useEffect(() => {
+    if (hasRecordingStarted) {
+      if (!showTimer) {
+        setShowTimer(true);
+      }
+    }
+    if (hasRecordingStopped) {
+      setShowTimer(false);
+    }
+  }, [hasRecordingStarted, hasRecordingStopped, showTimer]);
 
   // Use the cached interviews data when needed
   useEffect(() => {
@@ -376,7 +294,7 @@ export default function Interview({ interview }: InterviewProps) {
     <div className="flex flex-col items-center justify-center p-4">
       {
         view === "question" && (
-          <InterviewQuestion />
+          <InterviewQuestion jobTitle={interview.jobTitle} question={currentQuestion?.question || ""} />
         )
       }
       {
@@ -386,66 +304,6 @@ export default function Interview({ interview }: InterviewProps) {
       }
       <Card className="w-full max-w-4xl card-shadow bg-white">
         <CardContent className="p-6">
-          {!hasAudioUrl && (
-            <div className="flex items-center justify-center mb-4 p-2 bg-yellow-100 rounded-md">
-              <Mic className="w-5 h-5 mr-2 text-yellow-600" />
-              <p className="text-yellow-800 font-medium">
-                Please enable your microphone to start the interview.
-              </p>
-            </div>
-          )}
-          {/* Current question */}
-          <h2 className="text-xl mb-6 text-center font-bold">
-            {currentQuestion?.question}
-          </h2>
-          {/* Play audio button */}
-          <div className="flex justify-center mb-4">
-            <Button
-              data-testid="playaudio"
-              onClick={handleTextToSpeech}
-              disabled={isLoadingAudio || isPlaying}
-            >
-              {isLoadingAudio ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading Audio...
-                </>
-              ) : isPlaying ? (
-                "Playing..."
-              ) : (
-                "Play Question Audio"
-              )}
-            </Button>
-          </div>
-          <div className="timer-wrapper flex justify-center">
-            <CountdownCircleTimer
-              isPlaying={hasRecordingStarted}
-              duration={60}
-              colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
-              colorsTime={[10, 6, 3, 0]}
-              onComplete={() => ({
-                shouldRepeat: false,
-                delay: 1,
-                handleTimerComplete,
-              })}
-            >
-              {renderTime}
-            </CountdownCircleTimer>
-          </div>
-          {/* Hidden audio element */}
-          <audio ref={audioRef} className="hidden" />
-          {/* Visualizer component */}
-          {
-            <div className="relative">
-              <Visualizer
-                ref={visualizerRef}
-                recordingHasStopped={hasRecordingStopped}
-                hasTimedOut={hasTimedOut}
-                setHasRecordingStopped={setHasRecordingStopped}
-                setRecordingStarted={setHasRecordingStarted}
-              />
-            </div>
-          }
           {/* Action buttons */}
           <div className="flex justify-center mt-6 space-x-4">
             {(hasRecordingStopped || hasAudioUrl) &&
