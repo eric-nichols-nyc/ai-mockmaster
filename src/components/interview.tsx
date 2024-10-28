@@ -1,21 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import useBlobStore from "@/store/interviewStore";
 import { useApi } from "@/lib/api";
-import { Loader2 } from "lucide-react";
 import { InterviewQuestionRecord, InterviewRecord } from "@/db/schema";
 import { toast } from "sonner";
 import { useInterviews } from "@/hooks/useInterviews";
 import { evaluateInterviewAnswer } from '@/actions/gemini-actions';
 import InterviewQuestion from "@/components/interview-question";
 import InterviewResults from "@/components/interview-results";
-
+import { useInterview } from "@/hooks/use-tanstack-interview";
 interface InterviewProps {
-  interview: InterviewRecord;
+  interviewId: string;
 }
 
 // Define the structure for feedback data
@@ -37,8 +34,7 @@ interface FeedbackData {
  * @returns
  */
 // Main Interview component
-export default function Interview({ interview }: InterviewProps) {
-  console.log("interview", interview);
+export default function Interview({ interviewId }: InterviewProps) {
   const router = useRouter();
   const { fetchApi } = useApi();
   const { currentBlob } = useBlobStore();
@@ -46,29 +42,17 @@ export default function Interview({ interview }: InterviewProps) {
     "idle" | "saving" | "success" | "error"
   >("idle");
   const [view, setView] = useState<"question" | "results">("question");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
-  const [hasRecordingStarted, setHasRecordingStarted] = useState(false);
   const [isSubmittingRecording, setIsSubmittingRecording] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
-  const [hasTimedOut, setHasTimedOut] = useState(false);
   const [currentQuestion, setCurrentQuestion] =
     useState<InterviewQuestionRecord | null>(null);
   const [feedbackStatus, setFeedbackStatus] = useState<
     "generate" | "thinking" | "ready"
   >("generate");
-  const visualizerRef = useRef<{ clearCanvas: () => void } | null>(null);
-  const { data: interviews } = useInterviews();
 
-  // Handle timer completion
-  const handleTimerComplete = useCallback(() => {
-    setErrorMessage(
-      "Interview time has ended. Please submit your final answer."
-    );
-    setShowTimer(false);
-    setHasRecordingStopped(true);
-    setHasTimedOut(true);
-  }, []);
+  const { interview } = useInterview(interviewId);
+  console.log("interview", interview);
 
 
    // Update current question with feedback
@@ -251,26 +235,6 @@ export default function Interview({ interview }: InterviewProps) {
     }
   }, [currentQuestion, interview]);
 
-  // Effect to manage timer visibility
-  useEffect(() => {
-    if (hasRecordingStarted) {
-      if (!showTimer) {
-        setShowTimer(true);
-      }
-    }
-    if (hasRecordingStopped) {
-      setShowTimer(false);
-    }
-  }, [hasRecordingStarted, hasRecordingStopped, showTimer]);
-
-  // Use the cached interviews data when needed
-  useEffect(() => {
-    if (interviews) {
-      // Do something with the cached interviews data
-      console.log("Cached interviews:", interviews);
-    }
-  }, [interviews]);
-
   // Render error message if no interview questions are available
   if (
     !interview ||
@@ -294,7 +258,86 @@ export default function Interview({ interview }: InterviewProps) {
     <div className="flex flex-col items-center justify-center p-4">
       {
         view === "question" && (
-          <InterviewQuestion jobTitle={interview.jobTitle} question={currentQuestion?.question || ""} />
+          <>
+            <InterviewQuestion jobTitle={interview.jobTitle} question={currentQuestion?.question || ""} />
+            <div className="w-full max-w-4xl bg-white">
+                {/* Action buttons */}
+                {/* <div className="flex justify-center mt-6 space-x-4">
+                  {(hasRecordingStopped || hasAudioUrl) &&
+                    saveStatus !== "saving" &&
+                    saveStatus !== "success" && (
+                      <Button
+                        onClick={handleSubmitRecording}
+                        disabled={isSubmittingRecording}
+                      >
+                        {isSubmittingRecording ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          "Submit for AI feedback"
+                        )}
+                      </Button>
+                    )}
+                </div> */}
+                {/* Feedback button */}
+                {/* {saveStatus === "success" && (
+                  <div className="flex justify-center mt-6">
+                    <Button
+                      onClick={seeResults}
+                      disabled={feedbackStatus === "thinking"}
+                    >
+                      {feedbackStatus === "generate" && "Generate Results"}
+                      {feedbackStatus === "thinking" && (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          AI is thinking...
+                        </>
+                      )}
+                      {feedbackStatus === "ready" &&
+                        (Array.isArray(interview.questions)
+                          ? interview.questions.length > 1
+                            ? "See Feedback"
+                            : "See Results"
+                          : Object.keys(interview.questions).length > 1
+                          ? "See Feedback"
+                          : "See Results")}
+                    </Button>
+                  </div>
+                )} */}
+                {/* Status messages */}
+
+                {/* {saveStatus === "saving" && (
+                  <p className="mt-4 text-yellow-600 font-semibold text-center">
+                    Processing your answer...
+                  </p>
+                )}
+                {saveStatus === "success" && (
+                  <p className="mt-4 text-green-600 font-semibold text-center">
+                    Your answer has been processed and saved successfully!
+                  </p>
+                )} */}
+                {/*
+                {saveStatus === "error" && (
+                  <p className="mt-4 text-red-600 font-semibold text-center">
+                    There was an error processing your answer. Please try again.
+                  </p>
+                )} */}
+                {/* Error message display */}
+                {/* {errorMessage && errorMessage !== "" && (
+                  <div className="flex flex-col items-center justify-center p-4 gradient-bg">
+                    <Card className="w-full max-w-2xl card-shadow">
+                      <CardContent>
+                        <p className="text-red-500 text-center font-semibold">
+                          {errorMessage}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )} */}
+            </div>
+          </>
         )
       }
       {
@@ -302,84 +345,7 @@ export default function Interview({ interview }: InterviewProps) {
           <InterviewResults />
         )
       }
-      <Card className="w-full max-w-4xl card-shadow bg-white">
-        <CardContent className="p-6">
-          {/* Action buttons */}
-          <div className="flex justify-center mt-6 space-x-4">
-            {(hasRecordingStopped || hasAudioUrl) &&
-              saveStatus !== "saving" &&
-              saveStatus !== "success" && (
-                <Button
-                  onClick={handleSubmitRecording}
-                  disabled={isSubmittingRecording}
-                >
-                  {isSubmittingRecording ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit for AI feedback"
-                  )}
-                </Button>
-              )}
-          </div>
-          {/* Feedback button */}
-          {saveStatus === "success" && (
-            <div className="flex justify-center mt-6">
-              <Button
-                onClick={seeResults}
-                disabled={feedbackStatus === "thinking"}
-              >
-                {feedbackStatus === "generate" && "Generate Results"}
-                {feedbackStatus === "thinking" && (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    AI is thinking...
-                  </>
-                )}
-                {feedbackStatus === "ready" &&
-                  (Array.isArray(interview.questions)
-                    ? interview.questions.length > 1
-                      ? "See Feedback"
-                      : "See Results"
-                    : Object.keys(interview.questions).length > 1
-                    ? "See Feedback"
-                    : "See Results")}
-              </Button>
-            </div>
-          )}
-          {/* Status messages */}
-          {saveStatus === "saving" && (
-            <p className="mt-4 text-yellow-600 font-semibold text-center">
-              Processing your answer...
-            </p>
-          )}
-          {saveStatus === "success" && (
-            <p className="mt-4 text-green-600 font-semibold text-center">
-              Your answer has been processed and saved successfully!
-            </p>
-          )}{" "}
-          {/*
-          {saveStatus === "error" && (
-            <p className="mt-4 text-red-600 font-semibold text-center">
-              There was an error processing your answer. Please try again.
-            </p>
-          )} */}
-          {/* Error message display */}
-          {errorMessage && errorMessage !== "" && (
-            <div className="flex flex-col items-center justify-center p-4 gradient-bg">
-              <Card className="w-full max-w-2xl card-shadow">
-                <CardContent>
-                  <p className="text-red-500 text-center font-semibold">
-                    {errorMessage}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
     </div>
   );
 }

@@ -9,3 +9,12 @@ export function useInterviews() {
     queryFn: () => fetchApi('/interviews'),
   })
 }
+
+// create fetching an interview by id
+export function useInterview(id: string) {
+  const { fetchApi } = useApi()
+  return useQuery({
+    queryKey: ['interview', id],
+    queryFn: () => fetchApi(`/interview/${id}`),
+  })
+}

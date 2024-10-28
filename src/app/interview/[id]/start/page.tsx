@@ -26,11 +26,11 @@ export default async function InterviewStart({
 }: {
   params: { id: string };
 }) {
-  const interview = await getInterview(params.id);
+  // const interview = await getInterview(params.id);
 
-  if (!interview) {
-    return <div>Error: Interview not found or failed to load.</div>;
-  }
+  // if (!interview) {
+  //   return <div>Error: Interview not found or failed to load.</div>;
+  // }
 
   return (
     <div className="container mx-auto max-w-4xl p-4">
@@ -42,12 +42,12 @@ export default async function InterviewStart({
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              Start Interview: {interview.jobTitle}
+              Start Interview
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <InterviewComponent interview={interview} />
+      <InterviewComponent interviewId={params.id} />
     </div>
   );
 }

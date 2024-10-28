@@ -1,23 +1,24 @@
 "use server"
 
 import { db } from "../db"
-import { interviews, interviewQuestions, InterviewRecord, InterviewQuestionRecord } from "../db/schema"
+import { interviews, interviewQuestions, InterviewRecord, InterviewQuestionRecord } from "../db/schema";
+import { UpdateInterviewQuestionSchema } from "@/lib/schemas";
 import { eq, and, desc } from "drizzle-orm"
 import { z } from "zod"
 import { auth } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
-import { 
-  GetInterviewByIdSchema, 
-  GetInterviewAndQuestionSchema, 
-  DeleteQuestionSchema, 
-  CreateInterviewSchema 
+import {
+  GetInterviewByIdSchema,
+  GetInterviewAndQuestionSchema,
+  DeleteQuestionSchema,
+  CreateInterviewSchema
 } from '@/lib/schemas';
 import { v4 as uuidv4 } from 'uuid';
 import { type InterviewQuestion } from '../db/schema';
 
 export async function getInterviews() {
   const { userId } = auth()
-  
+
   if (!userId) {
     throw new Error("Unauthorized")
   }
@@ -68,9 +69,9 @@ export async function getInterviewAndQuestion(input: z.infer<typeof GetInterview
       question: interviewQuestions,
       interviewId: interviewQuestions.interviewId
     })
-    .from(interviewQuestions)
-    .where(eq(interviewQuestions.id, questionId))
-    .limit(1)
+      .from(interviewQuestions)
+      .where(eq(interviewQuestions.id, questionId))
+      .limit(1)
 
     if (questionResult.length === 0) {
       throw new Error("Question not found")
@@ -105,7 +106,7 @@ export async function getInterviewAndQuestion(input: z.infer<typeof GetInterview
 
 export async function getAllUserQuestions(): Promise<InterviewQuestionRecord[]> {
   const { userId } = auth()
-  
+
   if (!userId) {
     throw new Error("Unauthorized")
   }
@@ -218,5 +219,57 @@ export async function createInterview(input: z.infer<typeof CreateInterviewSchem
       return { success: false, error: 'Invalid input data' };
     }
     return { success: false, error: 'Failed to create interview' };
+  }
+}
+
+export async function updateInterviewQuestion(data: z.infer<typeof UpdateInterviewQuestionSchema>) {
+  const { userId } = auth();
+  if (!userId) throw new Error("Unauthorized");
+  try {
+    const { interviewId, questionId, updates } = UpdateInterviewQuestionSchema.parse(data);
+
+    // Verify interview ownership
+    const interview = await db.query.interviews.findFirst({
+      where: and(
+        eq(interviews.id, interviewId),
+        eq(interviews.userId, userId)
+      ),
+    });
+
+    if (!interview) throw new Error("Interview not found");
+
+    // Update the question with all provided fields
+    const updatedQuestion = await db
+      .update(interviewQuestions)
+      .set({
+        ...updates,
+      })
+      .where(and(
+        eq(interviewQuestions.id, questionId),
+        eq(interviewQuestions.interviewId, interviewId)
+      ))
+      .returning();
+
+    if (!updatedQuestion.length) {
+      throw new Error("Question not found");
+    }
+
+    // If all questions are completed, update interview status
+    if (updates.isCompleted) {
+      const allQuestions = await db.query.interviewQuestions.findMany({
+        where: eq(interviewQuestions.interviewId, interviewId),
+      });
+      
+      const allCompleted = allQuestions.every(q => q.saved);
+      if (allCompleted) {
+        await db.update(interviews)
+          .set({ completed: true })
+          .where(eq(interviews.id, interviewId));
+      }
+    }
+    return updatedQuestion[0];
+  } catch (error) {
+    console.error("Error updating question:", error);
+    throw error;
   }
 }

@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Mic } from "lucide-react";
 import { InterviewTimer } from "./interview-timer";
-import { QuestionRecorder } from "./interview-question-recorder";
 import { QuestionAudio } from "./interview-question-audio";
 import Visualizer from "./visualizer";
+import { InterviewErrors } from "./interview-errors";
 interface InterviewQuestionProps {
   jobTitle: string;
   question: string;
@@ -13,8 +13,19 @@ interface InterviewQuestionProps {
 const InterviewQuestion = ({ question }: InterviewQuestionProps) => {
   const [hasRecordingStopped, setHasRecordingStopped] = useState(false);
   const [hasRecordingStarted, setHasRecordingStarted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const visualizerRef = useRef<{ clearCanvas: () => void } | null>(null);
+
+  // Handle timer completion
+  const handleTimerComplete = useCallback(() => {
+    setErrorMessage(
+      "Interview time has ended. Please submit your final answer."
+    );
+    setHasRecordingStopped(true);
+    setHasTimedOut(true);
+  }, []);
 
   return (
     <Card className="w-full max-w-4xl card-shadow bg-white">
@@ -28,13 +39,14 @@ const InterviewQuestion = ({ question }: InterviewQuestionProps) => {
           </div>
         </div>
         <QuestionAudio question={question} />
-        <Separator />
+        <Separator className="my-4"/>
         {/* Interview Timer */}
         <InterviewTimer
           duration={60}
-          hasRecordingStarted={false}
-          handleTimerComplete={() => {}}
+          hasRecordingStarted={hasRecordingStarted}
+          handleTimerComplete={handleTimerComplete}
         />
+        <Separator className="my-4" />
         <div className="relative">
           <Visualizer
             ref={visualizerRef}
@@ -44,6 +56,8 @@ const InterviewQuestion = ({ question }: InterviewQuestionProps) => {
             setRecordingStarted={setHasRecordingStarted}
           />
         </div>
+        <Separator />
+        <InterviewErrors errorMessage={errorMessage} />
       </CardContent>
     </Card>
   );

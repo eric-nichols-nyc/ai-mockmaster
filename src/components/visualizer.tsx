@@ -24,7 +24,13 @@ export interface VisualizerRef {
 
 const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
   (
-    { setHasRecordingStopped, setRecordingStarted, hasTimedOut, audioUrl, recordingHasStopped },
+    {
+      setHasRecordingStopped,
+      setRecordingStarted,
+      hasTimedOut,
+      audioUrl,
+      recordingHasStopped,
+    },
     ref
   ) => {
     const recorderControls = useVoiceVisualizer();
@@ -38,7 +44,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
       startRecording,
       isAvailableRecordedAudio,
       togglePauseResume,
-      setPreloadedAudioBlob
+      setPreloadedAudioBlob,
     } = recorderControls;
 
     const { setCurrentBlob } = useBlobStore();
@@ -54,12 +60,17 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
     }));
 
     useEffect(() => {
-      console.log("isAvailableRecordedAudio", isAvailableRecordedAudio);
       if (!recordedBlob) return;
       console.log(recordedBlob);
       setHasRecordingStopped(true);
       setCurrentBlob(recordedBlob);
-    }, [isAvailableRecordedAudio,recordedBlob, setHasRecordingStopped, setCurrentBlob, audioUrl]);
+    }, [
+      isAvailableRecordedAudio,
+      recordedBlob,
+      setHasRecordingStopped,
+      setCurrentBlob,
+      audioUrl,
+    ]);
 
     useEffect(() => {
       if (!error) return;
@@ -72,7 +83,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
           .then((response) => response.blob())
           .then((blob) => {
             console.log(blob);
-            setPreloadedAudioBlob(blob)
+            setPreloadedAudioBlob(blob);
           })
           .catch((error) => {
             console.error("Error fetching the MP3 file:", error);
@@ -134,7 +145,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
         />
         {!isRecordingInProgress && !recordingHasStopped && (
           <Button onClick={handleStartRecording} className="mt-4">
-            Start Recording 
+            Start Recording
           </Button>
         )}
         {isRecordingInProgress && (
@@ -142,9 +153,9 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
             Stop Recording
           </Button>
         )}
-        {isAvailableRecordedAudio && (
-          <Button onClick={handlePlayPause} className="mt-4">
-            Play
+        {recordingHasStopped && (
+          <Button onClick={() => alert("Submit Recording")} className="mt-4">
+            Submit Recording
           </Button>
         )}
       </div>

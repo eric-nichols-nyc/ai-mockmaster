@@ -79,3 +79,24 @@ export const interviewFormSchema = z.object({
 export type InterviewFormData = z.infer<typeof interviewFormSchema>;
 
 // create a schema 
+export const UpdateInterviewQuestionSchema = z.object({
+  interviewId: z.string(),
+  questionId: z.string(),
+  updates: z.object({
+    // Answer related fields
+    answer: z.string().optional(),
+    audioUrl: z.string().optional(),
+    
+    // Feedback related fields
+    feedback: z.string().optional(),
+    grade: z.string().optional(),
+    improvements: z.array(z.string()).optional(),
+    keyTakeaways: z.array(z.string()).optional(),
+    
+    // Status fields
+    isCompleted: z.boolean().optional(),
+    saved: z.boolean().optional(),
+  }).refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided for update"
+  }),
+});

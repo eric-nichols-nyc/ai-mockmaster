@@ -1,78 +1,7 @@
-import { useAuth } from '@clerk/nextjs';
+import { useApi } from '@/lib/api';
 import { InterviewRecord, InterviewQuestionRecord } from '@/db/schema';
 
-// Define a custom type that extends RequestInit
-type CustomRequestInit = Omit<RequestInit, 'body'> & {
-  body?: FormData | string | object;
-};
-
-export const useApi = () => {
-  const { getToken } = useAuth();
-
-  const fetchApi = async (endpoint: string, options: CustomRequestInit = {}) => {
-    const token = await getToken();
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-      ...Object.fromEntries(
-        Object.entries(options.headers || {}).map(([key, value]) => [key, String(value)])
-      ),
-    };
-    // Only set Content-Type to application/json if it's not FormData
-    if (!(options.body instanceof FormData)) {
-      headers['Content-Type'] = 'application/json';
-    }
-
-    const response = await fetch(`/api${endpoint}`, {
-      ...options,
-      headers,
-      // Don't stringify the body if it's FormData
-      body: options.body instanceof FormData ? options.body : 
-            typeof options.body === 'string' ? options.body : 
-            options.body ? JSON.stringify(options.body) : undefined,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('api error = ',error);
-      throw new Error(error.message || 'An error occurred');
-    }
-
-    return response.json();
-  };
-
-  const generateSpeech = async (text: string): Promise<string> => {
-    try {
-      const response = await fetchApi('/openai/text-to-speech', {
-        method: 'POST',
-        body: { text },
-      });
-      return response.audioUrl;
-    } catch (error) {
-      console.error('Error generating speech:', error);
-      throw error;
-    }
-  };
-
-  const transcribeAudio = async (formData: FormData) => {
-    const response = await fetchApi("/openai/transcribe", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response?.transcription) {
-      throw new Error("Invalid response from transcription service");
-    }
-
-    return {
-      answer: response.transcription,
-      audioUrl: response.audioUrl,
-    };
-  };
-
-  return { fetchApi, generateSpeech, transcribeAudio };
-};
-
-export const useInterviews = () => {
+export const useInterview = () => {
   const { fetchApi } = useApi();
 
   const getInterviewById = async (id: string): Promise<InterviewRecord | null> => {
@@ -144,7 +73,4 @@ export const useInterviews = () => {
     getSavedInterviewQuestions,
     deleteInterview,
   };
-}
-
-// New function for server-side use
-
+};

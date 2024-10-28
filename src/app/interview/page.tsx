@@ -109,6 +109,7 @@ const QuestionGeneratorPage = () => {
       }
     } catch (error) {
       console.error('Error creating interview:', error);
+      toast.error('Failed to create interview');
       setError('Failed to create interview');
     }
   };
