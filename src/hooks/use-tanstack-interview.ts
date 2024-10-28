@@ -43,6 +43,17 @@ export function useInterview(id: string) {
     },
   });
 
+  const updateAnswer = (questionId: string, answer: string, audioUrl?: string) => {
+    return updateMutation.mutate({
+      interviewId: id,
+      questionId,
+      updates: {
+        answer,
+        audioUrl,
+      },
+    });
+  };
+
   // Mutation for updating answer
 //   const answerMutation = useMutation<InterviewQuestionRecord>({
 //     mutationFn: updateInterviewAnswer,
@@ -83,7 +94,7 @@ export function useInterview(id: string) {
     isLoading,
     error,
     refetch,
-    //updateAnswer: answerMutation.mutate,
+    updateAnswer,
     //isUpdatingAnswer: answerMutation.isPending,
     //updateFeedback: feedbackMutation.mutate,
     //isUpdatingFeedback: feedbackMutation.isPending,

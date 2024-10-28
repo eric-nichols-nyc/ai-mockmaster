@@ -1,10 +1,8 @@
-import { Suspense } from "react";
 import { 
   HydrationBoundary, 
   QueryClient,
   dehydrate 
 } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 import { getInterviewById } from "@/actions/interview-actions";
 
 // Move this outside the component

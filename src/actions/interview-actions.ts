@@ -267,6 +267,7 @@ export async function updateInterviewQuestion(data: z.infer<typeof UpdateIntervi
           .where(eq(interviews.id, interviewId));
       }
     }
+    console.log("updatedQuestion", updatedQuestion);
     return updatedQuestion[0];
   } catch (error) {
     console.error("Error updating question:", error);
