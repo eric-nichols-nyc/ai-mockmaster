@@ -25,10 +25,9 @@ export default function Interview({ interviewId }: InterviewProps) {
   // Render the main interview component
   return (
     <div className="flex flex-col items-center justify-center p-4">
-      <button onClick={() => setQuestionView(!questionView)}>View Results</button>
       {
         questionView && (
-            <InterviewQuestion jobTitle={interview?.jobTitle || ""} question={currentQuestion} />)
+            <InterviewQuestion jobTitle={interview?.jobTitle || ""} question={currentQuestion} setQuestionView={setQuestionView}/>)
       }
       {
         !questionView && (

@@ -31,6 +31,7 @@ interface InterviewQuestionProps {
   jobTitle: string;
   /** The current question record containing question details */
   question: InterviewQuestionRecord;
+  setQuestionView?: (value: boolean) => void;
 }
 
 /**
@@ -68,7 +69,7 @@ type UpdateAnswerData = {
  * @param {InterviewQuestionProps} props - Component props
  * @returns {JSX.Element} Rendered component
  */
-const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
+const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question, setQuestionView }) => {
   const params = useParams();
   const { id } = params;
 
@@ -176,9 +177,10 @@ const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
       formData.append("audio", audioResult.data, "audio.mp3");
 
       const { answer, audioUrl } = await transcribedAudio(formData);
-      const evaluationResult = await evaluateAnswer(answer);
-      setFeedbackStatus("thinking");
+      setIsSubmittingRecording(false);
+      setSaveStatus("success");
 
+      const evaluationResult = await evaluateAnswer(answer);
       await updateQuestion(currentQuestion.id, {
         answer,
         audioUrl,
@@ -188,8 +190,7 @@ const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
         keyTakeaways: evaluationResult.keyTakeaways,
         saved: true,
       } as UpdateAnswerData);
-
-      setSaveStatus("success");
+      setFeedbackStatus("thinking");
       setFeedbackStatus("ready");
     } catch (error) {
       console.error("Error processing interview response:", error);
@@ -247,7 +248,7 @@ const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
             handleSubmitRecording={handleSubmitRecording}
           />
           <div className="flex flex-col justify-center mb-4">
-            {saveStatus === "success" && (
+            {hasRecordingStopped && (
               <SubmitButton
                 onSubmit={handleSubmitRecording}
                 saveStatus={saveStatus}
@@ -255,9 +256,10 @@ const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
                 isSubmitting={isSubmittingRecording}
                 disabled={hasTimedOut}
                 showFeedback={true}
+                onFeedbackSubmit={setQuestionView}
               />
             )}
-            {saveStatus !== "success" && (
+            {!hasRecordingStopped && (
               <RecordButton
                 visualizerRef={visualizerRef}
                 isRecording={isRecording}
