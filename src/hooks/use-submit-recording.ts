@@ -13,16 +13,16 @@ type SubmitRecordingProps = {
 
 const createAudioFile = (blob: Blob) => {
     return new File([blob], "audio.mp3", {
-        type: blob.type,
+      type: blob.type,
     });
-};
+  };
 
 
 type SaveAnswerProps = {
     interviewId: string;
     questionId: string;
-    answer: string;
-    audioUrl: string;
+    answer:string;
+    audioUrl:string;
 }
 
 
@@ -36,47 +36,47 @@ export const useSubmitRecording = () => {
         return { answer, audioUrl };
     }
 
-    const saveAnswer = async ({ interviewId, questionId, answer, audioUrl }: SaveAnswerProps) => {
+    const saveAnswer = async ({interviewId, questionId, answer, audioUrl}: SaveAnswerProps) => {
         const updatedQuestion = await fetchApi(
-            `/interviews/${interviewId}/questions/${questionId}/answer`,
-            {
-                method: "PUT",
-                body: JSON.stringify({ answer, audioUrl }),
-            }
+          `/interviews/${interviewId}/questions/${questionId}/answer`,
+          {
+            method: "PUT",
+            body: JSON.stringify({ answer, audioUrl }),
+          }
         );
-
+    
         if (!updatedQuestion?.audioUrl) {
-            throw new Error("Invalid response from server");
+          throw new Error("Invalid response from server");
         }
-
+    
         return updatedQuestion;
-    };
+      };
+    
 
-
-    const handleSubmitRecording = useCallback(async ({ interviewId, questionId, audioBlob }: SubmitRecordingProps) => {
+    const handleSubmitRecording = useCallback(async ({interviewId, questionId, audioBlob}: SubmitRecordingProps) => {
         setSaveStatus("saving");
         // validate props
-        if (!interviewId || !questionId || !audioBlob) {
+        if(!interviewId || !questionId || !audioBlob){
             setSaveStatus("error");
             setError("Invalid props");
             return;
         }
         //create audio file
-        const audioFile = createAudioFile(audioBlob);
+          const audioFile = createAudioFile(audioBlob);
 
 
-        const formData = new FormData();
-        formData.append("audio", audioFile, "audio.mp3");
+          const formData = new FormData();
+          formData.append("audio", audioFile, "audio.mp3");
 
-        // Get transcription
-        const { answer, audioUrl } = await transcribedAudio(formData);
+          // Get transcription
+          const { answer, audioUrl } = await transcribedAudio(formData);
 
-        // Save answer
-        await saveAnswer({ interviewId, questionId, answer, audioUrl });
+         // Save answer
+         await saveAnswer({interviewId, questionId, answer, audioUrl});
 
-    }, [])
+    },[])
 
-
+  
 
     return {
         saveStatus,

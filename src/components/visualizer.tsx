@@ -16,6 +16,7 @@ interface VisualizerProps {
   setRecordingStarted: (value: boolean) => void;
   hasTimedOut: boolean;
   audioUrl?: string | null;
+  handleSubmitRecording: () => void;
 }
 
 export interface VisualizerRef {
@@ -30,6 +31,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
       hasTimedOut,
       audioUrl,
       recordingHasStopped,
+      handleSubmitRecording
     },
     ref
   ) => {
@@ -154,7 +156,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
           </Button>
         )}
         {recordingHasStopped && (
-          <Button onClick={() => alert("Submit Recording")} className="mt-4">
+          <Button onClick={() => handleSubmitRecording()} className="mt-4">
             Submit Recording
           </Button>
         )}

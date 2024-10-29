@@ -15,3 +15,10 @@ export type Job = {
   description: string;
   skills: string[];
 }
+
+export type SaveAnswerProps = {
+  interviewId: string;
+  questionId: string;
+  answer:string;
+  audioUrl:string;
+}

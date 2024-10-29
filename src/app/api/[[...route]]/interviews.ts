@@ -236,53 +236,89 @@ app.put('/:id', zValidator('json', UpdateInterviewSchema.shape.body), async (c) 
 })
 
 // PUT /:id/questions/:questionId - Update a specific question with any provided fields
-app.put('/:id/questions/:questionId', async (c) => {
+app.put('/:id/questions/:questionId', zValidator('json', UpdateQuestionSchema), async (c) => {
   const auth = getAuth(c);
   if (!auth?.userId) {
     return c.json({ error: "unauthorized" }, 401);
   }
 
-  const interviewId = c.req.param('id');
-  const questionId = c.req.param('questionId');
+  const interviewId = c.req.param('id')
+  const questionId = c.req.param('questionId')
 
   try {
-    const body = await c.req.json();
-    const updateData = UpdateQuestionSchema.parse(body);
-    console.log("updateData", updateData)
+    const { feedback, improvements, keyTakeaways, grade, answer, audioUrl } = c.req.valid('json')
 
-    // First, verify that the interview belongs to the authenticated user
-    const interviewCheck = await db.select({ id: interviews.id })
-      .from(interviews)
-      .where(and(
-        eq(interviews.id, interviewId),
-        eq(interviews.userId, auth.userId)
-      ));
+    // Use a transaction to ensure data consistency
+    const result = await db.transaction(async (tx) => {
+      // First, verify that the interview belongs to the authenticated user
+      const interviewCheck = await tx.select()
+        .from(interviews)
+        .where(and(
+          eq(interviews.id, interviewId),
+          eq(interviews.userId, auth.userId)
+        ))
 
-    if (interviewCheck.length === 0) {
-      return c.json({ error: 'Interview not found or unauthorized' }, 404);
-    }
+      if (interviewCheck.length === 0) {
+        throw new Error('Interview not found or unauthorized');
+      }
 
-    const updatedQuestion = await db.update(interviewQuestions)
-      .set(updateData)
-      .where(and(
-        eq(interviewQuestions.id, questionId),
-        eq(interviewQuestions.interviewId, interviewId)
-      ))
-      .returning();
+      // Update the question in interview_questions table
+      const updateData: Partial<typeof interviewQuestions.$inferInsert> = {}
+      if (feedback !== undefined) updateData.feedback = feedback
+      if (improvements !== undefined) updateData.improvements = improvements
+      if (keyTakeaways !== undefined) updateData.keyTakeaways = keyTakeaways
+      if (grade !== undefined) updateData.grade = grade
+      if (answer !== undefined) updateData.answer = answer
+      if (audioUrl !== undefined) updateData.audioUrl = audioUrl
 
-    if (updatedQuestion.length === 0) {
-      return c.json({ error: 'Question not found' }, 404);
-    }
+      const updatedQuestion = await tx.update(interviewQuestions)
+        .set(updateData)
+        .where(and(
+          eq(interviewQuestions.id, questionId),
+          eq(interviewQuestions.interviewId, interviewId)
+        ))
+        .returning()
 
-    return c.json(updatedQuestion[0]);
+      if (updatedQuestion.length === 0) {
+        throw new Error('Question not found');
+      }
+
+      // Get all questions for this interview to update the JSON column
+      const allQuestions = await tx.select()
+        .from(interviewQuestions)
+        .where(eq(interviewQuestions.interviewId, interviewId))
+
+      // Update the questions JSON column in the interviews table
+      await tx.update(interviews)
+        .set({
+          questions: allQuestions.map(q => ({
+             ...q, 
+            id: q.id,
+            question: q.question,
+            answer: q.answer,
+            feedback: q.feedback,
+            suggested: q.suggested,
+            improvements: q.improvements,
+            keyTakeaways: q.keyTakeaways,
+            grade: q.grade,
+            audioUrl: q.audioUrl,
+            saved: q.saved ?? false  // Provide default value of false if null
+          }))
+        })
+        .where(eq(interviews.id, interviewId))
+
+      return updatedQuestion[0];
+    });
+
+    return c.json(result)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return c.json({ error: 'Invalid input', details: error.errors }, 400);
+      return c.json({ error: 'Invalid input', details: error.errors }, 400)
     }
-    console.error(`Error updating question with id ${questionId} in interview ${interviewId}:`, error);
-    return c.json({ error: 'Failed to update question' }, 500);
+    console.error(`Error updating question with id ${questionId} in interview ${interviewId}:`, error)
+    return c.json({ error: error instanceof Error ? error.message : 'Failed to update question' }, 500)
   }
-});
+})
 
 // POST /:id/complete - Mark an interview as complete
 app.post('/:id/complete', async (c) => {
