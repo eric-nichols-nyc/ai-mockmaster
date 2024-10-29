@@ -20,6 +20,7 @@ import { evaluateInterviewAnswer } from "@/actions/gemini-actions";
 import { useParams } from "next/navigation";
 import { createAudioFile } from "@/utils/create-audio";
 import RecordButton from "./record-button";
+import SubmitButton from "./submit-button";
 
 /**
  * Props for the InterviewQuestion component
@@ -240,12 +241,20 @@ const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
             setRecordingStarted={setHasRecordingStarted}
             handleSubmitRecording={handleSubmitRecording}
           />
-           <div className="flex justify-center mb-4">
+           <div className="flex flex-col justify-center mb-4">
             <RecordButton
               visualizerRef={visualizerRef}
               isRecording={isRecording}
               setIsRecording={setIsRecording}
               disabled={hasTimedOut}
+            />
+            <SubmitButton
+              onSubmit={handleSubmitRecording}
+              saveStatus={saveStatus}
+              feedbackStatus={feedbackStatus}
+              isSubmitting={isSubmittingRecording}
+              disabled={hasTimedOut}
+              showFeedback={true}
             />
           </div>
         </div>

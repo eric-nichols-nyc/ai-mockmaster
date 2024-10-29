@@ -4,7 +4,7 @@ import React, {
   useImperativeHandle,
   forwardRef,
   useCallback,
-  useState,
+  //useState,
 } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
 import useBlobStore from "@/store/interviewStore";
@@ -30,8 +30,8 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
       setRecordingStarted,
       hasTimedOut,
       audioUrl,
-      recordingHasStopped,
-      handleSubmitRecording
+      // recordingHasStopped,
+     // handleSubmitRecording
     },
     ref
   ) => {
@@ -42,15 +42,15 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
       isRecordingInProgress,
       stopRecording,
       clearCanvas,
-      audioRef,
+      //audioRef,
       startRecording,
       isAvailableRecordedAudio,
-      togglePauseResume,
+      ///togglePauseResume,
       setPreloadedAudioBlob,
     } = recorderControls;
 
     const { setCurrentBlob } = useBlobStore();
-    const [isPlaying, setIsPlaying] = useState(false);
+    //const [isPlaying, setIsPlaying] = useState(false);
 
     useImperativeHandle(ref, () => ({
       clearCanvas: () => {
@@ -97,7 +97,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
             console.error("Error fetching the MP3 file:", error);
           });
       }
-    }, [audioUrl]);
+    }, [audioUrl, setPreloadedAudioBlob]);
 
     useEffect(() => {
       if (isRecordingInProgress) {
@@ -120,25 +120,25 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
       startRecording();
       setRecordingStarted(true);
       setHasRecordingStopped(false);
-    }, [startRecording, setRecordingStarted]);
+    }, [startRecording, setRecordingStarted, setHasRecordingStopped]);
 
     const handleStopRecording = useCallback(() => {
       stopRecording();
       setRecordingStarted(false);
       setHasRecordingStopped(true);
       console.log("Stop Recording");
-    }, [stopRecording]);
+    }, [stopRecording, setRecordingStarted, setHasRecordingStopped]);
 
-    const handlePlayPause = useCallback(() => {
-      if (audioRef.current) {
-        if (isPlaying) {
-          togglePauseResume();
-        } else {
-          togglePauseResume();
-        }
-        setIsPlaying(!isPlaying);
-      }
-    }, [audioRef, isPlaying, togglePauseResume]);
+    // const handlePlayPause = useCallback(() => {
+    //   if (audioRef.current) {
+    //     if (isPlaying) {
+    //       togglePauseResume();
+    //     } else {
+    //       togglePauseResume();
+    //     }
+    //     setIsPlaying(!isPlaying);
+    //   }
+    // }, [audioRef, isPlaying, togglePauseResume]);
 
     return (
       <div className="flex flex-col items-center">

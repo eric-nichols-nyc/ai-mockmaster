@@ -33,5 +33,21 @@ vi.mock('@clerk/nextjs', () => ({
   }),
 }))
 
+// Mock window.AudioContext
+window.AudioContext = vi.fn().mockImplementation(() => ({
+  createMediaStreamSource: vi.fn(),
+  createAnalyser: vi.fn(),
+  createScriptProcessor: vi.fn(),
+}));
+
+// Mock window.MediaRecorder
+const MediaRecorderMock = vi.fn().mockImplementation(() => ({
+  start: vi.fn(),
+  stop: vi.fn(),
+  addEventListener: vi.fn(),
+})) as unknown as typeof MediaRecorder;
+MediaRecorderMock.isTypeSupported = vi.fn().mockReturnValue(true);
+window.MediaRecorder = MediaRecorderMock;
+
 // Suppress console errors during tests
 console.error = vi.fn()
