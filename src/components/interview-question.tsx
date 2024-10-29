@@ -92,7 +92,11 @@ const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
   const { currentBlob } = useBlobStore();
   const { transcribeAudio } = useApi();
   const { interview, updateQuestion } = useInterview(id as string);
-  const visualizerRef = useRef<{ clearCanvas: () => void, handleStartRecording: () => void, handleStopRecording: () => void } | null>(null);
+  const visualizerRef = useRef<{
+    clearCanvas: () => void;
+    handleStartRecording: () => void;
+    handleStopRecording: () => void;
+  } | null>(null);
 
   /**
    * Handles the completion of the interview timer
@@ -173,6 +177,7 @@ const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
 
       const { answer, audioUrl } = await transcribedAudio(formData);
       const evaluationResult = await evaluateAnswer(answer);
+      setFeedbackStatus("thinking");
 
       await updateQuestion(currentQuestion.id, {
         answer,
@@ -241,21 +246,25 @@ const InterviewQuestion: React.FC<InterviewQuestionProps> = ({ question }) => {
             setRecordingStarted={setHasRecordingStarted}
             handleSubmitRecording={handleSubmitRecording}
           />
-           <div className="flex flex-col justify-center mb-4">
-            <RecordButton
-              visualizerRef={visualizerRef}
-              isRecording={isRecording}
-              setIsRecording={setIsRecording}
-              disabled={hasTimedOut}
-            />
-            <SubmitButton
-              onSubmit={handleSubmitRecording}
-              saveStatus={saveStatus}
-              feedbackStatus={feedbackStatus}
-              isSubmitting={isSubmittingRecording}
-              disabled={hasTimedOut}
-              showFeedback={true}
-            />
+          <div className="flex flex-col justify-center mb-4">
+            {saveStatus === "success" && (
+              <SubmitButton
+                onSubmit={handleSubmitRecording}
+                saveStatus={saveStatus}
+                feedbackStatus={feedbackStatus}
+                isSubmitting={isSubmittingRecording}
+                disabled={hasTimedOut}
+                showFeedback={true}
+              />
+            )}
+            {saveStatus !== "success" && (
+              <RecordButton
+                visualizerRef={visualizerRef}
+                isRecording={isRecording}
+                setIsRecording={setIsRecording}
+                disabled={hasTimedOut}
+              />
+            )}
           </div>
         </div>
         <Separator />
