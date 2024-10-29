@@ -1,11 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  getInterviewById, 
-  //updateInterviewAnswer,
-  //updateInterviewFeedback,
-  updateInterviewQuestion
-} from "@/actions/interview-actions";
+import { getInterviewById, updateInterviewQuestion } from "@/actions/interview-actions";
 import { InterviewRecord } from "@/db/schema";
+
+// Define types for different kinds of updates
+type QuestionUpdatePayload = Partial<{
+  answer: string;
+  audioUrl: string;
+  feedback: string;
+  grade: string;
+  improvements: string[];
+  keyTakeaways: string[];
+  saved: boolean;
+  skills: string[];
+}>;
+
+interface UpdateQuestionParams {
+  interviewId: string;
+  questionId: string;
+  updates: QuestionUpdatePayload;
+}
 
 export function useInterview(id: string) {
   const queryClient = useQueryClient();
@@ -27,8 +40,16 @@ export function useInterview(id: string) {
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 
+  // Single mutation that handles all types of question updates
   const updateMutation = useMutation({
-    mutationFn: updateInterviewQuestion,
+    mutationFn: async ({ interviewId, questionId, updates }: UpdateQuestionParams) => {
+      const response = await updateInterviewQuestion({
+        interviewId,
+        questionId,
+        updates,
+      });
+      return response;
+    },
     onSuccess: (updatedQuestion) => {
       queryClient.setQueryData(['interview', id], (oldData: InterviewRecord | undefined) => {
         if (!oldData) return oldData;
@@ -37,67 +58,27 @@ export function useInterview(id: string) {
           ...oldData,
           questions: oldData.questions.map(q => 
             q.id === updatedQuestion.id ? updatedQuestion : q
-          ),
+          )
         };
       });
     },
   });
 
-  const updateAnswer = (questionId: string, answer: string, audioUrl?: string) => {
+  // Generic update function that can handle any valid question updates
+  const updateQuestion = (questionId: string, updates: QuestionUpdatePayload) => {
     return updateMutation.mutate({
       interviewId: id,
       questionId,
-      updates: {
-        answer,
-        audioUrl,
-      },
+      updates,
     });
   };
-
-  // Mutation for updating answer
-//   const answerMutation = useMutation<InterviewQuestionRecord>({
-//     mutationFn: updateInterviewAnswer,
-//     onSuccess: (updatedQuestion) => {
-//       // Optimistically update the cache
-//       queryClient.setQueryData(['interview', id], (oldData: InterviewRecord | undefined) => {
-//         if (!oldData) return oldData;
-        
-//         return {
-//           ...oldData,
-//           questions: oldData.questions.map(q => 
-//             q.id === updatedQuestion.id ? updatedQuestion : q
-//           ),
-//         };
-//       });
-//     },
-//   });
-
-  // Mutation for updating feedback
-//   const feedbackMutation = useMutation<InterviewQuestionRecord>({
-//     mutationFn: updateInterviewFeedback,
-//     onSuccess: (updatedQuestion) => {
-//       queryClient.setQueryData(['interview', id], (oldData: InterviewRecord | undefined) => {
-//         if (!oldData) return oldData;
-        
-//         return {
-//           ...oldData,
-//           questions: oldData.questions.map(q => 
-//             q.id === updatedQuestion.id ? updatedQuestion : q
-//           ),
-//         };
-//       });
-//     },
-//   });
 
   return {
     interview,
     isLoading,
     error,
     refetch,
-    updateAnswer,
-    //isUpdatingAnswer: answerMutation.isPending,
-    //updateFeedback: feedbackMutation.mutate,
-    //isUpdatingFeedback: feedbackMutation.isPending,
+    updateQuestion,
     isUpdating: updateMutation.isPending,
     updateError: updateMutation.error,
   };
