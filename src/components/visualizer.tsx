@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
 import useBlobStore from "@/store/interviewStore";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 
 interface VisualizerProps {
   recordingHasStopped: boolean;
@@ -58,6 +58,12 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
         setHasRecordingStopped(true);
         setRecordingStarted(false);
         setCurrentBlob(null);
+      },
+      handleStartRecording: () => {
+        handleStartRecording();
+      },
+      handleStopRecording: () => {
+        handleStopRecording();
       },
     }));
 
@@ -145,7 +151,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
           mainBarColor="black"
           onlyRecording={true}
         />
-        {!isRecordingInProgress && !recordingHasStopped && (
+        {/* {!isRecordingInProgress && !recordingHasStopped && (
           <Button onClick={handleStartRecording} className="mt-4">
             Start Recording
           </Button>
@@ -159,7 +165,7 @@ const Visualizer = forwardRef<VisualizerRef, VisualizerProps>(
           <Button onClick={() => handleSubmitRecording()} className="mt-4">
             Submit Recording
           </Button>
-        )}
+        )} */}
       </div>
     );
   }
