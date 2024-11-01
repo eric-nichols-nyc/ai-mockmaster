@@ -65,8 +65,15 @@ export const UpdateQuestionSavedSchema = z.object({
   })
 });
 
-// You    export const interviewFormSchema = z.object({
-export const interviewFormSchema = z.object({
+// You    export const InterviewFormSchema = z.object({
+  export const InterviewJobSchema = z.object({
+    jobTitle: z.string().min(1, 'Job title is required'),
+    jobDescription: z.string().optional(),
+    skills: z.array(z.string()).min(1, 'At least one skill is required'),// Ensure there's at least one question
+  });
+
+// You    export const InterviewFormSchema = z.object({
+export const InterviewFormSchema = z.object({
   jobTitle: z.string().min(1, 'Job title is required'),
   jobDescription: z.string().optional(),
   skills: z.array(z.string()).min(1, 'At least one skill is required'),
@@ -76,7 +83,7 @@ export const interviewFormSchema = z.object({
   })).nonempty(), // Ensure there's at least one question
 });
 
-export type InterviewFormData = z.infer<typeof interviewFormSchema>;
+export type InterviewFormData = z.infer<typeof InterviewFormSchema>;
 
 // create a schema 
 export const UpdateInterviewQuestionSchema = z.object({

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import InterviewForm from '@/components/interview-form';
+import InterviewForm from '@/components/interview-form/interview-form';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -13,7 +13,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { Job } from '@/types'; // Importing Job type
 import { createInterview } from '@/actions/interview-actions';
-import { interviewFormSchema } from '@/lib/schemas';
+import { InterviewFormSchema } from '@/lib/schemas';
 import { toast } from "sonner";
 
 export type FeedbackGrade = {
@@ -48,8 +48,7 @@ const QuestionGeneratorPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [interviewId, setInterviewId] = useState<string | null>(null);
-
-
+  const [questionId, setQuestionId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -82,7 +81,7 @@ const QuestionGeneratorPage = () => {
     console.log('handleSubmit', data);
     try {
       // Validate the form data
-      const validationResult = interviewFormSchema.safeParse(data);
+      const validationResult = InterviewFormSchema.safeParse(data);
       
       if (!validationResult.success) {
         // Format validation errors into a readable message
@@ -104,6 +103,7 @@ const QuestionGeneratorPage = () => {
 
       if (result.success) {
         setInterviewId(result.data?.id || null); // Assuming the API returns interviewId
+        setQuestionId(result.data?.questions[0].id || null); // Assuming the API returns questionId
       } else {
         setError(result.error || 'Failed to create interview');
       }
@@ -143,6 +143,7 @@ const QuestionGeneratorPage = () => {
             onSubmit={(data) => handleSubmit(data as FormData)} 
             jobs={jobs}
             interviewId={interviewId}
+            questionId={questionId}
           />
         )}
         </div>

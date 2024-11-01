@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import InterviewForm from '@/components/interview-form';
+import InterviewForm from '@/components/interview-form/interview-form';
 
 // Add this mock at the top with your other mocks
 vi.mock('next/navigation', () => ({

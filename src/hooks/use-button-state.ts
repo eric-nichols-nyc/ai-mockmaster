@@ -66,6 +66,7 @@ const useButtonState = ({ initialState = 'idle', onSuccess, onError }: UseButton
     state,
     handleButtonSubmit,
     getButtonText,
+    setState,
   };
 };
 
