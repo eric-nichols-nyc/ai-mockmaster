@@ -6,9 +6,16 @@ import React, {
   useCallback,
   //useState,
 } from "react";
-import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
+import { useVoiceVisualizer } from "react-voice-visualizer";
 import useBlobStore from "@/store/interviewStore";
 // import { Button } from "@/components/ui/button";
+import dynamic from 'next/dynamic';
+
+// Move VoiceVisualizer import to dynamic import
+const VoiceVisualizer = dynamic(
+  () => import('react-voice-visualizer').then((mod) => mod.VoiceVisualizer),
+  { ssr: false }
+);
 
 interface VisualizerProps {
   recordingHasStopped: boolean;
