@@ -11,7 +11,7 @@ const renderTime = ({ remainingTime }: { remainingTime: number }) => {
     if (remainingTime === 0) {
       return <div className="timer">Interview time is up!</div>;
     }
-    return <div className="timer text-4xl font-bold">{remainingTime}</div>; // Add this line
+    return <div className="timer text-4xl font-bold">{remainingTime}s</div>; // Add this line
   }; // Add closing bracket
   
 export const InterviewTimer = ({hasRecordingStarted, handleTimerComplete, duration}: InterviewTimerProps) => {

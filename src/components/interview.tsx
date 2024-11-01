@@ -11,7 +11,7 @@ interface InterviewProps {
 
 // Main Interview component
 export default function Interview({ interviewId }: InterviewProps) {
-  const [questionView, setQuestionView] = useState<boolean>(false);
+  const [questionView, setQuestionView] = useState<boolean>(true);
 
   const { interview } = useInterview(interviewId);
   const currentQuestion = interview?.questions[0];

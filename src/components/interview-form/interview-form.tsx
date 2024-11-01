@@ -9,14 +9,9 @@ import {
 } from "@/components/ui/card";
 import { Job } from "@/types"; // Importing Job type from types.ts
 import MultipleSelector from "@/components/ui/multi-select"; // Importing MultipleSelector
-//import { InterviewFormSchema, InterviewFormData } from "@/lib/schemas"; // Adjust the import path
-//import { z } from "zod";
 import { StatefulButton } from "@/components/stateful-button";
 import useButtonState from "@/hooks/use-button-state";
-//import { generateTechInterviewQuestion } from "@/actions/gemini-actions";
 import { Button } from "@/components/ui/button"; // Add this import if not already present
-//import { useRouter } from "next/navigation";
-//import { toast } from "sonner";
 import { ArrowRight } from "lucide-react"; // Add this import at the top
 import { useInterviewForm } from "@/hooks/use-interviewform";
 
@@ -27,60 +22,26 @@ interface InterviewFormProps {
   questionId: string | null;
 }
 
-// type Question = {
-//   question: string;
-//   suggested: string;
-// };
-
 const InterviewForm: React.FC<InterviewFormProps> = ({
   onSubmit,
   jobs,
   interviewId,
   questionId,
 }) => {
-  // const router = useRouter();
-  //const [jobTitle, setJobTitle] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
-  //const [jobDescription, setJobDescription] = useState("");
-  //const [skills, setSkills] = useState<Option[]>([]); // State for available skills
-  //const [selectedSkills, setSelectedSkills] = useState<string[]>([]); // State for selected skills
-  //const [errors, setErrors] = useState<{ [key: string]: string }>({}); // State for validation errors
-
-  const { formState, handleJobChange, handleStartInterview, handleSkillsChange,resetForm, validateFormSubmission } = useInterviewForm({onSubmit, interviewId, questionId, jobs});
+  const { formState, handleJobChange, handleStartInterview, handleSkillsChange, validateFormSubmission } = useInterviewForm({onSubmit, interviewId, questionId, jobs});
   const {jobDescription, errors, jobTitle, availableSkills} = formState;
-
-  // const handleJobChange = (selectedTitle: string) => {
-  //   const selectedJob = jobs.find((job) => job.title === selectedTitle);
-  //   if (selectedJob) {
-  //     setJobTitle(selectedJob.title);
-  //     setJobDescription(selectedJob.description);
-  //     // Create an array of Option objects for skills
-  //     const skillOptions: Option[] = selectedJob.skills.map((skill) => ({
-  //       value: skill,
-  //       label: skill,
-  //     }));
-  //     setSkills(skillOptions);
-  //   }
-  // };
 
   const { state, setState, handleButtonSubmit, getButtonText } = useButtonState({
     initialState: "idle",
     onSuccess: () => {
       console.log("Form submitted successfully");
-      resetForm();
       setIsSubmitted(true);
     },
     onError: () => {
       console.error("Form submission failed");
     },
   });
-
-  // const handleSelectedSkillsChange = useCallback(
-  //   (newSelectedSkills: string[]) => {
-  //     setSelectedSkills(newSelectedSkills);
-  //   },
-  //   []
-  // );
 
   const onJobChange = (jobTitle: string) => {
     console.log("jobTitle", jobTitle);
@@ -93,16 +54,6 @@ const InterviewForm: React.FC<InterviewFormProps> = ({
     const test = await handleButtonSubmit(validateFormSubmission);
     console.log("test", test);
   };
-
-  // const handleStartInterview = () => {
-  //   if (interviewId && questionId) {
-  //     const url = `/interview/${interviewId}/start?questionId=${questionId}`;
-  //     console.log("url", url);
-  //     router.push(url);
-  //   } else {
-  //     toast.error("Interview ID or Question ID not found");
-  //   }
-  // };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
