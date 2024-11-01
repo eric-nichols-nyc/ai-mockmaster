@@ -8,13 +8,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import InterviewComponent from "@/components/interview";
-import { getInterviewAndQuestion } from "@/actions/interview-actions";
+//import { getInterviewAndQuestion } from "@/actions/interview-actions";
 
 // get the interview and question from the database and set in memory with tanstack query actions
-async function getInterviewAndQuestionFromDatabase(id: string, qid: string) {
-  const data = await getInterviewAndQuestion({ id, qid });
-  return data;
-}
+// async function getInterviewAndQuestionFromDatabase(id: string, qid: string) {
+//   const data = await getInterviewAndQuestion({ id, qid });
+//   return data;
+// }
 
 export default async function InterviewStart({
   params,
