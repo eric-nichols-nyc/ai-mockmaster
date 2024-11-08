@@ -28,7 +28,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({ question, onDelete }
   };
 
   return (
-    <Link href={`/dashboard/interview/${question.interviewId}/summary/${question.id}`} passHref>
+    <Link href={`/interview/${question.interviewId}/summary/${question.id}`} passHref>
       <Card className="w-full h-full flex flex-col hover:shadow-lg transition-shadow duration-300 cursor-pointer relative">
         <CardHeader className="flex-grow">
           <div 
