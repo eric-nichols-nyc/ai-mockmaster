@@ -1,7 +1,10 @@
 import {withSentryConfig} from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
-
+const nextConfig = {
+    images: {
+      domains: ['img.clerk.com'],
+    },
+  }
 export default withSentryConfig(nextConfig, {
 // For all available options, see:
 // https://github.com/getsentry/sentry-webpack-plugin#options

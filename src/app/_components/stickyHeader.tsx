@@ -31,6 +31,14 @@ const StickyHeader: React.FC = () => {
               >
                 Dashboard
               </Link>
+              <Link 
+                href="/account" 
+                className="text-white/90 hover:text-white font-medium px-4 py-2 rounded-full 
+                          hover:bg-white/10 transition-all duration-300 ease-in-out
+                          active:scale-95"
+              >
+                Account
+              </Link>
               <div className="pl-2 border-l border-white/20">
                 <AuthDropdown />
               </div>
