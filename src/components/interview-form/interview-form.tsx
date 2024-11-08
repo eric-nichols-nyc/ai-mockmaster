@@ -51,8 +51,13 @@ const InterviewForm: React.FC<InterviewFormProps> = ({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const test = await handleButtonSubmit(validateFormSubmission);
-    console.log("test", test);
+    // make try catch
+    try {
+      const isValid = await handleButtonSubmit(validateFormSubmission);
+      console.log("isValid = ", isValid);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
   };
 
   return (

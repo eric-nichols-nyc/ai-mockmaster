@@ -211,14 +211,14 @@ export async function createInterview(input: z.infer<typeof CreateInterviewSchem
       return interview;
     });
 
-    revalidatePath('/dashboard');
+    // revalidatePath('/dashboard');
     return { success: true, data: newInterview };
   } catch (error) {
     console.error('Error creating interview:', error);
     if (error instanceof z.ZodError) {
       return { success: false, error: 'Invalid input data' };
     }
-    return { success: false, error: 'Failed to create interview' };
+    return { success: false, error: 'Failed to create new interview' };
   }
 }
 

@@ -1,9 +1,16 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-
-const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/api(.*)', '/interview(.*)'])
+// i want all api routes to be protected except for the webhooks
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)', 
+  '/api/(.*)',
+  '/interview(.*)'
+]);
 
 export default clerkMiddleware(
   (auth, req) => {
+    // Skip protection for webhook routes
+    if (req.url.includes('/api/webhooks')) return;
+    
     if (isProtectedRoute(req)) auth().protect();
   },
   {

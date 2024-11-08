@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
-import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
 import StickyHeader from "./_components/stickyHeader";
 import { Toaster } from "sonner";
@@ -41,7 +40,6 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen gradient_body`}
         >
-          <ThemeProvider attribute="class" defaultTheme="light">
             <TanstackProvider>
               <StickyHeader />
               <main className="flex-grow">
@@ -49,7 +47,6 @@ export default function RootLayout({
               </main>
               <Toaster />
             </TanstackProvider>
-          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

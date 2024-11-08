@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { handle } from 'hono/vercel'
-import webhook from './webhook'
+import webhook from './webhooks'
 import interviews from './interviews'
 import upload from './upload'
 import openai from './openai'
@@ -24,7 +24,7 @@ app.get('/', (c) => {
   })
 })
 
-app.route('/webhook', webhook)
+app.route('/webhooks', webhook)
 app.route('/interviews', interviews)
 app.route('/upload', upload)
 app.route('/openai', openai)

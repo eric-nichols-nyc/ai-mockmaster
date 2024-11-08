@@ -33,7 +33,7 @@ app.post('/', async (c) => {
   }
 
   const payload = await validateRequest(c.req.raw, process.env.CLERK_WEBHOOK_SECRET!)
-
+  console.log('payload = ', payload)
   if (!payload) {
     return c.json(
       { error: 'webhook verification failed or payload was malformed' },

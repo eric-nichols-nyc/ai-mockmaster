@@ -17,7 +17,7 @@ export default function SignInPage() {
     <div className="flex min-h-screen">
       <div className="hidden w-1/2 sm:block">
         <Image
-          src="/images/landing/ai4.webp"
+          src="/images/landing/ai1.webp"
           alt="Abstract background"
           width={1080}
           height={1080}

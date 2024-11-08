@@ -153,7 +153,7 @@ export const useInterviewForm = ({ onSubmit, interviewId, questionId, jobs }: Us
     // Handle navigation to the interview page
     const handleStartInterview = useCallback(() => {
         if (interviewId && questionId) {
-            const url = `/interview/${interviewId}/start?questionId=${questionId}`;
+            const url = `/interview/${interviewId}/start/${questionId}`;
             console.log("url", url);
             router.push(url);
         } else {
