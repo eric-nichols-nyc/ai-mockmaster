@@ -3,9 +3,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { Job } from "@/types"; // Importing Job type from types.ts
 import MultipleSelector from "@/components/ui/multi-select"; // Importing MultipleSelector
@@ -63,19 +60,8 @@ const InterviewForm: React.FC<InterviewFormProps> = ({
   return (
     <div className="max-w-2xl mx-auto p-4">
       <Card data-testid="card">
-        <CardHeader data-testid="card-header">
-          <CardTitle data-testid="card-title" className="text-lg font-semibold">
-            Interview Form
-          </CardTitle>
-          <CardDescription data-testid="card-description">
-            Please fill out the details below.
-          </CardDescription>
-        </CardHeader>
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
           <div>
-            <Label className="block text-lg font-bold text-blue-600 text-center">
-              Select A Job Title
-            </Label>
             <RadioGroup
               value={jobTitle}
               onValueChange={onJobChange}

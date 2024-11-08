@@ -16,7 +16,17 @@ const StickyHeader: React.FC = () => {
           AI MockMaster
         </Link>
         <div className="flex items-center space-x-4">
-          {isSignedIn && <AuthDropdown />}
+          {isSignedIn && (
+            <>
+              <Link 
+                href="/dashboard" 
+                className="text-white font-semibold hover:text-gray-200 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <AuthDropdown />
+            </>
+          )}
         </div>
       </div>
     </header>

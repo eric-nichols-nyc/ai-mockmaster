@@ -86,21 +86,6 @@
         ]
       },
       {
-        "title": "Data Scientist",
-        "description": "Exciting opportunity for a Data Scientist to join our analytics team! We're looking for someone who can turn complex data into actionable insights. You'll work with stakeholders across the organization to drive data-informed decisions and build predictive models that shape our business strategy.",
-        "skills": [
-          "Python",
-          "R",
-          "Machine Learning",
-          "SQL",
-          "Statistical Analysis",
-          "Data Visualization",
-          "TensorFlow",
-          "PyTorch",
-          "Big Data Technologies"
-        ]
-      },
-      {
         "title": "DevOps Engineer",
         "description": "Fast-growing SaaS company seeks a DevOps Engineer to streamline our deployment processes and enhance our infrastructure! You'll automate workflows, implement CI/CD pipelines, and ensure the reliability and scalability of our cloud-based systems. Join us in building a world-class DevOps culture!",
         "skills": [
@@ -132,36 +117,6 @@
           "Cost Optimization",
           "System Design",
           "Enterprise Architecture"
-        ]
-      },
-      {
-        "title": "Security Engineer",
-        "description": "Join our cybersecurity team! We're looking for a Security Engineer who's passionate about protecting systems and data. You'll implement security measures, conduct penetration testing, and respond to security incidents. Help us build and maintain a robust security infrastructure in an ever-evolving threat landscape.",
-        "skills": [
-          "Network Security",
-          "Penetration Testing",
-          "Security Frameworks",
-          "Incident Response",
-          "Cryptography",
-          "Security Tools",
-          "Risk Assessment",
-          "Compliance Standards"
-        ]
-      },
-      {
-        "title": "Machine Learning Engineer",
-        "description": "Innovative tech company seeks a Machine Learning Engineer to build next-generation AI solutions! You'll develop and deploy machine learning models, collaborate with research teams, and push the boundaries of what's possible with AI. Join us in creating cutting-edge ML applications that solve real-world problems.",
-        "skills": [
-          "Python",
-          "Deep Learning",
-          "TensorFlow",
-          "PyTorch",
-          "Computer Vision",
-          "Natural Language Processing",
-          "MLOps",
-          "Mathematics",
-          "Statistics",
-          "Distributed Computing"
         ]
       },
       {
