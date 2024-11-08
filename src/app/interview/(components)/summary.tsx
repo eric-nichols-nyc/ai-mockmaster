@@ -4,14 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { InterviewRecord, InterviewQuestionRecord } from "@/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useApi } from "@/lib/api";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -89,18 +81,6 @@ const Summary: React.FC<SummaryProps> = ({ interview, question: initialQuestion,
       className="container mx-auto p-4 max-w-4xl"
       data-testid="summary-component"
     >
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Question Summary</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <h1 className="text-3xl font-bold mb-6 text-center">Question Summary</h1>
       <Card className="mb-8 shadow-lg">
         <CardHeader className="bg-gray-50">
