@@ -9,25 +9,34 @@ const StickyHeader: React.FC = () => {
   const { isSignedIn } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-primary shadow-md">
-      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold text-white flex items-center">
-          <BotIcon className="mr-2" />
-          AI MockMaster
+    <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-primary to-primary/90 backdrop-blur-sm shadow-lg">
+      <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+        <Link 
+          href="/" 
+          className="text-2xl font-bold text-white flex items-center group transition-all duration-300 ease-in-out"
+        >
+          <BotIcon className="mr-3 h-6 w-6 group-hover:scale-110 transition-transform duration-300" />
+          <span className="bg-gradient-to-r from-white to-gray-100 bg-clip-text text-transparent">
+            AI MockMaster
+          </span>
         </Link>
-        <div className="flex items-center space-x-4">
+        <nav className="flex items-center space-x-6">
           {isSignedIn && (
             <>
               <Link 
                 href="/dashboard" 
-                className="text-white font-semibold hover:text-gray-200 transition-colors"
+                className="text-white/90 hover:text-white font-medium px-4 py-2 rounded-full 
+                          hover:bg-white/10 transition-all duration-300 ease-in-out
+                          active:scale-95"
               >
                 Dashboard
               </Link>
-              <AuthDropdown />
+              <div className="pl-2 border-l border-white/20">
+                <AuthDropdown />
+              </div>
             </>
           )}
-        </div>
+        </nav>
       </div>
     </header>
   );
