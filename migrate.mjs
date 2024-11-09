@@ -6,7 +6,7 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 async function main() {
-  const sql = neon(process.env.NEON_DB_URL!);
+  const sql = neon(process.env.NEON_DB_URL);
   const db = drizzle(sql);
 
   console.log('Running migrations...');

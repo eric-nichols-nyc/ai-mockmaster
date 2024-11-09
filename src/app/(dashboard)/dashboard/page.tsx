@@ -20,7 +20,8 @@ export default async function DashboardPage() {
   const allQuestions = await getAllUserQuestions()
   const questionsWithDefaultSaved = allQuestions.map(q => ({
     ...q,
-    saved: q.saved ?? false
+    saved: q.saved ?? false,
+    jobTitle: q.jobTitle ?? "Untitled Position"
   }))
 
   return (

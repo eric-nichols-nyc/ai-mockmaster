@@ -57,6 +57,7 @@ const InterviewCard: React.FC<InterviewCardProps> = ({ id, jobTitle, jobDescript
             </p>
             <div className="flex justify-between items-center text-sm">
               <div className="space-x-2">
+                <Badge variant="outline">{jobTitle}</Badge>
                 {skills && skills.slice(0, 2).map((skill, index) => (
                   <Badge key={index} variant="secondary">{skill}</Badge>
                 ))}
