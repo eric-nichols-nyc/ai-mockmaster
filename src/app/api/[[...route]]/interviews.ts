@@ -48,6 +48,7 @@ app.post('/', zValidator('json', CreateInterviewSchema.shape.body), async (c) =>
         suggested: q.suggested,
         suggestedAudioUrl: null,
         answer: null,
+        jobTitle: jobTitle,
         audioUrl: null,
         feedback: null,
         improvements: null,
