@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import AnimatedButton from '../src/app/interview/(components)/AnimatedButton';
+import AnimatedButton from '../src/components/AnimatedButton';
 
 // Mock the useRouter hook
 const mockPush = vi.fn();

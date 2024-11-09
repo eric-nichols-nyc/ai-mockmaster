@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useApi } from '@/lib/api';
-import AnimatedButton from './AnimatedButton';
+import AnimatedButton from '../../../components/AnimatedButton';
 //import { generateQuestions } from '@/actions/opeanai-actions';
 import { generateTechInterviewQuestion } from '@/actions/gemini-actions';
 const formSchema = z.object({

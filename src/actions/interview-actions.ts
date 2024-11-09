@@ -320,3 +320,74 @@ export async function updateQuestionJobTitles() {
     throw new Error("Failed to update question job titles")
   }
 }
+// Define allowed fields for update
+const UpdateFieldSchema = z.enum(['jobTitle', 'skills'])
+//type UpdateField = z.infer<typeof UpdateFieldSchema>
+
+// Define the input schema
+const UpdateQuestionsInput = z.object({
+  field: UpdateFieldSchema,
+  batchSize: z.number().optional().default(100)
+})
+
+type BatchUpdateResult = {
+  success: boolean
+  updatedCount: number
+  error?: string
+}
+
+// function to update question with info from the interview: returns a promise
+export async function updateQuestionsFromInterviews(input: z.infer<typeof UpdateQuestionsInput>): Promise<BatchUpdateResult> {
+  const { userId } = auth()
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
+  const { field, batchSize } = UpdateQuestionsInput.parse(input)
+
+  try {
+    // Get all interviews with their questions
+    const allInterviews = await db.select({
+      id: interviews.id,
+      [field]: interviews[field],
+    })
+    .from(interviews)
+    .where(eq(interviews.userId, userId))
+
+    let totalUpdated = 0;
+
+    // Process interviews in batches
+    for (let i = 0; i < allInterviews.length; i += batchSize) {
+      const batch = allInterviews.slice(i, i + batchSize)
+      
+      const batchPromises = batch.map(async (interview) => {
+        const updateData = {
+          [field]: interview[field]
+        }
+
+        const result = await db
+          .update(interviewQuestions)
+          .set(updateData)
+          .where(eq(interviewQuestions.interviewId, interview.id))
+          .returning()
+
+        return result.length
+      })
+
+      const batchResults = await Promise.all(batchPromises)
+      totalUpdated += batchResults.reduce((sum, count) => sum + count, 0)
+    }
+
+    return {
+      success: true,
+      updatedCount: totalUpdated
+    }
+  } catch (error) {
+    console.error(`Error updating questions:`, error)
+    return {
+      success: false,
+      updatedCount: 0,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }
+  }
+}

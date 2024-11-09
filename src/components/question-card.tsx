@@ -62,7 +62,19 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           <p className="text-sm font-medium leading-5 text-gray-900 line-clamp-4">
             Q1: {question.question}
           </p>
-          {/* Add more questions if needed */}
+          {/* Add skills badges */}
+          {question.skills && question.skills.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {question.skills.map((skill, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
