@@ -188,6 +188,7 @@ export async function createInterview(input: z.infer<typeof CreateInterviewSchem
         answer: null,
         audioUrl: null,
         feedback: null,
+        jobTitle: null,
         improvements: null,
         keyTakeaways: null,
         grade: null,
@@ -272,5 +273,50 @@ export async function updateInterviewQuestion(data: z.infer<typeof UpdateIntervi
   } catch (error) {
     console.error("Error updating question:", error);
     throw error;
+  }
+}
+
+
+export async function updateQuestionJobTitles() {
+  const { userId } = auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  try {
+    // First, get all interviews with their questions
+    const allInterviews = await db.select({
+      id: interviews.id,
+      jobTitle: interviews.jobTitle,
+    })
+    .from(interviews)
+    .where(eq(interviews.userId, userId))
+
+    console.log("interviews", interviews);
+    // FOr each interview update it associated questions
+    const updatePromises = allInterviews.map(async (interview) => {
+      return db
+        .update(interviewQuestions)
+        .set({
+          jobTitle: interview.jobTitle
+        })
+        .where(eq(interviewQuestions.interviewId, interview.id))
+    })
+    // execute all updates
+    await Promise.all(updatePromises);
+    // Optional: Return count of updated questions for verification
+    const updatedCount = await db.select({
+      count: interviewQuestions.id
+    })
+    .from(interviewQuestions)
+    .innerJoin(interviews, eq(interviews.id, interviewQuestions.interviewId))
+    .where(eq(interviews.userId, userId))
+
+    return {
+      success: true,
+      message: `Successfully updated job titles for ${updatedCount.length} questions`,
+      updatedCount: updatedCount.length
+    }
+  } catch (error) {
+    console.error("Error updating question job titles:", error)
+    throw new Error("Failed to update question job titles")
   }
 }

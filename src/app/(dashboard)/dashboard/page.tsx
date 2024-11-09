@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { DashboardQuestionsList } from './(components)/dashboard-questions-list'
-import { getAllUserQuestions } from '@/actions/interview-actions'
+import { getAllUserQuestions, updateQuestionJobTitles } from '@/actions/interview-actions'
 import Link from 'next/link'
 import { PlusIcon } from '@radix-ui/react-icons'
 //import { getFeedbackTool } from "@/actions/feedback-action";
@@ -17,6 +17,8 @@ import { PlusIcon } from '@radix-ui/react-icons'
 // };
 export default async function DashboardPage() {
   //const test = await testFeedback();
+  const update = await updateQuestionJobTitles();
+  console.log("update", update);
   const allQuestions = await getAllUserQuestions()
   const questionsWithDefaultSaved = allQuestions.map(q => ({
     ...q,

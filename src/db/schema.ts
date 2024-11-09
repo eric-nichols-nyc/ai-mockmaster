@@ -6,7 +6,7 @@ export interface InterviewQuestion {
   interviewId: string;
   question: string;
   suggested: string;
-  jobTitle: string;  // Added jobTitle
+  jobTitle: string | null;  // Added jobTitle
   answer: string | null;
   audioUrl: string | null;
   suggestedAudioUrl: string | null;
