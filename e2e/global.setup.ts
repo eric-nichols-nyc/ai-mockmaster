@@ -1,4 +1,6 @@
 import { clerk, clerkSetup } from "@clerk/testing/playwright";
+import { setupClerkTestingToken } from '@clerk/testing/playwright'
+
 import { test as setup } from "@playwright/test";
 import path from "path";
 import fs from 'fs/promises';
@@ -19,7 +21,9 @@ setup("global setup", async ({}) => {
 const authFile = path.join(__dirname, "../playwright/.clerk/user.json");
 
 setup("authenticate", async ({ page }) => {
+  await setupClerkTestingToken({ page })
   await page.goto("/sign-in");
+
   await clerk.signIn({
     page,
     signInParams: {

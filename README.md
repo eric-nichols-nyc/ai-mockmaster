@@ -1,6 +1,6 @@
 # AI MockMaster
 
-![AI MockMaster Logo](https://via.placeholder.com/800x400?text=AI+MockMaster+Logo)
+![AI MockMaster Logo](/public/images/landing-sc.png)
 
 ## Project Overview
 
